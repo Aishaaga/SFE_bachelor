@@ -18,7 +18,7 @@ async function identifyPlant(imageBuffer, originalname) {
     });
     
     // Ajouter les organes à analyser
-    formData.append('organs', 'leaf');
+    formData.append('organs', 'auto');
    
     
     const response = await axios.post(
