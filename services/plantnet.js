@@ -19,9 +19,7 @@ async function identifyPlant(imageBuffer, originalname) {
     
     // Ajouter les organes à analyser
     formData.append('organs', 'leaf');
-    formData.append('organs', 'flower');
-    formData.append('organs', 'fruit');
-    formData.append('organs', 'bark');
+   
     
     const response = await axios.post(
       `${PLANTNET_URL}?api-key=${PLANTNET_API_KEY}`,
