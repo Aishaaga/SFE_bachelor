@@ -37,6 +37,20 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route non trouvée' });
 });
 
+// ROUTE DE DEBUG - À SUPPRIMER PLUS TARD
+app.get('/api/debug/user/:email', async (req, res) => {
+  const User = require('./models/User');
+  const user = await User.findOne({ email: req.params.email });
+  if (!user) return res.json({ error: 'User not found' });
+  
+  res.json({
+    email: user.email,
+    passwordLength: user.password.length,
+    passwordStart: user.password.substring(0, 20) + '...',
+    isHashed: user.password.startsWith('$2b$')
+  });
+});
+
 // DÉMARRAGE
 app.listen(PORT, () => {
   console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);

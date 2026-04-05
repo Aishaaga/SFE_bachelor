@@ -4,20 +4,17 @@ const bcrypt = require('bcrypt');
 const userSchema = new mongoose.Schema({
   email: {
     type: String,
-    required: [true, 'L\'email est requis'],
+    required: true,
     unique: true,
     lowercase: true,
-    trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Email invalide']
+    trim: true
   },
   password: {
     type: String,
-    required: [true, 'Le mot de passe est requis'],
-    minlength: [6, 'Le mot de passe doit faire au moins 6 caractères']
+    required: true
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
     default: 'user'
   },
   createdAt: {
@@ -26,21 +23,23 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Hash du mot de passe avant sauvegarde
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+// Version avec async/await - PAS de paramètre 'next'
+userSchema.pre('save', async function() {
+  console.log('🔐 pre save - hachage');
   
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
+  if (!this.isModified('password')) {
+    console.log('➡️ Mot de passe non modifié');
+    return;
   }
+  
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+  console.log('✅ Mot de passe haché');
 });
 
 // Méthode pour comparer les mots de passe
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  console.log('🔍 Comparaison...');
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
