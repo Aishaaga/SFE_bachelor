@@ -28,18 +28,18 @@ userSchema.pre('save', async function() {
   console.log('🔐 pre save - hachage');
   
   if (!this.isModified('password')) {
-    console.log('➡️ Mot de passe non modifié');
+    console.log('Mot de passe non modifié');
     return;
   }
   
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  console.log('✅ Mot de passe haché');
+  console.log('Mot de passe haché');
 });
 
 // Méthode pour comparer les mots de passe
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  console.log('🔍 Comparaison...');
+  console.log(' Comparaison...');
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
