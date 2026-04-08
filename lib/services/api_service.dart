@@ -10,7 +10,7 @@ class ApiService {
   final AuthService _authService = AuthService();
 
   // Identifier une plante à partir d'une photo
-  Future<Map<String, dynamic>> identifyPlant(File photo) async {
+  Future<Map<String, dynamic>> identifyPlant(File image) async {
     try {
       final token = await _authService.getToken();
       if (token == null) {
@@ -23,7 +23,7 @@ class ApiService {
       );
 
       request.headers['Authorization'] = 'Bearer $token';
-      request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
 
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
