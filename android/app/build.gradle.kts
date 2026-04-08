@@ -6,8 +6,8 @@ plugins {
 
 android {
     namespace = "com.example.sfe_mobile"
-    compileSdk = 34  // Keep at 34 for now
-    ndkVersion = "26.3.11579264" 
+    compileSdk = 36  // Keep at 34 for now
+     buildToolsVersion = "36.1.0"
     
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
