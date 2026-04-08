@@ -12,17 +12,29 @@ const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
+fileFilter: (req, file, cb) => {
+    console.log('=== WHAT FLUTTER SENT ===');
+    console.log('Field name:', file.fieldname);
+    console.log('File name:', file.originalname);
+    console.log('MIME type:', file.mimetype);
+    console.log('File size:', file.size, 'bytes');
+    
     const allowedTypes = /jpeg|jpg|png|heic/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     const mimetype = allowedTypes.test(file.mimetype);
     
+    console.log('Extension valid?', extname);
+    console.log('MIME type valid?', mimetype);
+    console.log('========================');
+    
     if (mimetype && extname) {
-      return cb(null, true);
+        console.log('✅ IMAGE ACCEPTED');
+        return cb(null, true);
     } else {
-      cb(new Error('Seules les images sont autorisées'));
+        console.log('❌ IMAGE REJECTED');
+        cb(new Error('Seules les images sont autorisées'));
     }
-  }
+}
 });
 
 // POST /api/identify (protégé par authentification)
