@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
 import 'history_screen.dart';
+import '../services/image_compression_service.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -45,34 +46,47 @@ class _CameraScreenState extends State<CameraScreen> {
 
     setState(() => _isLoading = true);
     // Before creating the request
-    print('=== SENDING FILE ===');
-    print('Path: ${_selectedImage!.path}');
-    print('Exists: ${await _selectedImage!.exists()}');
-    print('Size: ${await _selectedImage!.length()}');
 
-    final result = await _apiService.identifyPlant(_selectedImage!);
+    try {
+      // COMPRESS THE IMAGE BEFORE SENDING
+      final compressedImage =
+          await ImageCompressionService.compressImage(_selectedImage!);
 
-    setState(() => _isLoading = false);
+      print('=== SENDING FILE ===');
+      print('Path: ${compressedImage.path}');
+      print('Exists: ${await compressedImage.exists()}');
+      print('Size: ${await compressedImage.length()}');
 
-    if (result['success']) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ResultScreen(
-            plant: result['plant'],
-            photo: _selectedImage!,
-            identificationId: result['identificationId'],
+      final result = await _apiService.identifyPlant(compressedImage);
+
+      setState(() => _isLoading = false);
+
+      if (result['success']) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ResultScreen(
+              plant: result['plant'],
+              photo: compressedImage,
+              identificationId: result['identificationId'],
+            ),
           ),
-        ),
-      ).then((_) {
-        // Revenir à l'écran caméra, réinitialiser
-        setState(() {
-          _selectedImage = null;
+        ).then((_) {
+          // Revenir à l'écran caméra, réinitialiser
+          setState(() {
+            _selectedImage = null;
+          });
         });
-      });
-    } else {
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(result['message']), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
+        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
       );
     }
   }
