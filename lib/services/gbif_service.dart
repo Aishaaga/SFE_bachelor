@@ -11,6 +11,8 @@ class GBIFService {
   /// Get occurrences from YOUR backend (which calls GBIF)
   static Future<Map<String, dynamic>> getOccurrences(
       String scientificName) async {
+    final url = '$baseUrl/gbif/summary/${Uri.encodeComponent(scientificName)}';
+    print('📡 Calling URL: $url'); // DEBUG
     try {
       // Get auth token
       final token = await _storage.read(key: 'auth_token');
@@ -31,6 +33,7 @@ class GBIFService {
       );
 
       print('Response status: ${response.statusCode}'); // Debug
+      print('Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
