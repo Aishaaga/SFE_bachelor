@@ -5,10 +5,10 @@ require('dotenv').config();
 console.log('🔑 Clé API chargée:', process.env.PLANTNET_API_KEY ? 'OUI (' + process.env.PLANTNET_API_KEY.substring(0, 10) + '...)' : 'NON (manquante)');
 
 // Import des routes
+const gbifRoutes = require('./routes/gbif');
 const identifyRoutes = require('./routes/identify');
 const authRoutes = require('./routes/auth');
 const identificationsRoutes = require('./routes/identifications');
-const gbifRoutes = require('./routes/gbif');
 
 
 const app = express();
@@ -25,10 +25,10 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('Erreur MongoDB:', err));
 
 // ROUTES
+app.use('/api/gbif', gbifRoutes);
 app.use('/api/identify', identifyRoutes);
 app.use('/api', authRoutes);  // /api/register, /api/login
 app.use('/api', identificationsRoutes);  // /api/save-identification, etc.
-app.use('/api/gbif', gbifRoutes);
 
 
 // Route de test
