@@ -40,7 +40,10 @@ router.get('/occurrences/:scientificName', async (req, res) => {
                     hasCoordinate: true,
                     status: 'PRESENT'
                 },
-                timeout: 10000
+                timeout: 10000,
+                headers: {                          // ← ADD THIS BLOCK
+            'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)'
+        }
             }
         );
         
@@ -82,6 +85,8 @@ router.get('/occurrences/:scientificName', async (req, res) => {
 router.get('/summary/:scientificName', async (req, res) => {
     try {
         const { scientificName } = req.params;
+        console.log(`📍 Fetching GBIF count for: ${scientificName}`);
+
         
         // Get just the count (faster)
         const response = await axios.get(
@@ -92,9 +97,15 @@ router.get('/summary/:scientificName', async (req, res) => {
                     limit: 0,
                     hasCoordinate: true
                 },
-                timeout: 5000
+                timeout: 5000,
+                headers: {                          // ← ADD THIS BLOCK
+                        'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)'
+        }
             }
         );
+
+        const count = response.data.count || 0;
+        console.log(`📊 Found ${count} total occurrences`);
         
         res.json({
             success: true,
