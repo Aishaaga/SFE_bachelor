@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
 import 'history_screen.dart';
+import 'plant_map_screen.dart';
 
 class ResultScreen extends StatelessWidget {
   final Plant plant;
@@ -19,11 +20,32 @@ class ResultScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Résultat'),
-        centerTitle: true,
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
+          title: const Text('Résultat'),
+          centerTitle: true,
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          // Add this button where you display the plant info
+          actions: [
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PlantMapScreen(
+                      plantName: plant.name,
+                      scientificName: plant.scientificName,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.map),
+              label: const Text('Voir la distribution mondiale'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            )
+          ]),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
