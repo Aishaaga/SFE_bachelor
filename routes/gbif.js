@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
+async function fetchWithRetry(url, params, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await axios.get(url, { 
+                params, 
+                timeout: 10000,
+                headers: {
+                    'User-Agent': 'SFE-Mobile-App/1.0'
+                }
+            });
+            return response;
+        } catch (error) {
+            console.log(`Attempt ${i + 1} failed: ${error.message}`);
+            if (i === maxRetries - 1) throw error;
+            // Wait 1 second, then 2 seconds, then 3 seconds
+            await new Promise(r => setTimeout(r, (i + 1) * 1000));
+        }
+    }
+}
+
 // GET /api/gbif/occurrences/:scientificName
 router.get('/occurrences/:scientificName', async (req, res) => {
     try {
@@ -46,11 +66,13 @@ router.get('/occurrences/:scientificName', async (req, res) => {
             occurrences: occurrences
         });
         
-    } catch (error) {
+    }catch (error) {
         console.error('❌ GBIF Error:', error.message);
-        res.status(500).json({
+        
+        // Send a friendly message to Flutter
+        res.status(503).json({
             success: false,
-            message: 'Erreur lors de la récupération des données GBIF',
+            message: 'Le service GBIF est temporairement indisponible. Veuillez réessayer plus tard.',
             error: error.message
         });
     }
