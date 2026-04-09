@@ -37,6 +37,7 @@ fileFilter: (req, file, cb) => {
 }
 });
 
+
 // POST /api/identify (protégé par authentification)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
   try {
