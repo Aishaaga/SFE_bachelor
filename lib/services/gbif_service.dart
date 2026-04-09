@@ -1,18 +1,20 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class GBIFService {
   static const String baseUrl =
       'http://192.168.0.182:3000/api'; // Your backend URL
+  static final _storage = FlutterSecureStorage();
 
   /// Get occurrences from YOUR backend (which calls GBIF)
   static Future<Map<String, dynamic>> getOccurrences(
       String scientificName) async {
     try {
       // Get auth token
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await _storage.read(key: 'auth_token');
+      const String baseUrl = 'http://192.168.0.182:3000/api';
 
       if (token == null) {
         return {'success': false, 'message': 'Non authentifié'};
@@ -27,6 +29,8 @@ class GBIFService {
           'Content-Type': 'application/json',
         },
       );
+
+      print('Response status: ${response.statusCode}'); // Debug
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
