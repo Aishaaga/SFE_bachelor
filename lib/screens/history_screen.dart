@@ -88,11 +88,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
         centerTitle: true,
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadHistory,
-          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
