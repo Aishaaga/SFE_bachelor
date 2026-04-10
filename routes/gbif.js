@@ -26,7 +26,7 @@ async function fetchWithRetry(url, params, maxRetries = 3) {
 router.get('/occurrences/:scientificName', async (req, res) => {
     try {
         const { scientificName } = req.params;
-        const { limit = 50 } = req.query;
+        const { limit = 200 } = req.query;
         
         console.log(`📍 Fetching GBIF data for: ${scientificName}`);
         
