@@ -68,18 +68,18 @@ class _CameraScreenState extends State<CameraScreen> {
 
       LoadingDialog.update(context, '🗺️ Récupération de la distribution...');
 
-      final distributionFuture =
-          GBIFService.getOccurrenceCount(result['plant'].scientificName);
+      if (result['success'] && result['plant'] != null) {
+        final distributionFuture =
+            GBIFService.getOccurrenceCount(result['plant'].scientificName);
 
-      // Wait for both (or timeout after 5 seconds)
-      final distributionCount = await distributionFuture.timeout(
-        Duration(seconds: 5),
-        onTimeout: () => 0,
-      );
+        // Wait for both (or timeout after 5 seconds)
+        final distributionCount = await distributionFuture.timeout(
+          Duration(seconds: 5),
+          onTimeout: () => 0,
+        );
 
-      LoadingDialog.hide(context);
+        LoadingDialog.hide(context);
 
-      if (result['success']) {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -94,6 +94,7 @@ class _CameraScreenState extends State<CameraScreen> {
           LoadingDialog.hide(context);
         });
       } else {
+        LoadingDialog.hide(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(result['message']), backgroundColor: Colors.red),

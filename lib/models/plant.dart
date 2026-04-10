@@ -19,10 +19,25 @@ class Plant {
     return Plant(
       id: json['id'] ?? '',
       name: json['name'] ?? 'Plante inconnue',
-      scientificName: json['scientificName'] ?? '',
-      family: json['family'] ?? '',
+      scientificName:
+          json['scientificName'] ?? json['name'] ?? 'Nom scientifique inconnu',
       localName: json['localName'],
+      family: json['family'] ?? 'Famille inconnue',
       confidence: (json['confidence'] ?? 0).toDouble(),
     );
   }
+  // Helper method for display
+  String get displayName {
+    if (scientificName.isNotEmpty &&
+        scientificName != 'Nom scientifique inconnu') {
+      return scientificName;
+    }
+    return name;
+  }
+
+  // Helper method for confidence percentage
+  int get confidencePercentage => (confidence * 100).toInt();
+
+  // Check if identification is reliable
+  bool get isReliable => confidence >= 0.5;
 }

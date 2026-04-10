@@ -35,13 +35,42 @@ class ApiService {
       final data = jsonDecode(responseData);
 
       if (response.statusCode == 200 && data['success'] == true) {
+        // ✅ VALIDATION: Check if plant data exists
+        if (data['plant'] == null) {
+          return {
+            'success': false,
+            'message': 'Plante non reconnue. Veuillez réessayer.',
+          };
+        }
+
+        final plant = Plant.fromJson({
+          ...data['plant'],
+          'id': data['identificationId'],
+          'confidence': data['plant']['confidence'],
+        });
+
+        // ✅ VALIDATION: Check if scientific name is valid
+        if (plant.scientificName.isEmpty ||
+            plant.scientificName == 'Nom scientifique inconnu') {
+          return {
+            'success': false,
+            'message':
+                'Cette plante n\'a pas pu être identifiée précisément. Essayez avec une photo plus nette.',
+          };
+        }
+
+        // ✅ VALIDATION: Check confidence level (optional)
+        if (plant.confidence < 0.5) {
+          return {
+            'success': false,
+            'message':
+                'Identification peu fiable (${(plant.confidence * 100).toInt()}%). Prenez une meilleure photo.',
+          };
+        }
+
         return {
           'success': true,
-          'plant': Plant.fromJson({
-            ...data['plant'],
-            'id': data['identificationId'],
-            'confidence': data['plant']['confidence'],
-          }),
+          'plant': plant,
           'identificationId': data['identificationId'],
         };
       } else {
