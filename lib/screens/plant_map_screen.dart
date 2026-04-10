@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_heatmap/flutter_map_heatmap.dart';
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import '../services/gbif_service.dart';
+
+// Enum for map view types
+enum MapViewType {
+  heatmap,
+  markers,
+  circles,
+  clusters,
+}
 
 class PlantMapScreen extends StatefulWidget {
   final String plantName;
@@ -23,7 +32,7 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
   bool _isLoading = true;
   int _totalCount = 0;
   String _error = '';
-  bool _useHeatmap = false;
+  MapViewType _currentViewType = MapViewType.heatmap; // Default view
 
   @override
   void initState() {
@@ -43,10 +52,8 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     // Check if the error is a 503 (GBIF busy)
     if (result['success'] == false &&
         result['message']?.contains('503') == true) {
-      // Hide loading
       setState(() => _isLoading = false);
 
-      // Show the friendly dialog
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -81,6 +88,52 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     }
   }
 
+  String _getViewTypeName() {
+    switch (_currentViewType) {
+      case MapViewType.heatmap:
+        return '🔥 Carte de chaleur';
+      case MapViewType.markers:
+        return '📍 Points individuels';
+      case MapViewType.circles:
+        return '⚪ Cercles transparents';
+      case MapViewType.clusters:
+        return '📦 Regroupement';
+    }
+  }
+
+  IconData _getViewTypeIcon() {
+    switch (_currentViewType) {
+      case MapViewType.heatmap:
+        return Icons.heat_pump;
+      case MapViewType.markers:
+        return Icons.place;
+      case MapViewType.circles:
+        return Icons.circle;
+      case MapViewType.clusters:
+        return Icons.groups;
+    }
+  }
+
+  void _changeViewType() {
+    setState(() {
+      // Cycle through view types
+      switch (_currentViewType) {
+        case MapViewType.heatmap:
+          _currentViewType = MapViewType.markers;
+          break;
+        case MapViewType.markers:
+          _currentViewType = MapViewType.circles;
+          break;
+        case MapViewType.circles:
+          _currentViewType = MapViewType.clusters;
+          break;
+        case MapViewType.clusters:
+          _currentViewType = MapViewType.heatmap;
+          break;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,16 +142,24 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
+          // View type selector button
           IconButton(
-            icon: Icon(_useHeatmap ? Icons.map : Icons.heat_pump),
-            onPressed: () {
-              setState(() {
-                _useHeatmap = !_useHeatmap;
-              });
-            },
-            tooltip: _useHeatmap
-                ? 'Afficher les points'
-                : 'Afficher la carte de chaleur',
+            icon: Icon(_getViewTypeIcon()),
+            onPressed: _changeViewType,
+            tooltip: 'Changer le type de vue',
+          ),
+          // View type name
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              _getViewTypeName(),
+              style: const TextStyle(fontSize: 12, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -156,11 +217,11 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
 
     return Column(
       children: [
+        // Info banner
         Container(
           padding: const EdgeInsets.all(8),
           color: Colors.green.shade50,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(
@@ -170,21 +231,22 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              // Show current mode
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: _useHeatmap ? Colors.orange : Colors.blue,
+                  color: _getViewTypeColor(),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  _useHeatmap ? '🔥 Mode carte de chaleur' : '📍 Mode points',
+                  _getViewTypeName(),
                   style: const TextStyle(fontSize: 10, color: Colors.white),
                 ),
               ),
             ],
           ),
         ),
+
+        // Map
         Expanded(
           child: FlutterMap(
             options: MapOptions(
@@ -192,48 +254,162 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
               initialZoom: 3,
             ),
             children: [
+              // Base map tiles
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.sfe_mobile',
               ),
-              if (_useHeatmap)
-                HeatMapLayer(
-                  heatMapDataSource:
-                      InMemoryHeatMapDataSource(data: heatmapPoints),
-                  heatMapOptions: HeatMapOptions(
-                    gradient: {
-                      0.1: Colors.blue,
-                      0.3: Colors.yellow,
-                      0.6: Colors.red,
-                      1.0: Colors.purple,
-                    },
-                    minOpacity: 0.4,
-                    radius: 40,
-                  ),
-                )
-              else
-// In _buildMap(), replace MarkerLayer with this:
-                MarkerLayer(
-                  markers: _occurrences.map((point) {
-                    return Marker(
-                      width: 20,
-                      height: 20,
-                      point: LatLng(point['lat'], point['lng']),
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.3),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+
+              // Select view type
+              if (_currentViewType == MapViewType.heatmap)
+                _buildHeatmapLayer(heatmapPoints),
+              if (_currentViewType == MapViewType.markers) _buildMarkersLayer(),
+              if (_currentViewType == MapViewType.circles) _buildCirclesLayer(),
+              if (_currentViewType == MapViewType.clusters)
+                _buildClustersLayer(),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Color _getViewTypeColor() {
+    switch (_currentViewType) {
+      case MapViewType.heatmap:
+        return Colors.orange;
+      case MapViewType.markers:
+        return Colors.red;
+      case MapViewType.circles:
+        return Colors.purple;
+      case MapViewType.clusters:
+        return Colors.blue;
+    }
+  }
+
+  // Option 1: Heatmap
+  Widget _buildHeatmapLayer(List<WeightedLatLng> heatmapPoints) {
+    return HeatMapLayer(
+      heatMapDataSource: InMemoryHeatMapDataSource(data: heatmapPoints),
+      heatMapOptions: HeatMapOptions(
+        gradient: {
+          0.1: Colors.blue,
+          0.3: Colors.yellow,
+          0.6: Colors.red,
+          1.0: Colors.purple,
+        },
+        minOpacity: 0.4,
+        radius: 40,
+      ),
+    );
+  }
+
+  // Option 2: Individual Markers (Pins)
+  Widget _buildMarkersLayer() {
+    return MarkerLayer(
+      markers: _occurrences.map((point) {
+        return Marker(
+          width: 40,
+          height: 40,
+          point: LatLng(point['lat'], point['lng']),
+          child: GestureDetector(
+            onTap: () => _showLocationDialog(point),
+            child: const Icon(
+              Icons.location_pin,
+              color: Colors.red,
+              size: 35,
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // Option 3: Transparent Circles (Heatmap-like but with circles)
+  Widget _buildCirclesLayer() {
+    return MarkerLayer(
+      markers: _occurrences.map((point) {
+        // Randomize opacity for density effect
+        final opacity = 0.2 + (point['lat'] % 0.3);
+
+        return Marker(
+          width: 25,
+          height: 25,
+          point: LatLng(point['lat'], point['lng']),
+          child: GestureDetector(
+            onTap: () => _showLocationDialog(point),
+            child: Container(
+              width: 25,
+              height: 25,
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(opacity),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.red, width: 1),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // Option 4: Clusters (Groups nearby points)
+  Widget _buildClustersLayer() {
+    // Convert occurrences to markers
+    final markers = _occurrences.map((point) {
+      return Marker(
+        width: 40,
+        height: 40,
+        point: LatLng(point['lat'], point['lng']),
+        child: GestureDetector(
+          onTap: () => _showLocationDialog(point),
+          child: const Icon(
+            Icons.location_pin,
+            color: Colors.red,
+            size: 35,
+          ),
+        ),
+      );
+    }).toList();
+
+    return MarkerClusterLayerWidget(
+      options: MarkerClusterLayerOptions(
+        maxClusterRadius: 120,
+        size: const Size(40, 40),
+        markers: markers,
+        builder: (context, markers) {
+          return GestureDetector(
+            onTap: () {
+              // Optional: Show cluster info when tapped
+              print('Cluster with ${markers.length} points');
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.5),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  markers.length.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+        spiderfySpiralDistanceMultiplier: 2,
+      ),
     );
   }
 
