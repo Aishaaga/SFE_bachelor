@@ -33,11 +33,234 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
   int _totalCount = 0;
   String _error = '';
   MapViewType _currentViewType = MapViewType.heatmap; // Default view
+  String? _selectedCountry;
+  int? _selectedYear;
+  bool _showFilters = false;
+  List<String> _availableCountries = [];
+  List<int> _availableYears = [];
+
+  final List<Map<String, String>> _commonCountries = [
+    {'code': 'FR', 'name': 'France'},
+    {'code': 'US', 'name': 'États-Unis'},
+    {'code': 'GB', 'name': 'Royaume-Uni'},
+    {'code': 'DE', 'name': 'Allemagne'},
+    {'code': 'ES', 'name': 'Espagne'},
+    {'code': 'IT', 'name': 'Italie'},
+    {'code': 'CA', 'name': 'Canada'},
+    {'code': 'AU', 'name': 'Australie'},
+    {'code': 'BR', 'name': 'Brésil'},
+    {'code': 'IN', 'name': 'Inde'},
+    {'code': 'CN', 'name': 'Chine'},
+    {'code': 'JP', 'name': 'Japon'},
+    {'code': 'ZA', 'name': 'Afrique du Sud'},
+    {'code': 'MA', 'name': 'Maroc'},
+  ];
+
+// Available years (last 10 years)
+  final List<int> _availableYearsList =
+      List.generate(11, (i) => DateTime.now().year - i);
 
   @override
   void initState() {
     super.initState();
     _loadOccurrences();
+  }
+
+// Method to apply filters
+  Future<void> _applyFilters() async {
+    setState(() {
+      _isLoading = true;
+      _showFilters = false;
+    });
+
+    final result = await GBIFService.getOccurrences(
+      widget.scientificName,
+      limit: 200,
+      country: _selectedCountry,
+      year: _selectedYear,
+    );
+
+    if (result['success'] == true) {
+      setState(() {
+        _occurrences =
+            List<Map<String, dynamic>>.from(result['occurrences'] ?? []);
+        _totalCount = result['totalCount'] ?? 0;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _error = result['message'] ?? 'Erreur lors du filtrage';
+        _isLoading = false;
+      });
+    }
+  }
+
+// Method to reset filters
+  void _resetFilters() {
+    setState(() {
+      _selectedCountry = null;
+      _selectedYear = null;
+    });
+    _applyFilters();
+  }
+
+// Method to show filter dialog
+  void _showFilterDialog() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Center(
+                    child: Text(
+                      'Filtrer les observations',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Country filter
+                  const Text('🌍 Pays',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedCountry,
+                        hint: const Text('Tous les pays'),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem(
+                              value: null, child: Text('🌍 Tous les pays')),
+                          ..._commonCountries.map((country) => DropdownMenuItem(
+                                value: country['code'],
+                                child: Text(
+                                    '${country['name']} (${country['code']})'),
+                              )),
+                        ],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _selectedCountry = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Year filter
+                  const Text('📅 Année',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedYear,
+                        hint: const Text('Toutes les années'),
+                        isExpanded: true,
+                        items: [
+                          const DropdownMenuItem(
+                              value: null, child: Text('📅 Toutes les années')),
+                          ..._availableYearsList.map((year) => DropdownMenuItem(
+                                value: year,
+                                child: Text(year.toString()),
+                              )),
+                        ],
+                        onChanged: (value) {
+                          setStateDialog(() {
+                            _selectedYear = value;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Action buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _resetFilters();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text('Réinitialiser'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _applyFilters();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text('Appliquer'),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Active filters indicator
+                  if (_selectedCountry != null || _selectedYear != null)
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.filter_alt,
+                              size: 16, color: Colors.orange),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Filtres actifs: ${_selectedCountry != null ? "Pays: $_selectedCountry" : ""}${_selectedCountry != null && _selectedYear != null ? " • " : ""}${_selectedYear != null ? "Année: $_selectedYear" : ""}',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _loadOccurrences() async {
@@ -142,7 +365,13 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
-          // View type selector button
+          // Filter button
+          IconButton(
+            icon: const Icon(Icons.filter_alt),
+            onPressed: _showFilterDialog,
+            tooltip: 'Filtrer',
+          ),
+          // View type selector
           IconButton(
             icon: Icon(_getViewTypeIcon()),
             onPressed: _changeViewType,
@@ -221,31 +450,62 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           color: Colors.green.shade50,
-          child: Row(
+          child: Column(
             children: [
-              Expanded(
-                child: Text(
-                  '🌍 ${_occurrences.length} observations sur $_totalCount au total',
-                  style: const TextStyle(fontSize: 14),
-                  overflow: TextOverflow.ellipsis,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '🌍 ${_occurrences.length} observations sur $_totalCount au total',
+                      style: const TextStyle(fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: _getViewTypeColor(),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _getViewTypeName(),
+                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: _getViewTypeColor(),
-                  borderRadius: BorderRadius.circular(12),
+              // Show active filters
+              if (_selectedCountry != null || _selectedYear != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.filter_alt,
+                          size: 12, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          'Filtré: ${_selectedCountry != null ? "Pays: ${_commonCountries.firstWhere((c) => c['code'] == _selectedCountry, orElse: () => {
+                                'name': _selectedCountry!
+                              })['name']}" : ""}${_selectedCountry != null && _selectedYear != null ? " • " : ""}${_selectedYear != null ? "Année: $_selectedYear" : ""}',
+                          style:
+                              const TextStyle(fontSize: 10, color: Colors.grey),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _resetFilters,
+                        child: const Icon(Icons.close,
+                            size: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Text(
-                  _getViewTypeName(),
-                  style: const TextStyle(fontSize: 10, color: Colors.white),
-                ),
-              ),
             ],
           ),
         ),
-
         // Map
         Expanded(
           child: FlutterMap(

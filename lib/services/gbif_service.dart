@@ -11,9 +11,17 @@ class GBIFService {
 
   /// Get occurrences from YOUR backend (which calls GBIF)
   static Future<Map<String, dynamic>> getOccurrences(String scientificName,
-      {required int limit}) async {
-    final url = '$baseUrl/gbif/summary/${Uri.encodeComponent(scientificName)}';
-    print('📡 Calling URL: $url'); // DEBUG
+      {required int limit, String? country, int? year}) async {
+    var url =
+        '$baseUrl/gbif/occurrences/${Uri.encodeComponent(scientificName)}?limit=$limit';
+    if (country != null && country != 'all') {
+      url += '&country=$country';
+    }
+    if (year != null && year != 0) {
+      url += '&year=$year';
+    }
+
+    print('📡 Fetching: $url');
     try {
       // Get auth token
       final token = await _storage.read(key: 'auth_token');
@@ -42,6 +50,7 @@ class GBIFService {
         return {'success': false, 'message': 'Erreur: ${response.statusCode}'};
       }
     } catch (e) {
+      print('Error in getOccurrences: $e');
       return {'success': false, 'message': 'Erreur: $e'};
     }
   }
