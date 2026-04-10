@@ -1,0 +1,59 @@
+name: sfe_mobile
+description: App de biodiversité marocaine
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  flutter_image_compress: ^2.1.0
+
+  # UI
+  cupertino_icons: ^1.0.6
+  
+  # Caméra et photos
+  camera: ^0.10.5
+  image_picker: ^0.8.9
+  
+  # HTTP et API
+  http: ^1.1.0
+  dio: ^5.3.0
+  
+  # Stockage sécurisé
+  shared_preferences: ^2.2.0
+  flutter_secure_storage: ^8.1.0
+  
+  # State management
+  provider: ^6.0.5
+  
+  # Navigation
+  go_router: ^13.0.0
+  
+  # Utilitaires
+  image: ^4.1.3
+  path_provider: ^2.1.1
+
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  flutter_map_marker_cluster: ^1.3.0
+  flutter_map_heatmap: ^0.0.7
+
+ 
+  
+  
+  # For caching map tiles (optional but recommended)
+  flutter_map_cancellable_tile_provider: ^2.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
