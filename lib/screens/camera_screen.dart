@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:sfe_mobile/services/gbif_service.dart';
+import 'package:sfe_mobile/widgets/loading_widget.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
@@ -44,7 +46,10 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _identifyPlant() async {
     if (_selectedImage == null) return;
 
-    setState(() => _isLoading = true);
+    LoadingDialog.show(
+      context,
+      message: '📸 Compression de l\'image...',
+    );
     // Before creating the request
 
     try {
@@ -57,9 +62,22 @@ class _CameraScreenState extends State<CameraScreen> {
       print('Exists: ${await compressedImage.exists()}');
       print('Size: ${await compressedImage.length()}');
 
+      LoadingDialog.update(context, '🌿 Envoi à PlantNet...');
+
       final result = await _apiService.identifyPlant(compressedImage);
 
-      setState(() => _isLoading = false);
+      LoadingDialog.update(context, '🗺️ Récupération de la distribution...');
+
+      final distributionFuture =
+          GBIFService.getOccurrenceCount(result['plant'].scientificName);
+
+      // Wait for both (or timeout after 5 seconds)
+      final distributionCount = await distributionFuture.timeout(
+        Duration(seconds: 5),
+        onTimeout: () => 0,
+      );
+
+      LoadingDialog.hide(context);
 
       if (result['success']) {
         Navigator.push(
@@ -73,9 +91,7 @@ class _CameraScreenState extends State<CameraScreen> {
           ),
         ).then((_) {
           // Revenir à l'écran caméra, réinitialiser
-          setState(() {
-            _selectedImage = null;
-          });
+          LoadingDialog.hide(context);
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -84,7 +100,7 @@ class _CameraScreenState extends State<CameraScreen> {
         );
       }
     } catch (e) {
-      setState(() => _isLoading = false);
+      LoadingDialog.hide(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
       );
