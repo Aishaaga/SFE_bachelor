@@ -37,6 +37,9 @@ fileFilter: (req, file, cb) => {
 }
 });
 
+const PLANTNET_TIMEOUT = 20000; // 20 seconds max
+
+
 
 // POST /api/identify (protégé par authentification)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
