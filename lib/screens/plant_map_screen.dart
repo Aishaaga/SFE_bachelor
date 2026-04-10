@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_heatmap/flutter_map_heatmap.dart';
 import 'package:latlong2/latlong.dart';
 import '../services/gbif_service.dart';
 
@@ -134,17 +135,43 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     double centerLng = _occurrences.fold(0.0, (sum, p) => sum + p['lng']) /
         _occurrences.length;
 
+    // Convert to List<WeightedLatLng> for heatmap
+    final List<WeightedLatLng> heatmapPoints = _occurrences
+        .map((point) => WeightedLatLng(LatLng(point['lat'], point['lng']), 1.0))
+        .toList();
+
+    final bool useHeatmap = _occurrences.length > 100;
+
     return Column(
       children: [
         // Info banner
         Container(
           padding: const EdgeInsets.all(8),
           color: Colors.green.shade50,
-          child: Text(
-            '🌍 ${_occurrences.length} observations sur $_totalCount au total',
-            style: const TextStyle(fontSize: 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '🌍 ${_occurrences.length} observations sur $_totalCount au total',
+                style: const TextStyle(fontSize: 14),
+              ),
+              if (useHeatmap)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Mode carte de chaleur',
+                    style: TextStyle(fontSize: 10, color: Colors.white),
+                  ),
+                ),
+            ],
           ),
         ),
+
         // Map
         Expanded(
           child: FlutterMap(
@@ -157,25 +184,41 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.sfe_mobile',
               ),
-              MarkerLayer(
-                markers: _occurrences.map((point) {
-                  return Marker(
-                    width: 40,
-                    height: 40,
-                    point: LatLng(point['lat'], point['lng']),
-                    child: GestureDetector(
-                      onTap: () {
-                        _showLocationDialog(point);
-                      },
-                      child: const Icon(
-                        Icons.location_pin,
-                        color: Colors.red,
-                        size: 35,
+
+              // Use heatmap if many points, otherwise use markers
+              if (useHeatmap)
+                HeatMapLayer(
+                  heatMapDataSource:
+                      InMemoryHeatMapDataSource(data: heatmapPoints),
+                  heatMapOptions: HeatMapOptions(
+                    gradient: {
+                      0.25: Colors.blue,
+                      0.55: Colors.yellow,
+                      0.85: Colors.red,
+                      1.0: Colors.purple,
+                    },
+                    minOpacity: 0.2,
+                    radius: 25,
+                  ),
+                )
+              else
+                MarkerLayer(
+                  markers: _occurrences.map((point) {
+                    return Marker(
+                      width: 40,
+                      height: 40,
+                      point: LatLng(point['lat'], point['lng']),
+                      child: GestureDetector(
+                        onTap: () => _showLocationDialog(point),
+                        child: const Icon(
+                          Icons.location_pin,
+                          color: Colors.red,
+                          size: 35,
+                        ),
                       ),
-                    ),
-                  );
-                }).toList(),
-              ),
+                    );
+                  }).toList(),
+                ),
             ],
           ),
         ),
