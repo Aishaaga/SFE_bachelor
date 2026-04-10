@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
-import '../services/gbif_service.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 
-class ResultScreen extends StatefulWidget {
+class ResultScreen extends StatelessWidget {
   final Plant plant;
   final File photo;
   final String identificationId;
@@ -18,28 +17,6 @@ class ResultScreen extends StatefulWidget {
   });
 
   @override
-  State<ResultScreen> createState() => _ResultScreenState();
-}
-
-class _ResultScreenState extends State<ResultScreen> {
-  int _occurrenceCount = 0;
-  bool _isLoadingCount = true;
-  @override
-  void initState() {
-    super.initState();
-    _loadOccurrenceCount(); // Call this when screen loads
-  }
-
-  Future<void> _loadOccurrenceCount() async {
-    final count =
-        await GBIFService.getOccurrenceCount(widget.plant.scientificName);
-    setState(() {
-      _occurrenceCount = count;
-      _isLoadingCount = false;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -49,41 +26,24 @@ class _ResultScreenState extends State<ResultScreen> {
           foregroundColor: Colors.white,
           // Add this button where you display the plant info
           actions: [
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PlantMapScreen(
-                      plantName: widget.plant.name,
-                      scientificName: widget.plant.scientificName,
-                    ),
-                  ),
-                );
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.public, color: Colors.green, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      _isLoadingCount ? '...' : '$_occurrenceCount',
-                      style: TextStyle(
-                        color: Colors.green.shade700,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+            ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => PlantMapScreen(
+                        plantName: plant.name,
+                        scientificName: plant.scientificName,
                       ),
                     ),
-                  ],
-                ),
-              ),
-            )
+                  );
+                },
+                icon: const Icon(Icons.map),
+                label: const Text('Voir la distribution mondiale'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                )),
           ]),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -93,7 +53,7 @@ class _ResultScreenState extends State<ResultScreen> {
               elevation: 4,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(widget.photo,
+                child: Image.file(photo,
                     height: 250, width: double.infinity, fit: BoxFit.cover),
               ),
             ),
@@ -113,15 +73,15 @@ class _ResultScreenState extends State<ResultScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.plant.name,
+                                plant.name,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              if (widget.plant.scientificName.isNotEmpty)
+                              if (plant.scientificName.isNotEmpty)
                                 Text(
-                                  widget.plant.scientificName,
+                                  plant.scientificName,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontStyle: FontStyle.italic,
@@ -134,20 +94,19 @@ class _ResultScreenState extends State<ResultScreen> {
                       ],
                     ),
                     const Divider(height: 30),
-                    if (widget.plant.family.isNotEmpty)
-                      _infoRow(Icons.category, 'Famille', widget.plant.family),
-                    if (widget.plant.localName != null)
-                      _infoRow(
-                          Icons.language, 'Nom local', widget.plant.localName!),
+                    if (plant.family.isNotEmpty)
+                      _infoRow(Icons.category, 'Famille', plant.family),
+                    if (plant.localName != null)
+                      _infoRow(Icons.language, 'Nom local', plant.localName!),
                     _infoRow(
                       Icons.analytics,
                       'Confiance',
-                      '${(widget.plant.confidence * 100).toStringAsFixed(1)}%',
+                      '${(plant.confidence * 100).toStringAsFixed(1)}%',
                     ),
                     _infoRow(
                       Icons.fingerprint,
                       'ID',
-                      widget.identificationId.substring(0, 8),
+                      identificationId.substring(0, 8),
                     ),
                   ],
                 ),
