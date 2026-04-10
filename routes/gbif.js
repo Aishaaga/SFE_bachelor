@@ -23,27 +23,50 @@ async function fetchWithRetry(url, params, maxRetries = 3) {
 }
 
 // GET /api/gbif/occurrences/:scientificName
+// GET /api/gbif/occurrences/:scientificName
 router.get('/occurrences/:scientificName', async (req, res) => {
     try {
         const { scientificName } = req.params;
-        const { limit = 200 } = req.query;
+        const { 
+            limit = 200, 
+            country,      // Filter by country code (FR, US, etc.)
+            year,         // Filter by year
+            month         // Filter by month
+        } = req.query;
         
         console.log(`📍 Fetching GBIF data for: ${scientificName}`);
+        console.log(`   Filters: country=${country || 'all'}, year=${year || 'all'}`);
         
-        // Call GBIF API
+        // Build params object WITH filters
+        const params = {
+            scientificName: scientificName,
+            limit: Math.min(limit, 200),
+            hasCoordinate: true,
+            status: 'PRESENT'
+        };
+        
+        // ADD FILTERS TO PARAMS (THIS WAS MISSING!)
+        if (country && country !== 'all') {
+            params.country = country;
+        }
+        
+        if (year && year !== 'all') {
+            params.year = parseInt(year);
+        }
+        
+        if (month && month !== 'all') {
+            params.month = parseInt(month);
+        }
+        
+        // Call GBIF API WITH FILTERS
         const response = await axios.get(
             'https://api.gbif.org/v1/occurrence/search',
             {
-                params: {
-                    scientificName: scientificName,
-                    limit: Math.min(limit, 200),
-                    hasCoordinate: true,
-                    status: 'PRESENT'
-                },
+                params: params,  // Use the params object with filters
                 timeout: 10000,
-                headers: {                          // ← ADD THIS BLOCK
-            'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)'
-        }
+                headers: {
+                    'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)'
+                }
             }
         );
         
@@ -69,7 +92,7 @@ router.get('/occurrences/:scientificName', async (req, res) => {
             occurrences: occurrences
         });
         
-    }catch (error) {
+    } catch (error) {
         console.error('❌ GBIF Error:', error.message);
         
         // Send a friendly message to Flutter
