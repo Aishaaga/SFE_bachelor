@@ -212,18 +212,19 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                   ),
                 )
               else
+// In _buildMap(), replace MarkerLayer with this:
                 MarkerLayer(
                   markers: _occurrences.map((point) {
                     return Marker(
-                      width: 40,
-                      height: 40,
+                      width: 20,
+                      height: 20,
                       point: LatLng(point['lat'], point['lng']),
-                      child: GestureDetector(
-                        onTap: () => _showLocationDialog(point),
-                        child: const Icon(
-                          Icons.location_pin,
-                          color: Colors.red,
-                          size: 35,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.3),
+                          shape: BoxShape.circle,
                         ),
                       ),
                     );
