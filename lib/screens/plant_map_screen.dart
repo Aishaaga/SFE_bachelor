@@ -23,6 +23,7 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
   bool _isLoading = true;
   int _totalCount = 0;
   String _error = '';
+  bool _useHeatmap = false;
 
   @override
   void initState() {
@@ -85,6 +86,19 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         title: Text('Distribution: ${widget.plantName}'),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: Icon(_useHeatmap ? Icons.map : Icons.heat_pump),
+            onPressed: () {
+              setState(() {
+                _useHeatmap = !_useHeatmap;
+              });
+            },
+            tooltip: _useHeatmap
+                ? 'Afficher les points'
+                : 'Afficher la carte de chaleur',
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -129,50 +143,46 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
   }
 
   Widget _buildMap() {
-    // Calculate center for initial view
     double centerLat = _occurrences.fold(0.0, (sum, p) => sum + p['lat']) /
         _occurrences.length;
     double centerLng = _occurrences.fold(0.0, (sum, p) => sum + p['lng']) /
         _occurrences.length;
 
-    // Convert to List<WeightedLatLng> for heatmap
     final List<WeightedLatLng> heatmapPoints = _occurrences
         .map((point) => WeightedLatLng(LatLng(point['lat'], point['lng']), 1.0))
         .toList();
 
-    final bool useHeatmap = _occurrences.length > 100;
-
     return Column(
       children: [
-        // Info banner
         Container(
           padding: const EdgeInsets.all(8),
           color: Colors.green.shade50,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '🌍 ${_occurrences.length} observations sur $_totalCount au total',
-                style: const TextStyle(fontSize: 14),
-              ),
-              if (useHeatmap)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text(
-                    'Mode carte de chaleur',
-                    style: TextStyle(fontSize: 10, color: Colors.white),
-                  ),
+              Expanded(
+                child: Text(
+                  '🌍 ${_occurrences.length} observations sur $_totalCount au total',
+                  style: const TextStyle(fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ),
+              const SizedBox(width: 8),
+              // Show current mode
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _useHeatmap ? Colors.orange : Colors.blue,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _useHeatmap ? '🔥 Mode carte de chaleur' : '📍 Mode points',
+                  style: const TextStyle(fontSize: 10, color: Colors.white),
+                ),
+              ),
             ],
           ),
         ),
-
-        // Map
         Expanded(
           child: FlutterMap(
             options: MapOptions(
@@ -184,21 +194,19 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.example.sfe_mobile',
               ),
-
-              // Use heatmap if many points, otherwise use markers
-              if (useHeatmap)
+              if (_useHeatmap)
                 HeatMapLayer(
                   heatMapDataSource:
                       InMemoryHeatMapDataSource(data: heatmapPoints),
                   heatMapOptions: HeatMapOptions(
                     gradient: {
-                      0.25: Colors.blue,
-                      0.55: Colors.yellow,
-                      0.85: Colors.red,
+                      0.1: Colors.blue,
+                      0.3: Colors.yellow,
+                      0.6: Colors.red,
                       1.0: Colors.purple,
                     },
-                    minOpacity: 0.2,
-                    radius: 25,
+                    minOpacity: 0.4,
+                    radius: 40,
                   ),
                 )
               else
