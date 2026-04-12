@@ -64,7 +64,8 @@ class _CameraScreenState extends State<CameraScreen> {
 
       LoadingDialog.update(context, '🌿 Envoi à PlantNet...');
 
-      final result = await _apiService.identifyPlant(compressedImage);
+      final result =
+          await _apiService.identifyPlantWithDistribution(_selectedImage!);
 
       LoadingDialog.update(context, '🗺️ Récupération de la distribution...');
 
@@ -87,6 +88,7 @@ class _CameraScreenState extends State<CameraScreen> {
               plant: result['plant'],
               photo: compressedImage,
               identificationId: result['identificationId'],
+              distributionCount: result['distributionCount'], // Optional
             ),
           ),
         ).then((_) {

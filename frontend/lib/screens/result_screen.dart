@@ -14,6 +14,7 @@ class ResultScreen extends StatelessWidget {
     required this.plant,
     required this.photo,
     required this.identificationId,
+    required distributionCount,
   });
 
   @override
