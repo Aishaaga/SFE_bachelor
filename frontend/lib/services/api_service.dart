@@ -60,7 +60,7 @@ class ApiService {
         }
 
         // ✅ VALIDATION: Check confidence level (optional)
-        if (plant.confidence < 0.5) {
+        if (plant.confidence < 0.3) {
           return {
             'success': false,
             'message':
