@@ -88,7 +88,6 @@ class _CameraScreenState extends State<CameraScreen> {
               plant: result['plant'],
               photo: compressedImage,
               identificationId: result['identificationId'],
-              distributionCount: result['distributionCount'], // Optional
             ),
           ),
         ).then((_) {
