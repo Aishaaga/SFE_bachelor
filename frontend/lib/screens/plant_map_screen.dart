@@ -29,10 +29,11 @@ class PlantMapScreen extends StatefulWidget {
 
 class _PlantMapScreenState extends State<PlantMapScreen> {
   List<Map<String, dynamic>> _occurrences = [];
-  bool _isLoading = true;
+  bool _isLoadingData = true; // Changed: separate loading state for data
+  bool _isFirstLoad = true; // NEW: track first load
   int _totalCount = 0;
   String _error = '';
-  MapViewType _currentViewType = MapViewType.heatmap; // Default view
+  MapViewType _currentViewType = MapViewType.heatmap;
   String? _selectedCountry;
   int? _selectedYear;
   bool _showFilters = false;
@@ -56,20 +57,84 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     {'code': 'MA', 'name': 'Maroc'},
   ];
 
-// Available years (last 10 years)
   final List<int> _availableYearsList =
       List.generate(11, (i) => DateTime.now().year - i);
 
   @override
   void initState() {
     super.initState();
-    _loadOccurrences();
+    _loadOccurrencesProgressively();
   }
 
-// Method to apply filters
+  // NEW: Progressive loading method
+  Future<void> _loadOccurrencesProgressively() async {
+    setState(() {
+      _isLoadingData = true;
+      _isFirstLoad = true;
+      _error = '';
+    });
+
+    try {
+      final result = await GBIFService.getOccurrences(
+        widget.scientificName,
+        limit: 200,
+        country: _selectedCountry,
+        year: _selectedYear,
+      );
+
+      if (result['success'] == true) {
+        // Check for 503 error
+        if (result['message']?.contains('503') == true) {
+          setState(() => _isLoadingData = false);
+          _show503Dialog();
+          return;
+        }
+
+        setState(() {
+          _occurrences =
+              List<Map<String, dynamic>>.from(result['occurrences'] ?? []);
+          _totalCount = result['totalCount'] ?? 0;
+          _isLoadingData = false;
+          _isFirstLoad = false;
+        });
+      } else {
+        setState(() {
+          _error = result['message'] ?? 'Service temporairement indisponible';
+          _isLoadingData = false;
+          _isFirstLoad = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur: $e';
+        _isLoadingData = false;
+        _isFirstLoad = false;
+      });
+    }
+  }
+
+  void _show503Dialog() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Service temporairement indisponible'),
+        content: const Text(
+            'Le service de distribution de GBIF est actuellement surchargé.\n\n'
+            'Veuillez réessayer dans quelques minutes.\n\n'
+            'Les données de distribution seront disponibles ultérieurement.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _applyFilters() async {
     setState(() {
-      _isLoading = true;
+      _isLoadingData = true;
       _showFilters = false;
     });
 
@@ -85,17 +150,16 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         _occurrences =
             List<Map<String, dynamic>>.from(result['occurrences'] ?? []);
         _totalCount = result['totalCount'] ?? 0;
-        _isLoading = false;
+        _isLoadingData = false;
       });
     } else {
       setState(() {
         _error = result['message'] ?? 'Erreur lors du filtrage';
-        _isLoading = false;
+        _isLoadingData = false;
       });
     }
   }
 
-// Method to reset filters
   void _resetFilters() {
     setState(() {
       _selectedCountry = null;
@@ -104,7 +168,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     _applyFilters();
   }
 
-// Method to show filter dialog
   void _showFilterDialog() {
     showModalBottomSheet(
       context: context,
@@ -128,8 +191,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Country filter
                   const Text('🌍 Pays',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -161,10 +222,7 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Year filter
                   const Text('📅 Année',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
@@ -195,10 +253,7 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
-                  // Action buttons
                   Row(
                     children: [
                       Expanded(
@@ -229,10 +284,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 12),
-
-                  // Active filters indicator
                   if (_selectedCountry != null || _selectedYear != null)
                     Container(
                       padding: const EdgeInsets.all(8),
@@ -263,54 +314,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     );
   }
 
-  Future<void> _loadOccurrences() async {
-    setState(() {
-      _isLoading = true;
-      _error = '';
-    });
-
-    final result =
-        await GBIFService.getOccurrences(widget.scientificName, limit: 200);
-
-    // Check if the error is a 503 (GBIF busy)
-    if (result['success'] == false &&
-        result['message']?.contains('503') == true) {
-      setState(() => _isLoading = false);
-
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Service temporairement indisponible'),
-          content: const Text(
-              'Le service de distribution de GBIF est actuellement surchargé.\n\n'
-              'Veuillez réessayer dans quelques minutes.\n\n'
-              'Les données de distribution seront disponibles ultérieurement.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
-    if (result['success'] == true) {
-      setState(() {
-        _occurrences =
-            List<Map<String, dynamic>>.from(result['occurrences'] ?? []);
-        _totalCount = result['totalCount'] ?? 0;
-        _isLoading = false;
-      });
-    } else {
-      setState(() {
-        _error = result['message'] ?? 'Service temporairement indisponible';
-        _isLoading = false;
-      });
-    }
-  }
-
   String _getViewTypeName() {
     switch (_currentViewType) {
       case MapViewType.heatmap:
@@ -339,7 +342,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
 
   void _changeViewType() {
     setState(() {
-      // Cycle through view types
       switch (_currentViewType) {
         case MapViewType.heatmap:
           _currentViewType = MapViewType.markers;
@@ -365,19 +367,16 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
-          // Filter button
           IconButton(
             icon: const Icon(Icons.filter_alt),
             onPressed: _showFilterDialog,
             tooltip: 'Filtrer',
           ),
-          // View type selector
           IconButton(
             icon: Icon(_getViewTypeIcon()),
             onPressed: _changeViewType,
             tooltip: 'Changer le type de vue',
           ),
-          // View type name
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -392,53 +391,22 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error.isNotEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.error, size: 48, color: Colors.red),
-                      const SizedBox(height: 16),
-                      Text(_error),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadOccurrences,
-                        child: const Text('Réessayer'),
-                      ),
-                    ],
-                  ),
-                )
-              : _occurrences.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.map, size: 48, color: Colors.grey),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Aucune donnée de distribution disponible',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Pour: ${widget.scientificName}',
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    )
-                  : _buildMap(),
+      body: _buildProgressiveMap(),
     );
   }
 
-  Widget _buildMap() {
-    double centerLat = _occurrences.fold(0.0, (sum, p) => sum + p['lat']) /
-        _occurrences.length;
-    double centerLng = _occurrences.fold(0.0, (sum, p) => sum + p['lng']) /
-        _occurrences.length;
+  // NEW: Progressive map builder
+  Widget _buildProgressiveMap() {
+    // Calculate center (default to world center if no data)
+    double centerLat = 20.0;
+    double centerLng = 0.0;
+
+    if (_occurrences.isNotEmpty) {
+      centerLat = _occurrences.fold(0.0, (sum, p) => sum + p['lat']) /
+          _occurrences.length;
+      centerLng = _occurrences.fold(0.0, (sum, p) => sum + p['lng']) /
+          _occurrences.length;
+    }
 
     final List<WeightedLatLng> heatmapPoints = _occurrences
         .map((point) => WeightedLatLng(LatLng(point['lat'], point['lng']), 1.0))
@@ -446,7 +414,7 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
 
     return Column(
       children: [
-        // Info banner
+        // Info banner with loading status
         Container(
           padding: const EdgeInsets.all(8),
           color: Colors.green.shade50,
@@ -455,10 +423,36 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      '🌍 ${_occurrences.length} observations sur $_totalCount au total',
-                      style: const TextStyle(fontSize: 14),
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '🌍 ${_occurrences.length} observations sur $_totalCount au total',
+                          style: const TextStyle(fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (_isLoadingData && !_isFirstLoad)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Row(
+                              children: [
+                                const SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Mise à jour...',
+                                  style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey.shade600),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -476,7 +470,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                   ),
                 ],
               ),
-              // Show active filters
               if (_selectedCountry != null || _selectedYear != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
@@ -506,27 +499,224 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
             ],
           ),
         ),
-        // Map
+
+        // Map with loading overlay
         Expanded(
-          child: FlutterMap(
-            options: MapOptions(
-              initialCenter: LatLng(centerLat, centerLng),
-              initialZoom: 3,
-            ),
+          child: Stack(
             children: [
-              // Base map tiles
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.example.sfe_mobile',
+              // The map (always visible immediately)
+              FlutterMap(
+                options: MapOptions(
+                  initialCenter: LatLng(centerLat, centerLng),
+                  initialZoom: 3,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    userAgentPackageName: 'com.example.sfe_mobile',
+                  ),
+
+                  // Only show data when not loading or if we have data
+                  if (!_isLoadingData && _occurrences.isNotEmpty)
+                    _buildCurrentViewLayer(heatmapPoints),
+                ],
               ),
 
-              // Select view type
-              if (_currentViewType == MapViewType.heatmap)
-                _buildHeatmapLayer(heatmapPoints),
-              if (_currentViewType == MapViewType.markers) _buildMarkersLayer(),
-              if (_currentViewType == MapViewType.circles) _buildCirclesLayer(),
-              if (_currentViewType == MapViewType.clusters)
-                _buildClustersLayer(),
+              // Loading overlay (only on first load or when error)
+              if ((_isLoadingData && _isFirstLoad) ||
+                  (_error.isNotEmpty && _occurrences.isEmpty))
+                Container(
+                  child: Center(
+                    child: _error.isNotEmpty
+                        ? _buildErrorWidget()
+                        : _buildLoadingWidget(),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // NEW: Build the current view layer based on selected type
+  Widget _buildCurrentViewLayer(List<WeightedLatLng> heatmapPoints) {
+    switch (_currentViewType) {
+      case MapViewType.heatmap:
+        return HeatMapLayer(
+          heatMapDataSource: InMemoryHeatMapDataSource(data: heatmapPoints),
+          heatMapOptions: HeatMapOptions(
+            gradient: {
+              0.1: Colors.blue,
+              0.3: Colors.yellow,
+              0.6: Colors.red,
+              1.0: Colors.purple,
+            },
+            minOpacity: 0.4,
+            radius: 40,
+          ),
+        );
+      case MapViewType.markers:
+        return MarkerLayer(
+          markers: _occurrences.map((point) {
+            return Marker(
+              width: 40,
+              height: 40,
+              point: LatLng(point['lat'], point['lng']),
+              child: GestureDetector(
+                onTap: () => _showLocationDialog(point),
+                child:
+                    const Icon(Icons.location_pin, color: Colors.red, size: 35),
+              ),
+            );
+          }).toList(),
+        );
+      case MapViewType.circles:
+        return MarkerLayer(
+          markers: _occurrences.map((point) {
+            final opacity = 0.2 + (point['lat'] % 0.3);
+            return Marker(
+              width: 25,
+              height: 25,
+              point: LatLng(point['lat'], point['lng']),
+              child: GestureDetector(
+                onTap: () => _showLocationDialog(point),
+                child: Container(
+                  width: 25,
+                  height: 25,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(opacity),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.red, width: 1),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        );
+      case MapViewType.clusters:
+        final markers = _occurrences.map((point) {
+          return Marker(
+            width: 40,
+            height: 40,
+            point: LatLng(point['lat'], point['lng']),
+            child: GestureDetector(
+              onTap: () => _showLocationDialog(point),
+              child:
+                  const Icon(Icons.location_pin, color: Colors.red, size: 35),
+            ),
+          );
+        }).toList();
+        return MarkerClusterLayerWidget(
+          options: MarkerClusterLayerOptions(
+            maxClusterRadius: 120,
+            size: const Size(40, 40),
+            markers: markers,
+            builder: (context, markers) {
+              return GestureDetector(
+                onTap: () {
+                  print('Cluster with ${markers.length} points');
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.red.withOpacity(0.5),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      markers.length.toString(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+            spiderfySpiralDistanceMultiplier: 2,
+          ),
+        );
+    }
+  }
+
+  Widget _buildLoadingWidget() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const CircularProgressIndicator(),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+            color: Colors.grey.shade50,
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Chargement de la carte...',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green.shade700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Peut prendre 10-15 secondes',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade300),
+            color: Colors.grey.shade50,
+          ),
+          child: Column(
+            children: [
+              const Icon(Icons.error, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _error,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadOccurrencesProgressively,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                child: const Text('Réessayer'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Retour'),
+              ),
             ],
           ),
         ),
@@ -545,132 +735,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
       case MapViewType.clusters:
         return Colors.blue;
     }
-  }
-
-  // Option 1: Heatmap
-  Widget _buildHeatmapLayer(List<WeightedLatLng> heatmapPoints) {
-    return HeatMapLayer(
-      heatMapDataSource: InMemoryHeatMapDataSource(data: heatmapPoints),
-      heatMapOptions: HeatMapOptions(
-        gradient: {
-          0.1: Colors.blue,
-          0.3: Colors.yellow,
-          0.6: Colors.red,
-          1.0: Colors.purple,
-        },
-        minOpacity: 0.4,
-        radius: 40,
-      ),
-    );
-  }
-
-  // Option 2: Individual Markers (Pins)
-  Widget _buildMarkersLayer() {
-    return MarkerLayer(
-      markers: _occurrences.map((point) {
-        return Marker(
-          width: 40,
-          height: 40,
-          point: LatLng(point['lat'], point['lng']),
-          child: GestureDetector(
-            onTap: () => _showLocationDialog(point),
-            child: const Icon(
-              Icons.location_pin,
-              color: Colors.red,
-              size: 35,
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // Option 3: Transparent Circles (Heatmap-like but with circles)
-  Widget _buildCirclesLayer() {
-    return MarkerLayer(
-      markers: _occurrences.map((point) {
-        // Randomize opacity for density effect
-        final opacity = 0.2 + (point['lat'] % 0.3);
-
-        return Marker(
-          width: 25,
-          height: 25,
-          point: LatLng(point['lat'], point['lng']),
-          child: GestureDetector(
-            onTap: () => _showLocationDialog(point),
-            child: Container(
-              width: 25,
-              height: 25,
-              decoration: BoxDecoration(
-                color: Colors.red.withOpacity(opacity),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.red, width: 1),
-              ),
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  // Option 4: Clusters (Groups nearby points)
-  Widget _buildClustersLayer() {
-    // Convert occurrences to markers
-    final markers = _occurrences.map((point) {
-      return Marker(
-        width: 40,
-        height: 40,
-        point: LatLng(point['lat'], point['lng']),
-        child: GestureDetector(
-          onTap: () => _showLocationDialog(point),
-          child: const Icon(
-            Icons.location_pin,
-            color: Colors.red,
-            size: 35,
-          ),
-        ),
-      );
-    }).toList();
-
-    return MarkerClusterLayerWidget(
-      options: MarkerClusterLayerOptions(
-        maxClusterRadius: 120,
-        size: const Size(40, 40),
-        markers: markers,
-        builder: (context, markers) {
-          return GestureDetector(
-            onTap: () {
-              // Optional: Show cluster info when tapped
-              print('Cluster with ${markers.length} points');
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.red.withOpacity(0.5),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: Center(
-                child: Text(
-                  markers.length.toString(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
-        spiderfySpiralDistanceMultiplier: 2,
-      ),
-    );
   }
 
   void _showLocationDialog(Map<String, dynamic> point) {
