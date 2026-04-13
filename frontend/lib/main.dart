@@ -5,9 +5,14 @@ import 'screens/register_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/history_screen.dart';
 import 'services/auth_service.dart';
+import 'data/plant_translations.dart';
 
 void main() {
   runApp(const MyApp());
+  print('Number of translated plants: ${PlantTranslations.getPlantCount()}');
+  print('Number of valid plants: ${PlantTranslations.getValidPlantCount()}');
+  print(
+      'Number of high confidence tamazight: ${PlantTranslations.countHighConfidenceTamazight()}');
 }
 
 class MyApp extends StatelessWidget {
