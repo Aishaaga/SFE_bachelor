@@ -24,6 +24,11 @@ mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connecté'))
   .catch(err => console.error('Erreur MongoDB:', err));
 
+// Route de test
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Backend SFE fonctionne' });
+});
+
 // ROUTES
 app.use('/api/gbif', gbifRoutes);
 app.use('/api/identify', identifyRoutes);
@@ -31,10 +36,7 @@ app.use('/api', authRoutes);  // /api/register, /api/login
 app.use('/api', identificationsRoutes);  // /api/save-identification, etc.
 
 
-// Route de test
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', message: 'Backend SFE fonctionne' });
-});
+
 
 // Route 404
 app.use((req, res) => {
