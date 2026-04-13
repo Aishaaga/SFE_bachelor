@@ -17,6 +17,8 @@ class ApiService {
     final startTime = DateTime.now();
 
     try {
+      print('🔍 STEP 1: Getting token...');
+
       final token = await _authService.getToken();
       if (token == null) {
         return {'success': false, 'message': 'Non authentifié'};
@@ -52,13 +54,21 @@ class ApiService {
 
       // 🚀 STEP 4: Send request with timeout
       final response = await request.send().timeout(
-        const Duration(seconds: 20),
+        const Duration(seconds: 50),
         onTimeout: () {
-          throw Exception('PlantNet timeout after 20 seconds');
+          print(
+              '❌ TIMEOUT at ${DateTime.now().difference(startTime).inMilliseconds}ms');
+          throw Exception('PlantNet timeout after 50 seconds');
         },
       );
+      print(
+          '✅ Response received (${DateTime.now().difference(startTime).inMilliseconds}ms)');
+      print('🔍 STEP 4: Reading response...');
 
       final responseData = await response.stream.bytesToString();
+      print('📦 RAW RESPONSE: $responseData'); // ← ADD THIS LINE
+      print('Response status code: ${response.statusCode}'); // ← ADD THIS
+
       final data = jsonDecode(responseData);
 
       if (response.statusCode == 200 && data['success'] == true) {
