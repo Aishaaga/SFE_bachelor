@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
+import '../data/plant_translations.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 
@@ -58,61 +59,81 @@ class ResultScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            // Scientific name
             Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.eco, color: Colors.green, size: 30),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                plant.name,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              if (plant.scientificName.isNotEmpty)
-                                Text(
-                                  plant.scientificName,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontStyle: FontStyle.italic,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Divider(height: 30),
-                    if (plant.family.isNotEmpty)
-                      _infoRow(Icons.category, 'Famille', plant.family),
-                    if (plant.localName != null)
-                      _infoRow(Icons.language, 'Nom local', plant.localName!),
-                    _infoRow(
-                      Icons.analytics,
-                      'Confiance',
-                      '${(plant.confidence * 100).toStringAsFixed(1)}%',
-                    ),
-                    _infoRow(
-                      Icons.fingerprint,
-                      'ID',
-                      identificationId.substring(0, 8),
-                    ),
-                  ],
-                ),
+              child: ListTile(
+                leading: const Icon(Icons.science),
+                title: const Text('Nom scientifique'),
+                subtitle: Text(plant.scientificName),
               ),
             ),
+
+            // DARIJA NAME (New)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.translate),
+                title: const Text('بالدارجة',
+                    style: TextStyle(fontFamily: 'Arabic')),
+                subtitle: Text(
+                  plant.darijaName,
+                  style: const TextStyle(fontSize: 18, fontFamily: 'Arabic'),
+                ),
+                trailing: plant.darijaName != plant.scientificName
+                    ? null
+                    : const Icon(Icons.hourglass_empty, size: 16),
+              ),
+            ),
+
+            // TAMAZIGHT NAME (New)
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.translate),
+                title: const Text('ⵜⴰⵎⴰⵣⵉⵖⵜ',
+                    style: TextStyle(fontFamily: 'Tifinagh')),
+                subtitle: Text(
+                  plant.tamazightName,
+                  style: const TextStyle(fontSize: 18, fontFamily: 'Tifinagh'),
+                ),
+                trailing: plant.tamazightName != plant.scientificName
+                    ? null
+                    : const Icon(Icons.hourglass_empty, size: 16),
+              ),
+            ),
+
+            // Family
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.family_restroom),
+                title: const Text('Famille'),
+                subtitle: Text(plant.family),
+              ),
+            ),
+
+            // Confidence
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.percent),
+                title: const Text('Confiance'),
+                subtitle: Text('${plant.confidencePercentage}%'),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Contribute translation (optional)
+            if (!PlantTranslations.hasTranslation(plant.scientificName))
+              Center(
+                child: TextButton.icon(
+                  onPressed: () => _suggestTranslation(context),
+                  icon: const Icon(Icons.contact_support, size: 16),
+                  label:
+                      const Text('Proposer une traduction en Darija/Tamazight'),
+                ),
+              ),
+
             const SizedBox(height: 24),
+
+            // Bottom buttons
             Row(
               children: [
                 Expanded(
@@ -146,6 +167,36 @@ class ResultScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _suggestTranslation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Proposer une traduction'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Cette plante n\'a pas encore de nom en Darija ou Tamazight.'),
+            SizedBox(height: 16),
+            Text('Souhaitez-vous proposer une traduction ?'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Plus tard'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: Open form to submit translation
+              Navigator.pop(context);
+            },
+            child: const Text('Proposer'),
+          ),
+        ],
       ),
     );
   }

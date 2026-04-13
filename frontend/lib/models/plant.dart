@@ -1,3 +1,5 @@
+import '../data/plant_translations.dart';
+
 class Plant {
   final String id;
   final String name;
@@ -5,6 +7,10 @@ class Plant {
   final String family;
   final String? localName;
   final double confidence;
+
+  String get darijaName => PlantTranslations.getDarijaName(scientificName);
+  String get tamazightName =>
+      PlantTranslations.getTamazightName(scientificName);
 
   Plant({
     required this.id,
