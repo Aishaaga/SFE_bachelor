@@ -1,7 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { identifyPlant } = require('../services/plantnet');
+const axios = require('axios');
+const FormData = require('form-data');
 const authMiddleware = require('../middleware/auth');
 const Identification = require('../models/Identification');
 const Plant = require('../models/Plant');
@@ -12,7 +13,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-fileFilter: (req, file, cb) => {
+  fileFilter: (req, file, cb) => {
     console.log('=== WHAT FLUTTER SENT ===');
     console.log('Field name:', file.fieldname);
     console.log('File name:', file.originalname);
@@ -28,18 +29,85 @@ fileFilter: (req, file, cb) => {
     console.log('========================');
     
     if (mimetype && extname) {
-        console.log('✅ IMAGE ACCEPTED');
-        return cb(null, true);
+      console.log('✅ IMAGE ACCEPTED');
+      return cb(null, true);
     } else {
-        console.log('❌ IMAGE REJECTED');
-        cb(new Error('Seules les images sont autorisées'));
+      console.log('❌ IMAGE REJECTED');
+      cb(new Error('Seules les images sont autorisées'));
     }
-}
+  }
 });
 
-const PLANTNET_TIMEOUT = 20000; // 20 seconds max
+const PLANTNET_TIMEOUT = 90000; // 90 seconds max
 
-
+// Function to identify plant using PlantNet API (ONLY ONE!)
+async function callPlantNetAPI(imageBuffer, filename) {
+  try {
+    console.log('🌿 Preparing PlantNet request...');
+    
+    const formData = new FormData();
+    
+    // CRITICAL: Field name MUST be 'images' (plural)
+    formData.append('images', imageBuffer, {
+      filename: filename,
+      contentType: 'image/jpeg'
+    });
+    
+    // Optional parameters
+    formData.append('organs', 'leaf');
+    formData.append('lang', 'fr');
+    
+    console.log('📡 Sending to PlantNet API...');
+    
+    const response = await axios.post(
+      'https://my-api.plantnet.org/v2/identify/all',
+      formData,
+      {
+        params: {
+          'api-key': process.env.PLANTNET_API_KEY,
+        },
+        headers: {
+          ...formData.getHeaders(),
+        },
+        timeout: PLANTNET_TIMEOUT,
+      }
+    );
+    
+    console.log('✅ PlantNet responded successfully');
+    
+    // ✅ FIX: Parse PlantNet's actual response format
+    if (!response.data || !response.data.results || response.data.results.length === 0) {
+      throw new Error('Aucune plante reconnue');
+    }
+    
+    const bestMatch = response.data.results[0];
+    const species = bestMatch.species;
+    
+    // Extract common name (handle multiple languages)
+    let commonName = species.commonNames?.[0] || species.scientificNameWithoutAuthor;
+    
+    return {
+      success: true,
+      plant: {
+        name: commonName,
+        scientificName: species.scientificNameWithoutAuthor,
+        confidence: bestMatch.score,
+        family: species.family?.scientificNameWithoutAuthor || 'Inconnue'
+      },
+      saved: false
+    };
+    
+  } catch (error) {
+    console.error('❌ PlantNet API Error:');
+    if (error.response) {
+      console.error('   Status:', error.response.status);
+      console.error('   Data:', error.response.data);
+    } else {
+      console.error('   Message:', error.message);
+    }
+    throw error;
+  }
+}
 
 // POST /api/identify (protégé par authentification)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
@@ -53,8 +121,8 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     
     console.log(`📸 Photo reçue: ${req.file.originalname} (${req.file.size} bytes)`);
     
-    // Identifier la plante
-    const result = await identifyPlant(req.file.buffer, req.file.originalname);
+    // Call PlantNet API
+    const result = await callPlantNetAPI(req.file.buffer, req.file.originalname);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -97,13 +165,13 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
       result.saved = false;
     }
     
-    res.json(result);
+    return res.json(result);
     
   } catch (error) {
-    console.error('Erreur:', error);
+    console.error('Erreur:', error.message);
     res.status(500).json({ 
       success: false, 
-      message: 'Erreur interne du serveur' 
+      message: 'Erreur lors de l\'identification' 
     });
   }
 });
