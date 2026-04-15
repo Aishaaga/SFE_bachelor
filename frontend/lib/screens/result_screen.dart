@@ -8,13 +8,13 @@ import 'plant_map_screen.dart';
 class ResultScreen extends StatelessWidget {
   final Plant plant;
   final File photo;
-  final String identificationId;
+  final String? identificationId;
 
   const ResultScreen({
     super.key,
     required this.plant,
     required this.photo,
-    required this.identificationId,
+    this.identificationId,
   });
 
   @override
