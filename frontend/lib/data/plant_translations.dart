@@ -1,122 +1,241 @@
 class PlantTranslations {
   static final Map<String, Map<String, dynamic>> _translations = {
     'Rosa rubiginosa': {
-      'darija': 'ورد',
-      'tamazight': 'ⵉⵡⵔⵉ',
-      'sources': {
-        'tamazight': 'approximate / common usage',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'ورد',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵉⵡⵔⵉ',
+          'source': 'approximate_common_usage',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Strelitzia nicolai': {
-      'darija': 'زهرة الطائر',
-      'tamazight': 'ⵜⴰⵡⵔⵉⵔⵜ ⵏ ⵓⴼⵔⵓⵅ',
-      'sources': {
-        'tamazight': 'descriptive translation',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'زهرة الطائر',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵡⵔⵉⵔⵜ ⵏ ⵓⴼⵔⵓⵅ',
+          'source': 'descriptive_translation',
+          'confidence': 'low',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'low', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Dracaena trifasciata': {
-      'darija': 'لسان الحية',
-      'tamazight': 'ⵉⵍⵙ ⵏ ⵓⵣⵔⵎ',
-      'sources': {
-        'tamazight': 'descriptive translation',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'لسان الحية',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵉⵍⵙ ⵏ ⵓⵣⵔⵎ',
+          'source': 'descriptive_translation',
+          'confidence': 'low',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'low', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Helianthus annuus': {
-      'darija': 'عباد الشمس',
-      'tamazight': 'ⵜⴰⵎⴰⵔⵜ ⵏ ⵉⵊⵊⵉ',
-      'sources': {
-        'tamazight': 'approximate / descriptive',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'عباد الشمس',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵎⴰⵔⵜ ⵏ ⵉⵊⵊⵉ',
+          'source': 'approximate_descriptive',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Ocimum basilicum': {
-      'darija': 'الحبق',
-      'tamazight': 'ⴰⵎⴰⵏⵓⵙ',
-      'sources': {
-        'tamazight': 'possible IRCAM lexical match',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'الحبق',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⴰⵎⴰⵏⵓⵙ',
+          'source': 'possible_IRCAM_match',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Mentha': {
-      'darija': 'النعناع',
-      'tamazight': 'ⵜⵉⵎⵏⵄⴰ',
-      'sources': {
-        'tamazight': 'common usage (Souss)',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'النعناع',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⵉⵎⵏⵄⴰ',
+          'source': 'native_speaker',
+          'confidence': 'high',
+          'dialect': 'Tachelhit'
+        }
       },
-      'confidence': {'tamazight': 'high', 'darija': 'high'}
+      'metadata': {'region': 'Souss', 'notes': ''}
     },
     'Quercus robur': {
-      'darija': 'البلوط',
-      'tamazight': 'ⵜⴰⴱⴰⴳⴳⵓⵔⵜ',
-      'sources': {
-        'tamazight': 'approximate lexical match',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'البلوط',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⴱⴰⴳⴳⵓⵔⵜ',
+          'source': 'approximate_lexical',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Pinus': {
-      'darija': 'الصنوبر',
-      'tamazight': 'ⵜⴰⴷⴷⴰⴳⵜ',
-      'sources': {'tamazight': 'regional usage', 'darija': 'common usage'},
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'translations': {
+        'darija': {
+          'value': 'الصنوبر',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⴷⴷⴰⴳⵜ',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
+      },
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Jasminum': {
-      'darija': 'الياسمين',
-      'tamazight': 'ⵉⵙⵎⵉⵏ',
-      'sources': {'tamazight': 'borrowed term', 'darija': 'common usage'},
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'translations': {
+        'darija': {
+          'value': 'الياسمين',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵉⵙⵎⵉⵏ',
+          'source': 'borrowed_term',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
+      },
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Lavandula': {
-      'darija': 'الخزامى',
-      'tamazight': 'ⵜⴰⵎⴰⵣⵉⵔⵜ',
-      'sources': {
-        'tamazight': 'approximate / regional',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'الخزامى',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵎⴰⵣⵉⵔⵜ',
+          'source': 'approximate_regional',
+          'confidence': 'low',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'low', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Argania spinosa': {
-      'darija': 'أركان',
-      'tamazight': 'ⴰⵔⴳⴰⵏ',
-      'sources': {
-        'tamazight': 'verified (IRCAM usage)',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'أركان',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⴰⵔⴳⴰⵏ',
+          'source': 'IRCAM_verified',
+          'confidence': 'high',
+          'dialect': 'Tachelhit'
+        }
       },
-      'confidence': {'tamazight': 'high', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': 'iconic Moroccan species'}
     },
     'Olea europaea': {
-      'darija': 'الزيتون',
-      'tamazight': 'ⵜⴰⵣⵎⵎⵓⵔⵜ',
-      'sources': {
-        'tamazight': 'verified (IRCAM lexicon)',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'الزيتون',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵣⵎⵎⵓⵔⵜ',
+          'source': 'IRCAM_verified',
+          'confidence': 'high',
+          'dialect': 'standard'
+        }
       },
-      'confidence': {'tamazight': 'high', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Punica granatum': {
-      'darija': 'الرمان',
-      'tamazight': 'ⵜⴰⵔⵎⴰⵏⵜ',
-      'sources': {
-        'tamazight': 'common Amazigh usage',
-        'darija': 'common usage'
+      'translations': {
+        'darija': {
+          'value': 'الرمان',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵔⵎⴰⵏⵜ',
+          'source': 'common_amazigh_usage',
+          'confidence': 'high',
+          'dialect': 'unknown'
+        }
       },
-      'confidence': {'tamazight': 'high', 'darija': 'high'}
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
     'Ficus carica': {
-      'darija': 'الكرموس',
-      'tamazight': 'ⵜⴰⵣⵉⵔⵜ',
-      'sources': {'tamazight': 'regional usage', 'darija': 'common usage'},
-      'confidence': {'tamazight': 'medium', 'darija': 'high'}
+      'translations': {
+        'darija': {
+          'value': 'الكرموس',
+          'source': 'common_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵣⵉⵔⵜ',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': 'unknown'
+        }
+      },
+      'metadata': {'region': 'Morocco', 'notes': ''}
     },
+    'Juniperus oxycedrus': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⵜⵉⴽⵉⴷⴰ',
+          'source': 'native_speaker',
+          'confidence': 'high',
+          'dialect': 'Tachelhit'
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    }
   };
 
   // =========================
@@ -125,12 +244,14 @@ class PlantTranslations {
 
   static String getDarijaName(String scientificName) {
     final match = _translations[scientificName];
-    return match?['darija'] ?? _extractSimpleName(scientificName);
+    return match?['translations']?['darija']?['value'] ??
+        _extractSimpleName(scientificName);
   }
 
   static String getTamazightName(String scientificName) {
     final match = _translations[scientificName];
-    return match?['tamazight'] ?? getDarijaName(scientificName);
+    return match?['translations']?['tamazight']?['value'] ??
+        getDarijaName(scientificName);
   }
 
   static Map<String, dynamic>? getFullData(String scientificName) {
@@ -152,16 +273,19 @@ class PlantTranslations {
     String tamazightConfidence = 'medium',
   }) {
     _translations[scientificName] = {
-      'darija': darija,
-      'tamazight': tamazight,
-      'sources': {
-        'tamazight': tamazightSource,
-        'darija': darijaSource,
+      'translations': {
+        'darija': {
+          'value': darija,
+          'source': darijaSource,
+          'confidence': darijaConfidence
+        },
+        'tamazight': {
+          'value': tamazight,
+          'source': tamazightSource,
+          'confidence': tamazightConfidence
+        }
       },
-      'confidence': {
-        'tamazight': tamazightConfidence,
-        'darija': darijaConfidence,
-      }
+      'metadata': {'region': 'Morocco', 'notes': 'user contributed'}
     };
   }
 
@@ -176,13 +300,18 @@ class PlantTranslations {
 
   static int getValidPlantCount() {
     return _translations.values.where((plant) {
-      return plant['darija'] != null && plant['tamazight'] != null;
+      final darijaValue = plant['translations']?['darija']?['value'];
+      final tamazightValue = plant['translations']?['tamazight']?['value'];
+      return darijaValue != null &&
+          darijaValue.isNotEmpty &&
+          tamazightValue != null &&
+          tamazightValue.isNotEmpty;
     }).length;
   }
 
   static int countHighConfidenceTamazight() {
     return _translations.values.where((plant) {
-      return plant['confidence']?['tamazight'] == 'high';
+      return plant['translations']?['tamazight']?['confidence'] == 'high';
     }).length;
   }
 
