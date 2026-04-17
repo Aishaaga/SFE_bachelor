@@ -46,10 +46,16 @@ class ApiService {
       );
 
       request.headers['Authorization'] = 'Bearer $token';
+      // Auto-detect image type from file extension
+      final fileExtension = image.path.split('.').last.toLowerCase();
+      final contentType = fileExtension == 'png'
+          ? MediaType('image', 'png')
+          : MediaType('image', 'jpeg');
+
       request.files.add(await http.MultipartFile.fromPath(
         'image',
         image.path,
-        contentType: MediaType('image', 'jpeg'),
+        contentType: contentType,
       ));
 
       // 🚀 STEP 4: Send request with timeout
