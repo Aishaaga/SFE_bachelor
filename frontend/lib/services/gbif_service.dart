@@ -55,7 +55,7 @@ class GBIFService {
       final response = await http.get(
         Uri.parse(url),
         headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 30));
+      ).timeout(const Duration(seconds: 50));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
