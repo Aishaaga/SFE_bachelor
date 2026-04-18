@@ -228,16 +228,89 @@ class PlantTranslations {
       'translations': {
         'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
         'tamazight': {
-          'value': 'ⵜⵉⴽⵉⴷⴰ',
+          'value': 'ⵜⵉⵔⵇⵉ/ⵜⵉⵔⵇⵉⵜ',
           'source': 'native_speaker',
           'confidence': 'high',
-          'dialect': 'Tachelhit'
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Tetraclinis articulata': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⵉⵎⵉⵊⵊⴷ/ⵜⴰⵣⵓⵜ/ⵜⴰⴳⴰⵔⴳⴰⵔⵜ',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Clematis cirrhosa': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⵉⴳⵓⴷⵉ',
+          'source': 'regional_usage',
+          'confidence': 'low',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Juniperus thurifera': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⴰⴷⵔⵓⵎⴰⵏ/ⴰⵡⴰⵍ/ⵜⴰⵡⵍⵜ',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Bupleurum spinosum': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⴰⴷⵓⴼⵙⴰⵙ',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Leucaena leucocephala': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⵜⵉⴽⵉⴷⴰ/tikida',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'phonus arborescens': {
+      'translations': {
+        'darija': {'value': '', 'source': 'unknown', 'confidence': 'low'},
+        'tamazight': {
+          'value': 'ⴰⵛⴼⴼⴰⵕ/Asffar',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
         }
       },
       'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
     }
   };
 
+//ⴰⵛⴼⴼⴰⵕ
   // =========================
   // UPDATED METHODS
   // =========================
@@ -320,4 +393,16 @@ class PlantTranslations {
       print(key);
     });
   }
+}
+
+//references:
+class References {
+  static const refs = {
+    'GeoEcoTrop2022': {
+      'title': 'Geo-Eco-Trop., 2022, 46(3): 403–412',
+      'journal': 'Geo-Eco-Trop',
+      'type': 'article',
+      'url': 'https://www.geoecotrop.be/uploads/publications/pub_463_04.pdf'
+    }
+  };
 }
