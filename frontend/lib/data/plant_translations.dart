@@ -307,10 +307,58 @@ class PlantTranslations {
         }
       },
       'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Senecio vulgaris': {
+      'translations': {
+        'darija': {
+          'value': ' زهرة الشيخ ',
+          'source': 'regional_usage',
+          'confidence': 'low'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵍⵍⵓⵛⵜ ⵏ ⵓⵊⴰⵔⴼⵉ/ⵜⵉⴷⵎⴰⵎⴰⵢ \ntalluct n ujarfi/tidmamay',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Saponaria ocymoides': {
+      'translations': {
+        'darija': {
+          'value': 'الصابونية/عرق الحلاوة',
+          'source': '',
+          'confidence': 'very low'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵖⵉⵖⴰⵛⵜ ⵜⴰⵣⵡⴰⵡⴰⵖⵜ \ntaɣiɣact tazwawaɣt',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        } //https://imghayn.blogspot.com/2023/01/iris.html
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Iris xiphium': {
+      'translations': {
+        'darija': {
+          'value': 'الصابونية/عرق الحلاوة',
+          'source': '',
+          'confidence': 'very low'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵖⵉⵖⴰⵛⵜ ⵜⴰⵣⵡⴰⵡⴰⵖⵜ \ntaɣiɣact tazwawaɣt',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
     }
   };
 
-//ⴰⵛⴼⴼⴰⵕ
+//ⵜⴰⵖⵉⵖⴰⵛⵜ ⵜⴰⵣⵡⴰⵡⴰⵖⵜ
   // =========================
   // UPDATED METHODS
   // =========================
