@@ -58,9 +58,10 @@ app.get('/api/debug/user/:email', async (req, res) => {
 });
 
 // DÉMARRAGE
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
-  console.log(`📡 Endpoint identification: http://localhost:${PORT}/api/identify`);
-  console.log(`🔐 Endpoints auth: /api/register, /api/login`);
-  console.log(`📜 Endpoints historique: /api/my-identifications`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(` Serveur démarré sur http://localhost:${PORT}`);
+  console.log(` Accessible via IP: http://172.20.10.4:${PORT}`);
+  console.log(` Endpoint identification: http://localhost:${PORT}/api/identify`);
+  console.log(` Endpoints auth: /api/register, /api/login`);
+  console.log(` Endpoints historique: /api/my-identifications`);
 });
