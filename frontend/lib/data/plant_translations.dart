@@ -342,19 +342,354 @@ class PlantTranslations {
     },
     'Iris xiphium': {
       'translations': {
-        'darija': {
-          'value': 'الصابونية/عرق الحلاوة',
-          'source': '',
-          'confidence': 'very low'
-        },
+        'darija': {'value': '', 'source': '', 'confidence': 'very low'},
         'tamazight': {
-          'value': 'ⵜⴰⵖⵉⵖⴰⵛⵜ ⵜⴰⵣⵡⴰⵡⴰⵖⵜ \ntaɣiɣact tazwawaɣt',
+          'value': '',
           'source': 'regional_usage',
           'confidence': 'medium',
           'dialect': ''
         }
       },
       'metadata': {'region': 'Souss', 'notes': 'needs darija validation'}
+    },
+    'Iris paradoxa': {
+      'translations': {
+        'darija': {
+          'value': 'السوسن البري',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⴰⵙⵍⵉⵏ \nAslin',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Iris unguicularis': {
+      'translations': {
+        'darija': {
+          'value': 'سوسن جزائري',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⴰⵊⴻⵊⵊⵉⴳ ⴳⴻⵔⴼⵉ \nAjejjig gerfi',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Iris pseudacorus': {
+      'translations': {
+        'darija': {
+          'value': 'سوسن أصفر',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⴰⵣⴻⵏⴼⴰⵕ \nAzefar',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Iris × germanica': {
+      'translations': {
+        'darija': {
+          'value': 'عود العنبر \nسيف الديب',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⴼⵔⵓⵜ ⵉⵎⴻⵇⵇⵓⵔⵏ \nTafurt imeqqurn',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    //list
+    ///****************************** */
+    'Mentha pulegium': {
+      'translations': {
+        'darija': {
+          'value': 'النعناع',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⴼⵍⴰⵢⵢⵓ \nFlayyu',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': 'Souss'
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Salvia rosmarinus': {
+      'translations': {
+        'darija': {
+          'value': 'اليازير/آزير',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⴰⵣⵉⵔ Azir \nⵜⴰⵎⴻⵣⵣⵉⵔⴰ Tamzzira',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': 'Souss'
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Thymus vulgaris': {
+      'translations': {
+        'darija': {
+          'value': 'الزعتر',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⴰⵣⵓⴽⵏⵏⵉ Azuknni',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': 'Souss'
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Lavandula dentata': {
+      'translations': {
+        'darija': {
+          'value': 'الخزامى',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵢⵎⵔⵣⴰ taymrza \nⴱⵓⵜⵓⵖⵎⴰⵙ butuɣmas',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Salvia officinalis': {
+      'translations': {
+        'darija': {
+          'value': 'السالمية',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value':
+              'ⵜⴰⵢⵎⵔⵣⴰ butanzarin \nⴱⵓ ⵡⴰⵏⵣⴰⵔⵏ bu wanzarn \nⵜⴰⵣⵣⵓⵔⵜ tazzurt ',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Artemisia herba-alba': {
+      'translations': {
+        'darija': {
+          'value': 'الشيح',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵉⵣⵔⵉ izri \nⵉⵣⵔⴻⵢ izrey',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Foeniculum vulgare': {
+      'translations': {
+        'darija': {
+          'value': 'البسباس',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⴰⴱⵙⴱⴰⵙ absbas \nⴰⵎⵙⵙⴰ amsa',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Cedrus atlantica': {
+      'translations': {
+        'darija': {
+          'value': 'أرز',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵉⴷⴳⴻⵍ ⵏ ⵡⴰⵜⵍⴰⵙ idgel n watlas',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Quercus robur': {
+      'translations': {
+        'darija': {'value': 'السنديان القوي', 'source': '', 'confidence': ''},
+        'tamazight': {
+          'value': 'ⴰⵙⵙⴰⴼ assaf \nⵡⴰⵙⵙⴰⴼ wassaf \nⵉⵟⵏ itn',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Quercus coccifera': {
+      'translations': {
+        'darija': {'value': 'البلوط القرمزي', 'source': '', 'confidence': ''},
+        'tamazight': {
+          'value': 'ⵜⴰⵙⴰⴼⵜ ⵢⵉⵣⵎ tasaft yizem',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Quercus suber': {
+      'translations': {
+        'darija': {'value': 'بلوط الفلين', 'source': '', 'confidence': ''},
+        'tamazight': {
+          'value': 'ⴰⴼⴻⵔⵏⴰⵏ afernan \nⵜⴰⵙⴰⴼⵜ ⵎⵎ ⴰⴼⵔⵛⵉ tasaft mm afrchi',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Quercus ilex': {
+      'translations': {
+        'darija': {
+          'value': 'البلوط',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵙⴰⴼⵜ tasaft \nⵜⴰⴽⵔⵔⵓⵛⵜ takerrucht',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Nerium oleander': {
+      'translations': {
+        'darija': {'value': '', 'source': '', 'confidence': ''},
+        'tamazight': {
+          'value': 'ⴰⵍⵉⵍⵉ alili',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Laurus nobilis': {
+      'translations': {
+        'darija': {
+          'value': 'نبات الغار',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⵜⴰⵙⵙⴻⵍⵜ tasselt \nⵉⴳⴻⵔⵙⵍ igersel \nⵜⴰⵔⵙⴻⵍⵜ tarselt',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Ziziphus lotus': {
+      'translations': {
+        'darija': {
+          'value': 'السدر',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⴰⵣⴻⴳⴳⵯⴰⵔ  azeggarr \nⵜⴰⵣⴻⴳⴳⵯⴰⵔⵜ  tazeggart',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Pistacia atlantica': {
+      'translations': {
+        'darija': {
+          'value': 'ⵖⵓⵟⵎⴰ  buṭma',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⵉⴳⴳ ⴰⵏⴰⵟⵍⴰⵙ  igg anaṭlas \nⵉⵇⵇ ⴰⵏⴰⵟⵍⴰⵙ  iqq anaṭlas',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Opuntia ficus-indica': {
+      'translations': {
+        'darija': {
+          'value': 'هندية / كرموس',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⴰⴽⵏⴰⵔⵉ  aknari \nⵜⴰⴽⵏⴰⵔⵉⵜ  taknarit',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Macrochloa tenacissima': {
+      'translations': {
+        'darija': {
+          'value': '',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': '',
+          'source': 'regional_usage',
+          'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
     }
   };
 
@@ -433,6 +768,31 @@ class PlantTranslations {
   static int countHighConfidenceTamazight() {
     return _translations.values.where((plant) {
       return plant['translations']?['tamazight']?['confidence'] == 'high';
+    }).length;
+  }
+
+  static int countWithAmazighTranslation() {
+    return _translations.values.where((plant) {
+      final tamazightValue = plant['translations']?['tamazight']?['value'];
+      return tamazightValue != null && tamazightValue.isNotEmpty;
+    }).length;
+  }
+
+  static int countWithDarijaTranslation() {
+    return _translations.values.where((plant) {
+      final darijaValue = plant['translations']?['darija']?['value'];
+      return darijaValue != null && darijaValue.isNotEmpty;
+    }).length;
+  }
+
+  static int countWithBothTranslations() {
+    return _translations.values.where((plant) {
+      final darijaValue = plant['translations']?['darija']?['value'];
+      final tamazightValue = plant['translations']?['tamazight']?['value'];
+      return darijaValue != null &&
+          darijaValue.isNotEmpty &&
+          tamazightValue != null &&
+          tamazightValue.isNotEmpty;
     }).length;
   }
 
