@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
+import '../utils/constants.dart';
 
 class GBIFService {
-  static const String baseUrl =
-      'http://192.168.0.182:3000/api'; // Your backend URL
+  static const String baseUrl = Constants.apiUrl;
   static final _storage = FlutterSecureStorage();
   int limit = 200;
   static final Map<String, _CachedGBIFData> _cache = {};
@@ -55,7 +55,7 @@ class GBIFService {
       final response = await http.get(
         Uri.parse(url),
         headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 20));
+      ).timeout(const Duration(seconds: 50));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

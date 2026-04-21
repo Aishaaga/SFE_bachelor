@@ -5,9 +5,20 @@ import 'screens/register_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/history_screen.dart';
 import 'services/auth_service.dart';
+import 'data/plant_translations.dart';
 
 void main() {
   runApp(const MyApp());
+  print('Number of translated plants: ${PlantTranslations.getPlantCount()}');
+  print('Number of valid plants: ${PlantTranslations.getValidPlantCount()}');
+  print(
+      'Number of high confidence tamazight: ${PlantTranslations.countHighConfidenceTamazight()}');
+  print(
+      'Number of plants with both translations: ${PlantTranslations.countWithBothTranslations()}');
+  print(
+      'Number of plants with amazigh translation: ${PlantTranslations.countWithAmazighTranslation()}');
+  print(
+      'Number of plants with darija translation: ${PlantTranslations.countWithDarijaTranslation()}');
 }
 
 class MyApp extends StatelessWidget {

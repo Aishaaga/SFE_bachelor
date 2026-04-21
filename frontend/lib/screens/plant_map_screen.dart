@@ -402,14 +402,19 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     double centerLng = 0.0;
 
     if (_occurrences.isNotEmpty) {
-      centerLat = _occurrences.fold(0.0, (sum, p) => sum + p['lat']) /
+      centerLat = _occurrences.fold(
+              0.0, (sum, p) => sum + (p['lat']?.toDouble() ?? 0.0)) /
           _occurrences.length;
-      centerLng = _occurrences.fold(0.0, (sum, p) => sum + p['lng']) /
+      centerLng = _occurrences.fold(
+              0.0, (sum, p) => sum + (p['lng']?.toDouble() ?? 0.0)) /
           _occurrences.length;
     }
 
     final List<WeightedLatLng> heatmapPoints = _occurrences
-        .map((point) => WeightedLatLng(LatLng(point['lat'], point['lng']), 1.0))
+        .map((point) => WeightedLatLng(
+            LatLng(point['lat']?.toDouble() ?? 0.0,
+                point['lng']?.toDouble() ?? 0.0),
+            1.0))
         .toList();
 
     return Column(
@@ -563,7 +568,8 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
             return Marker(
               width: 40,
               height: 40,
-              point: LatLng(point['lat'], point['lng']),
+              point: LatLng(point['lat']?.toDouble() ?? 0.0,
+                  point['lng']?.toDouble() ?? 0.0),
               child: GestureDetector(
                 onTap: () => _showLocationDialog(point),
                 child:
@@ -575,11 +581,12 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
       case MapViewType.circles:
         return MarkerLayer(
           markers: _occurrences.map((point) {
-            final opacity = 0.2 + (point['lat'] % 0.3);
+            final opacity = 0.2 + ((point['lat']?.toDouble() ?? 0.0) % 0.3);
             return Marker(
               width: 25,
               height: 25,
-              point: LatLng(point['lat'], point['lng']),
+              point: LatLng(point['lat']?.toDouble() ?? 0.0,
+                  point['lng']?.toDouble() ?? 0.0),
               child: GestureDetector(
                 onTap: () => _showLocationDialog(point),
                 child: Container(
@@ -600,7 +607,8 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
           return Marker(
             width: 40,
             height: 40,
-            point: LatLng(point['lat'], point['lng']),
+            point: LatLng(point['lat']?.toDouble() ?? 0.0,
+                point['lng']?.toDouble() ?? 0.0),
             child: GestureDetector(
               onTap: () => _showLocationDialog(point),
               child:

@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
-const { identifyPlant } = require('../services/plantnet');
+const { identifyPlant} = require('../services/plantnet');
 const authMiddleware = require('../middleware/auth');
 const Identification = require('../models/Identification');
 const Plant = require('../models/Plant');
@@ -12,7 +12,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
-fileFilter: (req, file, cb) => {
+  fileFilter: (req, file, cb) => {
     console.log('=== WHAT FLUTTER SENT ===');
     console.log('Field name:', file.fieldname);
     console.log('File name:', file.originalname);
@@ -28,18 +28,16 @@ fileFilter: (req, file, cb) => {
     console.log('========================');
     
     if (mimetype && extname) {
-        console.log('✅ IMAGE ACCEPTED');
-        return cb(null, true);
+      console.log('✅ IMAGE ACCEPTED');
+      return cb(null, true);
     } else {
-        console.log('❌ IMAGE REJECTED');
-        cb(new Error('Seules les images sont autorisées'));
+      console.log('❌ IMAGE REJECTED');
+      cb(new Error('Seules les images sont autorisées'));
     }
-}
+  }
 });
 
-const PLANTNET_TIMEOUT = 20000; // 20 seconds max
-
-
+const PLANTNET_TIMEOUT = 90000; // 90 seconds max
 
 // POST /api/identify (protégé par authentification)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
@@ -53,7 +51,7 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     
     console.log(`📸 Photo reçue: ${req.file.originalname} (${req.file.size} bytes)`);
     
-    // Identifier la plante
+    // Call PlantNet API
     const result = await identifyPlant(req.file.buffer, req.file.originalname);
     
     if (!result.success) {
@@ -100,10 +98,10 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     res.json(result);
     
   } catch (error) {
-    console.error('Erreur:', error);
+    console.error('Erreur:', error.message);
     res.status(500).json({ 
       success: false, 
-      message: 'Erreur interne du serveur' 
+      message: 'Erreur lors de l\'identification' 
     });
   }
 });
