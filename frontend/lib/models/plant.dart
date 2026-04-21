@@ -26,6 +26,18 @@ class Plant {
       confidence: (json['confidence'] ?? 0).toDouble(),
     );
   }
+
+  // Add this method for easier conversion
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'scientificName': scientificName,
+      'confidence': confidence,
+      'family': family,
+      'id': id,
+    };
+  }
+
   // Helper method for display
   String get displayName {
     if (scientificName.isNotEmpty &&
