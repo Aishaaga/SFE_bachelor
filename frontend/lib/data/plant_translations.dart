@@ -216,7 +216,7 @@ class PlantTranslations {
           'confidence': 'high'
         },
         'tamazight': {
-          'value': 'ⵜⴰⵣⵉⵔⵜ',
+          'value': 'ⵜⴰⵣⴰⵔⵜ  tazart ',
           'source': 'regional_usage',
           'confidence': 'medium',
           'dialect': 'unknown'
@@ -686,6 +686,38 @@ class PlantTranslations {
           'value': '',
           'source': 'regional_usage',
           'confidence': 'medium',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Euphorbia resinifera': {
+      'translations': {
+        'darija': {
+          'value': 'دبغ',
+          'source': 'regional_usage',
+          'confidence': 'medium'
+        },
+        'tamazight': {
+          'value': 'ⵜⵉⴽⵉⵡⵜ',
+          'source': 'regional_usage',
+          'confidence': 'high',
+          'dialect': ''
+        }
+      },
+      'metadata': {'region': '', 'notes': ''}
+    },
+    'Allium sativum': {
+      'translations': {
+        'darija': {
+          'value': 'الثومة ',
+          'source': 'regional_usage',
+          'confidence': 'high'
+        },
+        'tamazight': {
+          'value': 'ⵜⵉⵙⴽⴻⵔⵜ  tiskert',
+          'source': 'regional_usage',
+          'confidence': 'high',
           'dialect': ''
         }
       },
