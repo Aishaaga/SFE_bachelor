@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/constants.dart';
+import 'plant_detail_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -233,7 +234,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             isThreeLine: true,
                             onTap: () {
-                              // Optionnel : voir le détail
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PlantDetailScreen(
+                                    identification: ident,
+                                  ),
+                                ),
+                              );
                             },
                           ),
                         );
