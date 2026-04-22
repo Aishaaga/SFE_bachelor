@@ -95,12 +95,11 @@ translationProposalSchema.index({ submittedAt: -1 });
 translationProposalSchema.index({ status: 1, submittedAt: -1 });
 
 // Validation : au moins une proposition doit exister
-translationProposalSchema.pre('save', function(next) {
+translationProposalSchema.pre('save', async function() {
   if (!this.darijaProposal && !this.tamazightProposal) {
     const error = new Error('Au moins une proposition (Darija ou Tamazight) est requise');
-    return next(error);
+    throw error;
   }
-  next();
 });
 
 // Méthode virtuelle pour vérifier si la proposition est valide

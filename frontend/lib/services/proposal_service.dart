@@ -1,17 +1,28 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/translation_proposal.dart';
+import '../services/auth_service.dart';
 
 class ProposalService {
   static const String _baseUrl =
       'http://192.168.0.182:3000/api/translation-proposals';
 
+  static Future<Map<String, String>> _getHeaders() async {
+    final authService = AuthService();
+    final token = await authService.getToken();
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
   static Future<List<TranslationProposal>> getAllProposals(
       {int page = 1, int limit = 20}) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$_baseUrl?page=$page&limit=$limit'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -34,7 +45,9 @@ class ProposalService {
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json'
+        }, // Pas d'auth pour la création
         body: json.encode({
           'scientificName': proposal.scientificName,
           'darijaProposal': proposal.darijaProposal,
@@ -61,10 +74,11 @@ class ProposalService {
       {int page = 1,
       int limit = 20}) async {
     try {
+      final headers = await _getHeaders();
       final statusString = status.toString().split('.').last;
       final response = await http.get(
         Uri.parse('$_baseUrl?status=$statusString&page=$page&limit=$limit'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -86,10 +100,11 @@ class ProposalService {
   static Future<List<TranslationProposal>> getProposalsByScientificName(
       String scientificName) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse(
             '$_baseUrl/scientific/${Uri.encodeComponent(scientificName)}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -112,10 +127,11 @@ class ProposalService {
       String proposalId, ProposalStatus newStatus,
       {String reviewNotes = ''}) async {
     try {
+      final headers = await _getHeaders();
       final statusString = newStatus.toString().split('.').last;
       final response = await http.put(
         Uri.parse('$_baseUrl/$proposalId/status'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
         body: json.encode({
           'status': statusString,
           'reviewNotes': reviewNotes,
@@ -135,9 +151,10 @@ class ProposalService {
 
   static Future<void> deleteProposal(String proposalId) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.delete(
         Uri.parse('$_baseUrl/$proposalId'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode != 200) {
@@ -153,9 +170,10 @@ class ProposalService {
 
   static Future<Map<String, int>> getProposalStats() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$_baseUrl/stats'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -216,9 +234,10 @@ class ProposalService {
       final uri =
           Uri.parse('$_baseUrl/search').replace(queryParameters: queryParams);
 
+      final headers = await _getHeaders();
       final response = await http.get(
         uri,
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {

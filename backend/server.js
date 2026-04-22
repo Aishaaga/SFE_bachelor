@@ -36,8 +36,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/gbif', gbifRoutes);
 app.use('/api/identify', identifyRoutes);
 app.use('/api', authRoutes);  // /api/register, /api/login
-app.use('/api', identificationsRoutes);  // /api/save-identification, etc.
-app.use('/api/translation-proposals', translationProposalsRoutes);  // /api/translation-proposals
+app.use('/api/translation-proposals', translationProposalsRoutes);  // /api/translation-proposals (POST publique)
+app.use('/api', identificationsRoutes);  // /api/save-identification, etc. (avec auth)
 
 // Route 404
 app.use((req, res) => {
