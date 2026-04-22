@@ -17,15 +17,22 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   List<String> _getPlantImages() {
     final List<String> images = [];
 
-    // Add the main identification photo
-    if (widget.identification['photoUrl'] != null) {
+    // Check if this is a grouped plant (new format) or single identification (old format)
+    if (widget.identification.containsKey('photoUrls')) {
+      // New grouped format
+      final List<String> photoUrls =
+          List<String>.from(widget.identification['photoUrls'] ?? []);
+      for (String photoUrl in photoUrls) {
+        final fullUrl =
+            '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}$photoUrl';
+        images.add(fullUrl);
+      }
+    } else if (widget.identification['photoUrl'] != null) {
+      // Old single identification format
       final mainPhoto =
           '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${widget.identification['photoUrl']}';
       images.add(mainPhoto);
     }
-
-    // In the future, you could add more photos of the same plant species
-    // For now, we'll just use the main photo
 
     return images;
   }
@@ -94,13 +101,40 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             'Elle s\'est adaptée au climat local et contribue à l\'écosystème.';
   }
 
+  double _getConfidence() {
+    return widget.identification.containsKey('latestConfidence')
+        ? widget.identification['latestConfidence']
+        : widget.identification['confidence'] ?? 0;
+  }
+
+  DateTime _getDate() {
+    return widget.identification.containsKey('latestDate')
+        ? DateTime.parse(widget.identification['latestDate'])
+        : DateTime.parse(widget.identification['date']);
+  }
+
   @override
   Widget build(BuildContext context) {
     final plant = widget.identification['plant'];
     final scientificName = plant['scientificName'] ?? '';
+
+    // Handle family field that might be a list or string
+    String family = 'Famille inconnue';
+    if (plant['family'] != null) {
+      if (plant['family'] is List) {
+        final familyList = plant['family'] as List;
+        family = familyList.isNotEmpty
+            ? familyList.first.toString()
+            : 'Famille inconnue';
+      } else {
+        family = plant['family'].toString();
+      }
+    }
     final images = _getPlantImages();
     final darijaName = PlantTranslations.getDarijaName(scientificName);
     final tamazightName = PlantTranslations.getTamazightName(scientificName);
+    final confidence = _getConfidence();
+    final date = _getDate();
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -118,8 +152,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             if (images.isNotEmpty) _buildImageGallery(images),
 
             // Plant Information Card
-            _buildPlantInfoCard(
-                plant, scientificName, darijaName, tamazightName),
+            _buildPlantInfoCard(plant, scientificName, darijaName,
+                tamazightName, confidence, family),
 
             // Usage Information Card
             _buildUsageCard(scientificName),
@@ -247,8 +281,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildPlantInfoCard(Map<String, dynamic> plant, String scientificName,
-      String darijaName, String tamazightName) {
+  Widget _buildPlantInfoCard(
+      Map<String, dynamic> plant,
+      String scientificName,
+      String darijaName,
+      String tamazightName,
+      double confidence,
+      String family) {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -285,8 +324,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             _buildInfoRow('Nom commun', plant['name'] ?? ''),
             if (scientificName.isNotEmpty)
               _buildInfoRow('Nom scientifique', scientificName, isItalic: true),
-            if (plant['family'] != null && plant['family'].isNotEmpty)
-              _buildInfoRow('Famille', plant['family']),
+            if (family.isNotEmpty && family != 'Famille inconnue')
+              _buildInfoRow('Famille', family),
             if (darijaName.isNotEmpty && darijaName != scientificName)
               _buildInfoRow('Nom (Darija)', darijaName),
             if (tamazightName.isNotEmpty && tamazightName != darijaName)
@@ -303,7 +342,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   Icon(Icons.check_circle, color: Colors.green, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Confiance: ${((widget.identification['confidence'] ?? 0) * 100).toInt()}%',
+                    'Confiance: ${(confidence * 100).toInt()}%',
                     style: TextStyle(
                       color: Colors.green[800],
                       fontWeight: FontWeight.w500,
@@ -415,7 +454,11 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   }
 
   Widget _buildTechnicalCard() {
-    final date = DateTime.parse(widget.identification['date']);
+    final date = _getDate();
+    final identificationCount =
+        widget.identification.containsKey('identificationCount')
+            ? widget.identification['identificationCount']
+            : 1;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -452,11 +495,45 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             const SizedBox(height: 12),
             _buildInfoRow('Date d\'identification',
                 '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'),
+            if (identificationCount > 1)
+              _buildInfoRow(
+                  'Nombre d\'identifications', '$identificationCount'),
             _buildInfoRow(
-                'Source', widget.identification['source'] ?? 'plantnet'),
-            _buildInfoRow('ID',
-                widget.identification['id']?.toString().substring(0, 8) ?? ''),
-            if (widget.identification['notes'] != null &&
+                'Source',
+                widget.identification.containsKey('sources')
+                    ? widget.identification['sources'][0] ?? 'plantnet'
+                    : widget.identification['source'] ?? 'plantnet'),
+            _buildInfoRow(
+                'ID',
+                widget.identification.containsKey('identificationIds')
+                    ? widget.identification['identificationIds'][0]
+                            ?.toString()
+                            .substring(0, 8) ??
+                        ''
+                    : widget.identification['id']?.toString().substring(0, 8) ??
+                        ''),
+            if (widget.identification.containsKey('notes') &&
+                widget.identification['notes'].isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Notes:',
+                style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+              const SizedBox(height: 4),
+              ...widget.identification['notes'].map((note) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                      note,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  )),
+            ] else if (widget.identification['notes'] != null &&
                 widget.identification['notes'].toString().isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
@@ -468,7 +545,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                widget.identification['notes'],
+                widget.identification['notes'].toString(),
                 style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black87,

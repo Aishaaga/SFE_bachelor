@@ -14,7 +14,7 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   final ApiService _apiService = ApiService();
   final AuthService _authService = AuthService();
-  List<dynamic> _identifications = [];
+  List<dynamic> _plants = [];
   bool _isLoading = true;
   String? _error;
 
@@ -32,11 +32,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
     setState(() {
       _isLoading = false;
       if (result['success']) {
-        _identifications = result['identifications'];
-        print('DEBUG: Loaded ${_identifications.length} identifications');
-        for (var ident in _identifications) {
+        _plants = result['plants'] ?? [];
+        print('DEBUG: Loaded ${_plants.length} grouped plants');
+        for (var plant in _plants) {
+          final photoUrls = List<String>.from(plant['photoUrls'] ?? []);
           print(
-              'DEBUG: Plant: ${ident['plant']['name']}, photoUrl: ${ident['photoUrl']}');
+              'DEBUG: Plant: ${plant['plant']?['name'] ?? 'Unknown'}, count: ${plant['identificationCount'] ?? 0}, photos: ${photoUrls.length}');
         }
       } else {
         _error = result['message'];
@@ -44,7 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     });
   }
 
-  Future<void> _deleteIdentification(String id) async {
+  Future<void> _deletePlantGroup(Map<String, dynamic> plantGroup) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -64,20 +65,150 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (confirm != true) return;
 
-    final result = await _apiService.deleteIdentification(id);
+    // Delete all identifications for this plant group
+    bool allDeleted = true;
+    String? errorMessage;
 
-    if (result['success']) {
+    final identificationIds =
+        plantGroup['identificationIds'] as List<dynamic>? ?? [];
+    for (String identificationId in identificationIds) {
+      final result = await _apiService.deleteIdentification(identificationId);
+      if (!result['success']) {
+        allDeleted = false;
+        errorMessage = result['message'];
+        break;
+      }
+    }
+
+    if (allDeleted) {
       await _loadHistory();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Identification supprimée'),
+            content: Text('Plante supprimée de l\'historique'),
             backgroundColor: Colors.green),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
+        SnackBar(
+            content: Text(errorMessage ?? 'Erreur lors de la suppression'),
+            backgroundColor: Colors.red),
       );
     }
+  }
+
+  Widget _buildPlantImageGrid(List<String> photoUrls) {
+    if (photoUrls.isEmpty) {
+      return Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Icon(Icons.eco, color: Colors.green),
+      );
+    }
+
+    // Show up to 4 images in a grid
+    final displayUrls = photoUrls.take(4).toList();
+    final hasMore = photoUrls.length > 4;
+
+    if (displayUrls.length == 1) {
+      return Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.green.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Builder(
+            builder: (context) {
+              final imageUrl =
+                  '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${displayUrls[0]}';
+              return Image.network(
+                imageUrl,
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.eco, color: Colors.green);
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    // Multiple images - show a grid
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Stack(
+        children: [
+          // First image (background)
+          if (displayUrls.isNotEmpty)
+            Positioned.fill(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Builder(
+                  builder: (context) {
+                    final imageUrl =
+                        '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${displayUrls[0]}';
+                    return Image.network(
+                      imageUrl,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(color: Colors.grey[200]);
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          // Overlay for multiple images
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
+                child: Text(
+                  '+${photoUrls.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _logout() async {
@@ -124,7 +255,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ],
                   ),
                 )
-              : _identifications.isEmpty
+              : _plants.isEmpty
                   ? const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -139,77 +270,45 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     )
                   : ListView.builder(
-                      itemCount: _identifications.length,
+                      itemCount: _plants.length,
                       itemBuilder: (context, index) {
-                        final ident = _identifications[index];
-                        final plant = ident['plant'];
-                        final date = DateTime.parse(ident['date']);
+                        final plantGroup = _plants[index];
+                        final plant = plantGroup['plant'];
+                        final latestDate =
+                            DateTime.parse(plantGroup['latestDate']);
 
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           child: ListTile(
-                            leading: Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: ident['photoUrl'] != null &&
-                                        ident['photoUrl'].isNotEmpty
-                                    ? Builder(
-                                        builder: (context) {
-                                          final imageUrl =
-                                              '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${ident['photoUrl']}';
-                                          print(
-                                              'DEBUG: Loading image: $imageUrl');
-                                          print(
-                                              'DEBUG: photoUrl from API: ${ident['photoUrl']}');
-                                          return Image.network(
-                                            imageUrl,
-                                            width: 50,
-                                            height: 50,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              print(
-                                                  'DEBUG: Image failed to load: $error');
-                                              return const Icon(Icons.eco,
-                                                  color: Colors.green);
-                                            },
-                                            loadingBuilder: (context, child,
-                                                loadingProgress) {
-                                              if (loadingProgress == null)
-                                                return child;
-                                              return const Center(
-                                                child: SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation<
-                                                                Color>(
-                                                            Colors.green),
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                      )
-                                    : const Icon(Icons.eco,
-                                        color: Colors.green),
-                              ),
-                            ),
-                            title: Text(
-                              plant['name'],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                            leading: _buildPlantImageGrid(List<String>.from(
+                                plantGroup['photoUrls'] ?? [])),
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    plant['name'],
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    '${plantGroup['identificationCount']}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[800],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,15 +321,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         fontStyle: FontStyle.italic),
                                   ),
                                 Text(
-                                  '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}',
+                                  'Dernière: ${latestDate.day}/${latestDate.month}/${latestDate.year} ${latestDate.hour}:${latestDate.minute.toString().padLeft(2, '0')}',
                                   style: const TextStyle(fontSize: 12),
                                 ),
+                                if (plantGroup['identificationCount'] > 1)
+                                  Text(
+                                    '${plantGroup['identificationCount']} identifications',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                               ],
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () =>
-                                  _deleteIdentification(ident['id']),
+                              onPressed: () => _deletePlantGroup(plantGroup),
                             ),
                             isThreeLine: true,
                             onTap: () {
@@ -238,7 +345,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => PlantDetailScreen(
-                                    identification: ident,
+                                    identification: plantGroup,
                                   ),
                                 ),
                               );

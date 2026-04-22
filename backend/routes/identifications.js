@@ -73,7 +73,7 @@ router.post('/save-identification', async (req, res) => {
   }
 });
 
-// GET /api/my-identifications - Voir son historique
+// GET /api/my-identifications - Voir son historique groupé par plante
 router.get('/my-identifications', async (req, res) => {
   try {
     // Récupérer les identifications de l'utilisateur
@@ -82,30 +82,62 @@ router.get('/my-identifications', async (req, res) => {
       .sort({ createdAt: -1 })  // Les plus récentes d'abord
       .limit(100);  // Maximum 100 résultats
     
-    const responseData = identifications.map(ident => {
-      console.log('DEBUG: Identification photoUrl:', ident.photoUrl);
-      return {
-        id: ident._id,
-        plant: {
-          name: ident.plant.name,
-          scientificName: ident.plant.scientificName,
-          family: ident.plant.family,
-          localName: ident.plant.localName
-        },
-        confidence: ident.confidence,
-        source: ident.source,
-        notes: ident.notes,
-        photoUrl: ident.photoUrl,
-        date: ident.createdAt
-      };
+    // Grouper par plante
+    const groupedPlants = {};
+    
+    identifications.forEach(ident => {
+      const plantId = ident.plant._id.toString();
+      
+      if (!groupedPlants[plantId]) {
+        groupedPlants[plantId] = {
+          plant: {
+            name: ident.plant.name,
+            scientificName: ident.plant.scientificName,
+            family: ident.plant.family,
+            localName: ident.plant.localName
+          },
+          identificationCount: 0,
+          photoUrls: [],
+          identificationDates: [],
+          confidences: [],
+          sources: [],
+          notes: [],
+          identificationIds: [],
+          latestDate: ident.createdAt,
+          latestConfidence: ident.confidence
+        };
+      }
+      
+      // Ajouter les données de cette identification
+      groupedPlants[plantId].identificationCount++;
+      if (ident.photoUrl) {
+        groupedPlants[plantId].photoUrls.push(ident.photoUrl);
+      }
+      groupedPlants[plantId].identificationDates.push(ident.createdAt);
+      groupedPlants[plantId].confidences.push(ident.confidence);
+      groupedPlants[plantId].sources.push(ident.source);
+      if (ident.notes) {
+        groupedPlants[plantId].notes.push(ident.notes);
+      }
+      groupedPlants[plantId].identificationIds.push(ident._id);
+      
+      // Garder la date la plus récente
+      if (ident.createdAt > groupedPlants[plantId].latestDate) {
+        groupedPlants[plantId].latestDate = ident.createdAt;
+        groupedPlants[plantId].latestConfidence = ident.confidence;
+      }
     });
     
-    console.log('DEBUG: Sending identifications with photoUrls:', responseData.map(item => item.photoUrl));
+    // Convertir en tableau et trier par date la plus récente
+    const responseData = Object.values(groupedPlants)
+      .sort((a, b) => new Date(b.latestDate) - new Date(a.latestDate));
+    
+    console.log('DEBUG: Grouped plants count:', responseData.length);
     
     res.json({
       success: true,
-      count: identifications.length,
-      identifications: responseData
+      count: responseData.length,
+      plants: responseData
     });
     
   } catch (error) {

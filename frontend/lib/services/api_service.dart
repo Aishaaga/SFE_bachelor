@@ -204,10 +204,10 @@ class ApiService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        final List<dynamic> identifications = data['identifications'];
+        final List<dynamic> plants = data['plants'];
         return {
           'success': true,
-          'identifications': identifications,
+          'plants': plants,
         };
       } else {
         return {
