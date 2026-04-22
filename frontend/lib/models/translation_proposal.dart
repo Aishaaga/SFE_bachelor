@@ -9,6 +9,10 @@ class TranslationProposal {
   final String notes;
   final DateTime submittedAt;
   final ProposalStatus status;
+  final DateTime? reviewedAt;
+  final String? reviewedBy;
+  final String? reviewNotes;
+  final bool isValidated;
 
   TranslationProposal({
     required this.id,
@@ -21,35 +25,59 @@ class TranslationProposal {
     this.notes = '',
     required this.submittedAt,
     this.status = ProposalStatus.pending,
+    this.reviewedAt,
+    this.reviewedBy,
+    this.reviewNotes,
+    this.isValidated = false,
   });
 
   factory TranslationProposal.fromJson(Map<String, dynamic> json) {
     return TranslationProposal(
-      id: json['id'] ?? '',
+      id: json['_id'] ?? json['id'] ?? '',
       scientificName: json['scientificName'] ?? '',
       darijaProposal: json['darijaProposal'] as String?,
       tamazightProposal: json['tamazightProposal'] as String?,
       contributorName: json['contributorName'] ?? '',
       contributorEmail: json['contributorEmail'] ?? '',
-      region: json['region'] ?? '',
+      region: json['contributorRegion'] ?? json['region'] ?? '',
       notes: json['notes'] ?? '',
-      submittedAt: DateTime.parse(json['submittedAt'] ?? DateTime.now().toIso8601String()),
-      status: ProposalStatus.values.firstWhere(
-        (e) => e.toString() == 'ProposalStatus.${json['status']}',
-        orElse: () => ProposalStatus.pending,
-      ),
+      submittedAt: DateTime.parse(
+          json['submittedAt'] ?? DateTime.now().toIso8601String()),
+      status: _parseStatus(json['status']),
+      reviewedAt: json['reviewedAt'] != null
+          ? DateTime.parse(json['reviewedAt'])
+          : null,
+      reviewedBy: json['reviewedBy']?.toString(),
+      reviewNotes: json['reviewNotes'] as String?,
+      isValidated: json['isValidated'] ?? false,
     );
+  }
+
+  static ProposalStatus _parseStatus(String? statusString) {
+    if (statusString == null) return ProposalStatus.pending;
+
+    switch (statusString.toLowerCase()) {
+      case 'pending':
+        return ProposalStatus.pending;
+      case 'approved':
+        return ProposalStatus.approved;
+      case 'rejected':
+        return ProposalStatus.rejected;
+      case 'needs_review':
+        return ProposalStatus.needs_review;
+      default:
+        return ProposalStatus.pending;
+    }
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'scientificName': scientificName,
       'darijaProposal': darijaProposal,
       'tamazightProposal': tamazightProposal,
       'contributorName': contributorName,
       'contributorEmail': contributorEmail,
-      'region': region,
+      'contributorRegion': region,
       'notes': notes,
       'submittedAt': submittedAt.toIso8601String(),
       'status': status.toString().split('.').last,
@@ -84,7 +112,7 @@ class TranslationProposal {
 
   bool get hasValidProposal {
     return (darijaProposal != null && darijaProposal!.isNotEmpty) ||
-           (tamazightProposal != null && tamazightProposal!.isNotEmpty);
+        (tamazightProposal != null && tamazightProposal!.isNotEmpty);
   }
 }
 

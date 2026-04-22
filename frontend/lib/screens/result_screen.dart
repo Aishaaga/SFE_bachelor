@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
-import '../data/plant_translations.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 import 'translation_proposal_screen.dart';

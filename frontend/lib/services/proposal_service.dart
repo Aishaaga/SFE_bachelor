@@ -1,19 +1,29 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import '../models/translation_proposal.dart';
 
 class ProposalService {
-  static const String _proposalsKey = 'translation_proposals';
+  static const String _baseUrl =
+      'http://192.168.0.182:3000/api/translation-proposals';
 
-  static Future<List<TranslationProposal>> getAllProposals() async {
+  static Future<List<TranslationProposal>> getAllProposals(
+      {int page = 1, int limit = 20}) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final proposalsJson = prefs.getString(_proposalsKey) ?? '[]';
-      
-      final List<dynamic> proposalsList = json.decode(proposalsJson);
-      return proposalsList
-          .map((proposal) => TranslationProposal.fromJson(proposal))
-          .toList();
+      final response = await http.get(
+        Uri.parse('$_baseUrl?page=$page&limit=$limit'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          final List<dynamic> proposalsList = data['proposals'];
+          return proposalsList
+              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .toList();
+        }
+      }
+      return [];
     } catch (e) {
       print('Error loading proposals: $e');
       return [];
@@ -22,47 +32,100 @@ class ProposalService {
 
   static Future<void> saveProposal(TranslationProposal proposal) async {
     try {
-      final proposals = await getAllProposals();
-      proposals.add(proposal);
-      
-      final prefs = await SharedPreferences.getInstance();
-      final proposalsJson = json.encode(
-        proposals.map((p) => p.toJson()).toList(),
+      final response = await http.post(
+        Uri.parse(_baseUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'scientificName': proposal.scientificName,
+          'darijaProposal': proposal.darijaProposal,
+          'tamazightProposal': proposal.tamazightProposal,
+          'contributorName': proposal.contributorName,
+          'contributorEmail': proposal.contributorEmail,
+          'contributorRegion': proposal.region,
+          'notes': proposal.notes,
+        }),
       );
-      
-      await prefs.setString(_proposalsKey, proposalsJson);
+
+      if (response.statusCode != 201) {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Erreur lors de la sauvegarde');
+      }
     } catch (e) {
       print('Error saving proposal: $e');
       rethrow;
     }
   }
 
-  static Future<List<TranslationProposal>> getProposalsByStatus(ProposalStatus status) async {
-    final proposals = await getAllProposals();
-    return proposals.where((proposal) => proposal.status == status).toList();
-  }
-
-  static Future<List<TranslationProposal>> getProposalsByScientificName(String scientificName) async {
-    final proposals = await getAllProposals();
-    return proposals
-        .where((proposal) => proposal.scientificName == scientificName)
-        .toList();
-  }
-
-  static Future<void> updateProposalStatus(String proposalId, ProposalStatus newStatus) async {
+  static Future<List<TranslationProposal>> getProposalsByStatus(
+      ProposalStatus status,
+      {int page = 1,
+      int limit = 20}) async {
     try {
-      final proposals = await getAllProposals();
-      final index = proposals.indexWhere((p) => p.id == proposalId);
-      
-      if (index != -1) {
-        proposals[index] = proposals[index].copyWith(status: newStatus);
-        
-        final prefs = await SharedPreferences.getInstance();
-        final proposalsJson = json.encode(
-          proposals.map((p) => p.toJson()).toList(),
-        );
-        
-        await prefs.setString(_proposalsKey, proposalsJson);
+      final statusString = status.toString().split('.').last;
+      final response = await http.get(
+        Uri.parse('$_baseUrl?status=$statusString&page=$page&limit=$limit'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          final List<dynamic> proposalsList = data['proposals'];
+          return proposalsList
+              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error loading proposals by status: $e');
+      return [];
+    }
+  }
+
+  static Future<List<TranslationProposal>> getProposalsByScientificName(
+      String scientificName) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '$_baseUrl/scientific/${Uri.encodeComponent(scientificName)}'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          final List<dynamic> proposalsList = data['proposals'];
+          return proposalsList
+              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error loading proposals by scientific name: $e');
+      return [];
+    }
+  }
+
+  static Future<void> updateProposalStatus(
+      String proposalId, ProposalStatus newStatus,
+      {String reviewNotes = ''}) async {
+    try {
+      final statusString = newStatus.toString().split('.').last;
+      final response = await http.put(
+        Uri.parse('$_baseUrl/$proposalId/status'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'status': statusString,
+          'reviewNotes': reviewNotes,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            errorData['message'] ?? 'Erreur lors de la mise à jour');
       }
     } catch (e) {
       print('Error updating proposal status: $e');
@@ -72,15 +135,16 @@ class ProposalService {
 
   static Future<void> deleteProposal(String proposalId) async {
     try {
-      final proposals = await getAllProposals();
-      proposals.removeWhere((p) => p.id == proposalId);
-      
-      final prefs = await SharedPreferences.getInstance();
-      final proposalsJson = json.encode(
-        proposals.map((p) => p.toJson()).toList(),
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/$proposalId'),
+        headers: {'Content-Type': 'application/json'},
       );
-      
-      await prefs.setString(_proposalsKey, proposalsJson);
+
+      if (response.statusCode != 200) {
+        final errorData = json.decode(response.body);
+        throw Exception(
+            errorData['message'] ?? 'Erreur lors de la suppression');
+      }
     } catch (e) {
       print('Error deleting proposal: $e');
       rethrow;
@@ -88,70 +152,88 @@ class ProposalService {
   }
 
   static Future<Map<String, int>> getProposalStats() async {
-    final proposals = await getAllProposals();
-    
-    final stats = <String, int>{
-      'total': proposals.length,
-      'pending': proposals.where((p) => p.status == ProposalStatus.pending).length,
-      'approved': proposals.where((p) => p.status == ProposalStatus.approved).length,
-      'rejected': proposals.where((p) => p.status == ProposalStatus.rejected).length,
-      'needs_review': proposals.where((p) => p.status == ProposalStatus.needs_review).length,
-    };
-    
-    return stats;
-  }
-
-  static Future<void> clearAllProposals() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove(_proposalsKey);
+      final response = await http.get(
+        Uri.parse('$_baseUrl/stats'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          return Map<String, int>.from(data['stats']);
+        }
+      }
+      return {
+        'total': 0,
+        'pending': 0,
+        'approved': 0,
+        'rejected': 0,
+        'needs_review': 0,
+      };
     } catch (e) {
-      print('Error clearing proposals: $e');
-      rethrow;
+      print('Error getting proposal stats: $e');
+      return {
+        'total': 0,
+        'pending': 0,
+        'approved': 0,
+        'rejected': 0,
+        'needs_review': 0,
+      };
     }
   }
 
   static Future<List<TranslationProposal>> searchProposals({
+    String? q,
     String? scientificName,
     String? contributorName,
+    String? contributorEmail,
     ProposalStatus? status,
     DateTime? startDate,
     DateTime? endDate,
+    int page = 1,
+    int limit = 10,
   }) async {
-    final proposals = await getAllProposals();
-    
-    return proposals.where((proposal) {
-      if (scientificName != null && scientificName.isNotEmpty) {
-        if (!proposal.scientificName.toLowerCase().contains(scientificName.toLowerCase())) {
-          return false;
+    try {
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+
+      if (q != null && q.isNotEmpty) queryParams['q'] = q;
+      if (scientificName != null && scientificName.isNotEmpty)
+        queryParams['scientificName'] = scientificName;
+      if (contributorName != null && contributorName.isNotEmpty)
+        queryParams['contributorName'] = contributorName;
+      if (contributorEmail != null && contributorEmail.isNotEmpty)
+        queryParams['contributorEmail'] = contributorEmail;
+      if (status != null)
+        queryParams['status'] = status.toString().split('.').last;
+      if (startDate != null)
+        queryParams['startDate'] = startDate.toIso8601String();
+      if (endDate != null) queryParams['endDate'] = endDate.toIso8601String();
+
+      final uri =
+          Uri.parse('$_baseUrl/search').replace(queryParameters: queryParams);
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success']) {
+          final List<dynamic> proposalsList = data['proposals'];
+          return proposalsList
+              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .toList();
         }
       }
-      
-      if (contributorName != null && contributorName.isNotEmpty) {
-        if (!proposal.contributorName.toLowerCase().contains(contributorName.toLowerCase())) {
-          return false;
-        }
-      }
-      
-      if (status != null) {
-        if (proposal.status != status) {
-          return false;
-        }
-      }
-      
-      if (startDate != null) {
-        if (proposal.submittedAt.isBefore(startDate)) {
-          return false;
-        }
-      }
-      
-      if (endDate != null) {
-        if (proposal.submittedAt.isAfter(endDate)) {
-          return false;
-        }
-      }
-      
-      return true;
-    }).toList();
+      return [];
+    } catch (e) {
+      print('Error searching proposals: $e');
+      return [];
+    }
   }
 }
