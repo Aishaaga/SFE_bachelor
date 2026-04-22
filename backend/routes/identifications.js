@@ -82,10 +82,9 @@ router.get('/my-identifications', async (req, res) => {
       .sort({ createdAt: -1 })  // Les plus récentes d'abord
       .limit(100);  // Maximum 100 résultats
     
-    res.json({
-      success: true,
-      count: identifications.length,
-      identifications: identifications.map(ident => ({
+    const responseData = identifications.map(ident => {
+      console.log('DEBUG: Identification photoUrl:', ident.photoUrl);
+      return {
         id: ident._id,
         plant: {
           name: ident.plant.name,
@@ -96,8 +95,17 @@ router.get('/my-identifications', async (req, res) => {
         confidence: ident.confidence,
         source: ident.source,
         notes: ident.notes,
+        photoUrl: ident.photoUrl,
         date: ident.createdAt
-      }))
+      };
+    });
+    
+    console.log('DEBUG: Sending identifications with photoUrls:', responseData.map(item => item.photoUrl));
+    
+    res.json({
+      success: true,
+      count: identifications.length,
+      identifications: responseData
     });
     
   } catch (error) {

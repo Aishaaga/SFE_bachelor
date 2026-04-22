@@ -8,7 +8,15 @@ const Plant = require('../models/Plant');
 
 const router = express.Router();
 
-const storage = multer.memoryStorage();
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'plant-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -51,8 +59,12 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     
     console.log(`📸 Photo reçue: ${req.file.originalname} (${req.file.size} bytes)`);
     
+    // Read file back into buffer for PlantNet API
+    const fs = require('fs');
+    const imageBuffer = fs.readFileSync(req.file.path);
+    
     // Call PlantNet API
-    const result = await identifyPlant(req.file.buffer, req.file.originalname);
+    const result = await identifyPlant(imageBuffer, req.file.originalname);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -79,13 +91,19 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
       await plant.save();
       
       // Créer l'identification
+      const photoUrl = `/uploads/${req.file.filename}`;
+      console.log('DEBUG: Saving photoUrl:', photoUrl);
+      console.log('DEBUG: File info:', req.file.filename);
+      
       const identification = new Identification({
         user: req.userId,
         plant: plant._id,
         confidence: result.plant.confidence,
-        source: 'plantnet'
+        source: 'plantnet',
+        photoUrl: photoUrl
       });
       await identification.save();
+      console.log('DEBUG: Identification saved with photoUrl:', photoUrl);
       
       result.saved = true;
       result.identificationId = identification._id;

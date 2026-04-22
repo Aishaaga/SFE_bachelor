@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../utils/constants.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -31,6 +32,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
       _isLoading = false;
       if (result['success']) {
         _identifications = result['identifications'];
+        print('DEBUG: Loaded ${_identifications.length} identifications');
+        for (var ident in _identifications) {
+          print(
+              'DEBUG: Plant: ${ident['plant']['name']}, photoUrl: ${ident['photoUrl']}');
+        }
       } else {
         _error = result['message'];
       }
@@ -149,7 +155,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 color: Colors.green.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.eco, color: Colors.green),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: ident['photoUrl'] != null &&
+                                        ident['photoUrl'].isNotEmpty
+                                    ? Builder(
+                                        builder: (context) {
+                                          final imageUrl =
+                                              '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${ident['photoUrl']}';
+                                          print(
+                                              'DEBUG: Loading image: $imageUrl');
+                                          print(
+                                              'DEBUG: photoUrl from API: ${ident['photoUrl']}');
+                                          return Image.network(
+                                            imageUrl,
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              print(
+                                                  'DEBUG: Image failed to load: $error');
+                                              return const Icon(Icons.eco,
+                                                  color: Colors.green);
+                                            },
+                                            loadingBuilder: (context, child,
+                                                loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
+                                              return const Center(
+                                                child: SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                                Color>(
+                                                            Colors.green),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      )
+                                    : const Icon(Icons.eco,
+                                        color: Colors.green),
+                              ),
                             ),
                             title: Text(
                               plant['name'],

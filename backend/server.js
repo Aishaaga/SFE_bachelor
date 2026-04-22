@@ -19,6 +19,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Servir les fichiers statiques (uploads)
+app.use('/uploads', express.static('uploads'));
+
 // CONNEXION À MONGODB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connecté'))
