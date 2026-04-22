@@ -4,8 +4,9 @@ import '../models/plant.dart';
 import '../data/plant_translations.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
+import 'translation_proposal_screen.dart';
 
-class ResultScreen extends StatelessWidget {
+class ResultScreen extends StatefulWidget {
   final Plant plant;
   final File photo;
   final String? identificationId;
@@ -17,6 +18,11 @@ class ResultScreen extends StatelessWidget {
     this.identificationId,
   });
 
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,8 +39,8 @@ class ResultScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (_) => PlantMapScreen(
-                        plantName: plant.name,
-                        scientificName: plant.scientificName,
+                        plantName: widget.plant.name,
+                        scientificName: widget.plant.scientificName,
                       ),
                     ),
                   );
@@ -54,7 +60,7 @@ class ResultScreen extends StatelessWidget {
               elevation: 4,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.file(photo,
+                child: Image.file(widget.photo,
                     height: 250, width: double.infinity, fit: BoxFit.cover),
               ),
             ),
@@ -64,7 +70,7 @@ class ResultScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.science),
                 title: const Text('Nom scientifique'),
-                subtitle: Text(plant.scientificName),
+                subtitle: Text(widget.plant.scientificName),
               ),
             ),
 
@@ -75,10 +81,10 @@ class ResultScreen extends StatelessWidget {
                 title: const Text('بالدارجة',
                     style: TextStyle(fontFamily: 'Arabic')),
                 subtitle: Text(
-                  plant.darijaName,
+                  widget.plant.darijaName,
                   style: const TextStyle(fontSize: 18, fontFamily: 'Arabic'),
                 ),
-                trailing: plant.darijaName != plant.scientificName
+                trailing: widget.plant.darijaName != widget.plant.scientificName
                     ? null
                     : const Icon(Icons.hourglass_empty, size: 16),
               ),
@@ -91,12 +97,13 @@ class ResultScreen extends StatelessWidget {
                 title: const Text('ⵜⴰⵎⴰⵣⵉⵖⵜ',
                     style: TextStyle(fontFamily: 'Tifinagh')),
                 subtitle: Text(
-                  plant.tamazightName,
+                  widget.plant.tamazightName,
                   style: const TextStyle(fontSize: 18, fontFamily: 'Tifinagh'),
                 ),
-                trailing: plant.tamazightName != plant.scientificName
-                    ? null
-                    : const Icon(Icons.hourglass_empty, size: 16),
+                trailing:
+                    widget.plant.tamazightName != widget.plant.scientificName
+                        ? null
+                        : const Icon(Icons.hourglass_empty, size: 16),
               ),
             ),
 
@@ -105,7 +112,7 @@ class ResultScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.family_restroom),
                 title: const Text('Famille'),
-                subtitle: Text(plant.family),
+                subtitle: Text(widget.plant.family),
               ),
             ),
 
@@ -114,14 +121,14 @@ class ResultScreen extends StatelessWidget {
               child: ListTile(
                 leading: const Icon(Icons.percent),
                 title: const Text('Confiance'),
-                subtitle: Text('${plant.confidencePercentage}%'),
+                subtitle: Text('${widget.plant.confidencePercentage}%'),
               ),
             ),
 
             const SizedBox(height: 16),
 
             // Contribute translation (optional)
-            if (!PlantTranslations.hasTranslation(plant.scientificName))
+            if (_shouldShowTranslationButton())
               Center(
                 child: TextButton.icon(
                   onPressed: () => _suggestTranslation(context),
@@ -171,32 +178,16 @@ class ResultScreen extends StatelessWidget {
     );
   }
 
+  bool _shouldShowTranslationButton() {
+    // Always show the translation proposal button
+    return true;
+  }
+
   void _suggestTranslation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Proposer une traduction'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Cette plante n\'a pas encore de nom en Darija ou Tamazight.'),
-            SizedBox(height: 16),
-            Text('Souhaitez-vous proposer une traduction ?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Plus tard'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Open form to submit translation
-              Navigator.pop(context);
-            },
-            child: const Text('Proposer'),
-          ),
-        ],
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TranslationProposalScreen(plant: widget.plant),
       ),
     );
   }
