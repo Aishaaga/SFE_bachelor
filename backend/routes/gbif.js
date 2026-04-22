@@ -7,17 +7,39 @@ async function fetchWithRetry(url, params, maxRetries = 3) {
         try {
             const response = await axios.get(url, { 
                 params, 
-                timeout: 10000,
+                timeout: 15000, // Increased timeout
+                maxContentLength: 50 * 1024 * 1024, // 50MB max
+                maxBodyLength: 50 * 1024 * 1024, // 50MB max
                 headers: {
-                    'User-Agent': 'SFE-Mobile-App/1.0'
+                    'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)',
+                    'Accept': 'application/json',
+                    'Connection': 'keep-alive'
                 }
             });
             return response;
         } catch (error) {
-            console.log(`Attempt ${i + 1} failed: ${error.message}`);
-            if (i === maxRetries - 1) throw error;
-            // Wait 1 second, then 2 seconds, then 3 seconds
-            await new Promise(r => setTimeout(r, (i + 1) * 1000));
+            console.log(`Attempt ${i + 1}/${maxRetries} failed: ${error.message}`);
+            
+            // Don't retry on certain errors
+            if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+                console.log('Timeout error, retrying...');
+            } else if (error.response && error.response.status === 404) {
+                console.log('Not found error, not retrying...');
+                throw error;
+            } else if (error.response && error.response.status === 400) {
+                console.log('Bad request error, not retrying...');
+                throw error;
+            }
+            
+            if (i === maxRetries - 1) {
+                console.log('All retry attempts exhausted');
+                throw error;
+            }
+            
+            // Exponential backoff: 1s, 2s, 4s
+            const delay = Math.min(1000 * Math.pow(2, i), 4000);
+            console.log(`Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
 }
@@ -59,15 +81,9 @@ router.get('/occurrences/:scientificName', async (req, res) => {
         }
         
         // Call GBIF API WITH FILTERS
-        const response = await axios.get(
+        const response = await fetchWithRetry(
             'https://api.gbif.org/v1/occurrence/search',
-            {
-                params: params,  // Use the params object with filters
-                timeout: 10000,
-                headers: {
-                    'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)'
-                }
-            }
+            params
         );
         
         const results = response.data.results || [];
@@ -111,19 +127,13 @@ router.get('/summary/:scientificName', async (req, res) => {
         console.log(`📍 Fetching GBIF count for: ${scientificName}`);
 
         
-        // Get just the count (faster)
-        const response = await axios.get(
+        // Get just the count (faster) using retry mechanism
+        const response = await fetchWithRetry(
             'https://api.gbif.org/v1/occurrence/search',
             {
-                params: {
-                    scientificName: scientificName,
-                    limit: 0,
-                    hasCoordinate: true
-                },
-                timeout: 5000,
-                headers: {                          // ← ADD THIS BLOCK
-                        'User-Agent': 'SFE-Mobile-App/1.0 (contact@yourapp.com)'
-        }
+                scientificName: scientificName,
+                limit: 0,
+                hasCoordinate: true
             }
         );
 
