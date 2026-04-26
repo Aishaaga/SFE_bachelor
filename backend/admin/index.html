@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs Administration - SFE Backend</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .log-entry {
+            border-left: 4px solid #dee2e6;
+            transition: all 0.2s ease;
+        }
+        .log-entry:hover {
+            background-color: #f8f9fa;
+            border-left-color: #0d6efd;
+        }
+        .log-error {
+            border-left-color: #dc3545;
+        }
+        .log-warning {
+            border-left-color: #ffc107;
+        }
+        .log-info {
+            border-left-color: #0dcaf0;
+        }
+        .log-success {
+            border-left-color: #198754;
+        }
+        .log-debug {
+            border-left-color: #6c757d;
+        }
+        .timestamp {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .log-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .filter-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .stats-card {
+            transition: transform 0.2s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-2px);
+        }
+        .sidebar {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .main-content {
+            background-color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <h5 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+                        <span>Administration</span>
+                    </h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#logs">
+                                <i class="bi bi-file-text"></i> Logs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#users">
+                                <i class="bi bi-people"></i> Utilisateurs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#identifications">
+                                <i class="bi bi-search"></i> Identifications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#settings">
+                                <i class="bi bi-gear"></i> Paramètres
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="bi bi-file-text me-2"></i>
+                        Logs Système
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshLogs()">
+                                <i class="bi bi-arrow-clockwise"></i> Actualiser
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportLogs()">
+                                <i class="bi bi-download"></i> Exporter
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearLogs()">
+                                <i class="bi bi-trash"></i> Vider
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stats-card bg-danger text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Erreurs</h6>
+                                        <h3 id="errorCount">0</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Avertissements</h6>
+                                        <h3 id="warningCount">0</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-exclamation-circle-fill fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Informations</h6>
+                                        <h3 id="infoCount">0</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-info-circle-fill fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Succès</h6>
+                                        <h3 id="successCount">0</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="bi bi-check-circle-fill fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="card filter-section mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title text-white">
+                            <i class="bi bi-funnel me-2"></i>Filtres
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="logLevel" class="form-label text-white">Niveau de log</label>
+                                <select class="form-select" id="logLevel" onchange="filterLogs()">
+                                    <option value="">Tous les niveaux</option>
+                                    <option value="error">Erreur</option>
+                                    <option value="warning">Avertissement</option>
+                                    <option value="info">Information</option>
+                                    <option value="success">Succès</option>
+                                    <option value="debug">Debug</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="logSource" class="form-label text-white">Source</label>
+                                <select class="form-select" id="logSource" onchange="filterLogs()">
+                                    <option value="">Toutes les sources</option>
+                                    <option value="server">Serveur</option>
+                                    <option value="auth">Authentification</option>
+                                    <option value="api">API</option>
+                                    <option value="database">Base de données</option>
+                                    <option value="external">Services externes</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="dateFrom" class="form-label text-white">Date début</label>
+                                <input type="datetime-local" class="form-control" id="dateFrom" onchange="filterLogs()">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="dateTo" class="form-label text-white">Date fin</label>
+                                <input type="datetime-local" class="form-control" id="dateTo" onchange="filterLogs()">
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label for="searchInput" class="form-label text-white">Recherche</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Rechercher dans les logs..." onkeyup="filterLogs()">
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="button" class="btn btn-light me-2" onclick="resetFilters()">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+                                </button>
+                                <button type="button" class="btn btn-light" onclick="applyFilters()">
+                                    <i class="bi bi-check-lg"></i> Appliquer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs Display -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-ul me-2"></i>
+                            Journal des logs
+                            <span class="badge bg-secondary ms-2" id="logCount">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="logsContainer">
+                            <!-- Logs will be loaded here -->
+                        </div>
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-primary" onclick="loadMoreLogs()">
+                                <i class="bi bi-arrow-down-circle"></i> Charger plus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Check authentication and fetch logs from API
+        let logs = [];
+        let isAuthenticated = false;
+
+        // Check if user is authenticated
+        function checkAuthentication() {
+            const token = sessionStorage.getItem('adminToken');
+            
+            if (!token) {
+                // Redirect to login if no token
+                window.location.href = '/api/admin/login';
+                return false;
+            }
+            isAuthenticated = true;
+            return true;
+        }
+
+        // Fetch logs from API
+        async function fetchLogs() {
+            const token = sessionStorage.getItem('adminToken');
+            
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/admin/api/logs', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    // Token expired or invalid, redirect to login
+                    sessionStorage.removeItem('adminToken');
+                    sessionStorage.removeItem('adminEmail');
+                    window.location.href = '/api/admin/login';
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    logs = data.data || [];
+                    filteredLogs = [...logs];
+                    updateStatistics();
+                    displayLogs();
+                }
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                // Fallback to sample data
+                logs = getSampleLogs();
+                filteredLogs = [...logs];
+                updateStatistics();
+                displayLogs();
+            }
+        }
+
+        // Sample log data as fallback
+        function getSampleLogs() {
+            return [
+                {
+                    id: 1,
+                    timestamp: new Date('2024-04-23T10:30:00'),
+                    level: 'error',
+                    source: 'server',
+                    message: 'Erreur de connexion à la base de données MongoDB',
+                    details: 'Connection timeout after 30000ms',
+                    userId: null
+                },
+                {
+                    id: 2,
+                    timestamp: new Date('2024-04-23T10:25:00'),
+                    level: 'warning',
+                    source: 'auth',
+                    message: 'Tentative de connexion échouée',
+                    details: 'Email: admin@example.com - IP: 192.168.1.100',
+                    userId: 'user123'
+                },
+                {
+                    id: 3,
+                    timestamp: new Date('2024-04-23T10:20:00'),
+                    level: 'info',
+                    source: 'api',
+                    message: 'Nouvelle identification plante créée',
+                    details: 'Plante ID: plant456 - Espèce: Rosa canina',
+                    userId: 'user456'
+                },
+                {
+                    id: 4,
+                    timestamp: new Date('2024-04-23T10:15:00'),
+                    level: 'success',
+                    source: 'external',
+                    message: 'API PlantNet répondue avec succès',
+                    details: '200 OK - Temps de réponse: 245ms',
+                    userId: null
+                },
+                {
+                    id: 5,
+                    timestamp: new Date('2024-04-23T10:10:00'),
+                    level: 'debug',
+                    source: 'database',
+                    message: 'Requête MongoDB exécutée',
+                    details: 'Collection: users - Opération: find - Temps: 12ms',
+                    userId: null
+                }
+            ];
+        }
+
+        let filteredLogs = [...logs];
+        let currentOffset = 0;
+        const logsPerPage = 50;
+
+        function initializePage() {
+            if (checkAuthentication()) {
+                fetchLogs();
+                setDefaultDateTime();
+                addLogoutButton();
+            }
+        }
+
+        function addLogoutButton() {
+            const toolbar = document.querySelector('.btn-toolbar');
+            const logoutBtn = document.createElement('button');
+            logoutBtn.type = 'button';
+            logoutBtn.className = 'btn btn-sm btn-outline-danger';
+            logoutBtn.innerHTML = '<i class="bi bi-box-arrow-right"></i> Déconnexion';
+            logoutBtn.onclick = logout;
+            toolbar.querySelector('.btn-group').appendChild(logoutBtn);
+        }
+
+        function logout() {
+            sessionStorage.removeItem('adminToken');
+            sessionStorage.removeItem('adminEmail');
+            window.location.href = '/api/admin/login';
+        }
+
+        function setDefaultDateTime() {
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            
+            document.getElementById('dateTo').value = formatDateTimeLocal(now);
+            document.getElementById('dateFrom').value = formatDateTimeLocal(yesterday);
+        }
+
+        function formatDateTimeLocal(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        function updateStatistics() {
+            const stats = {
+                error: 0,
+                warning: 0,
+                info: 0,
+                success: 0,
+                debug: 0
+            };
+
+            filteredLogs.forEach(log => {
+                if (stats.hasOwnProperty(log.level)) {
+                    stats[log.level]++;
+                }
+            });
+
+            document.getElementById('errorCount').textContent = stats.error;
+            document.getElementById('warningCount').textContent = stats.warning;
+            document.getElementById('infoCount').textContent = stats.info;
+            document.getElementById('successCount').textContent = stats.success;
+            document.getElementById('logCount').textContent = filteredLogs.length;
+        }
+
+        function displayLogs() {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = '';
+
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <i class="bi bi-inbox fs-1 text-muted"></i>
+                        <p class="text-muted">Aucun log trouvé</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const logsToDisplay = filteredLogs.slice(0, currentOffset + logsPerPage);
+
+            logsToDisplay.forEach(log => {
+                const logElement = createLogElement(log);
+                container.appendChild(logElement);
+            });
+
+            if (logsToDisplay.length < filteredLogs.length) {
+                document.querySelector('.btn-outline-primary').style.display = 'inline-block';
+            } else {
+                document.querySelector('.btn-outline-primary').style.display = 'none';
+            }
+        }
+
+        function createLogElement(log) {
+            const div = document.createElement('div');
+            div.className = `log-entry mb-3 p-3 border log-${log.level}`;
+            
+            const levelBadge = getLevelBadge(log.level);
+            const sourceIcon = getSourceIcon(log.source);
+            
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center mb-2">
+                            ${levelBadge}
+                            <span class="ms-2">${sourceIcon}</span>
+                            <strong class="ms-2">${log.source.toUpperCase()}</strong>
+                            <span class="timestamp ms-3 text-muted">${formatTimestamp(log.timestamp)}</span>
+                            ${log.userId ? `<span class="badge bg-secondary ms-2">User: ${log.userId}</span>` : ''}
+                        </div>
+                        <div class="log-content">${log.message}</div>
+                        ${log.details ? `<div class="log-content text-muted mt-2">${log.details}</div>` : ''}
+                    </div>
+                    <div class="ms-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showLogDetails(${log.id})">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function getLevelBadge(level) {
+            const badges = {
+                error: '<span class="badge bg-danger">ERREUR</span>',
+                warning: '<span class="badge bg-warning text-dark">AVERTISSEMENT</span>',
+                info: '<span class="badge bg-info">INFO</span>',
+                success: '<span class="badge bg-success">SUCCÈS</span>',
+                debug: '<span class="badge bg-secondary">DEBUG</span>'
+            };
+            return badges[level] || '<span class="badge bg-secondary">UNKNOWN</span>';
+        }
+
+        function getSourceIcon(source) {
+            const icons = {
+                server: '<i class="bi bi-server"></i>',
+                auth: '<i class="bi bi-shield-lock"></i>',
+                api: '<i class="bi bi-globe"></i>',
+                database: '<i class="bi bi-database"></i>',
+                external: '<i class="bi bi-cloud"></i>'
+            };
+            return icons[source] || '<i class="bi bi-file-text"></i>';
+        }
+
+        function formatTimestamp(timestamp) {
+            return new Date(timestamp).toLocaleString('fr-FR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function filterLogs() {
+            const level = document.getElementById('logLevel').value;
+            const source = document.getElementById('logSource').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredLogs = logs.filter(log => {
+                if (level && log.level !== level) return false;
+                if (source && log.source !== source) return false;
+                if (dateFrom && new Date(log.timestamp) < new Date(dateFrom)) return false;
+                if (dateTo && new Date(log.timestamp) > new Date(dateTo)) return false;
+                if (searchTerm && !log.message.toLowerCase().includes(searchTerm) && 
+                    !log.details.toLowerCase().includes(searchTerm)) return false;
+                return true;
+            });
+
+            currentOffset = 0;
+            updateStatistics();
+            displayLogs();
+        }
+
+        function resetFilters() {
+            document.getElementById('logLevel').value = '';
+            document.getElementById('logSource').value = '';
+            document.getElementById('searchInput').value = '';
+            setDefaultDateTime();
+            filterLogs();
+        }
+
+        function applyFilters() {
+            filterLogs();
+        }
+
+        function refreshLogs() {
+            // In production, this would fetch new logs from the server
+            addNewLog();
+            filterLogs();
+        }
+
+        function addNewLog() {
+            const newLog = {
+                id: logs.length + 1,
+                timestamp: new Date(),
+                level: 'info',
+                source: 'server',
+                message: 'Logs actualisés manuellement',
+                details: 'Action effectuée par l\'administrateur',
+                userId: null
+            };
+            logs.unshift(newLog);
+        }
+
+        function loadMoreLogs() {
+            currentOffset += logsPerPage;
+            displayLogs();
+        }
+
+        function exportLogs() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Timestamp,Niveau,Source,Message,Details,UserID\n"
+                + filteredLogs.map(log => 
+                    `"${formatTimestamp(log.timestamp)}","${log.level}","${log.source}","${log.message}","${log.details || ''}","${log.userId || ''}"`
+                ).join("\n");
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `logs_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function clearLogs() {
+            if (confirm('Êtes-vous sûr de vouloir vider tous les logs ? Cette action est irréversible.')) {
+                logs = [];
+                filteredLogs = [];
+                currentOffset = 0;
+                updateStatistics();
+                displayLogs();
+            }
+        }
+
+        function showLogDetails(logId) {
+            const log = logs.find(l => l.id === logId);
+            if (!log) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Détails du log #${log.id}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>ID:</strong></div>
+                                <div class="col-md-9">${log.id}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Timestamp:</strong></div>
+                                <div class="col-md-9">${formatTimestamp(log.timestamp)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Niveau:</strong></div>
+                                <div class="col-md-9">${getLevelBadge(log.level)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Source:</strong></div>
+                                <div class="col-md-9">${log.source}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>User ID:</strong></div>
+                                <div class="col-md-9">${log.userId || 'N/A'}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Message:</strong></div>
+                                <div class="col-md-9">${log.message}</div>
+                            </div>
+                            ${log.details ? `
+                            <div class="row mb-3">
+                                <div class="col-md-3"><strong>Détails:</strong></div>
+                                <div class="col-md-9"><pre class="log-content">${log.details}</pre></div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+
+            modal.addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modal);
+            });
+        }
+
+        // Initialize page on load
+        document.addEventListener('DOMContentLoaded', initializePage);
+
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            refreshLogs();
+        }, 30000);
+    </script>
+</body>
+</html>
