@@ -9,7 +9,7 @@ const gbifRoutes = require('./routes/gbif');
 const identifyRoutes = require('./routes/identify');
 const authRoutes = require('./routes/auth');
 const identificationsRoutes = require('./routes/identifications');
-const translationProposalsRoutes = require('./routes/translation-proposals');
+const translationSuggestionsRoutes = require('./routes/translation-suggestions');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,7 +36,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/gbif', gbifRoutes);
 app.use('/api/identify', identifyRoutes);
 app.use('/api', authRoutes);  // /api/register, /api/login
-app.use('/api/translation-proposals', translationProposalsRoutes);  // /api/translation-proposals (POST publique)
+app.use('/api/translation-suggestions', translationSuggestionsRoutes);  // /api/translation-suggestions (auth requise)
 app.use('/api', identificationsRoutes);  // /api/save-identification, etc. (avec auth)
 
 // Route 404

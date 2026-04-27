@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/translation_proposal.dart';
+import '../models/translation_suggestion.dart';
 import '../services/proposal_service.dart';
 
 class AdminProposalsScreen extends StatefulWidget {
@@ -10,7 +10,7 @@ class AdminProposalsScreen extends StatefulWidget {
 }
 
 class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
-  List<TranslationProposal> _proposals = [];
+  List<TranslationSuggestion> _proposals = [];
   bool _isLoading = true;
   ProposalStatus? _filterStatus;
 
@@ -29,7 +29,7 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
       final proposals = _filterStatus != null
           ? await ProposalService.getProposalsByStatus(_filterStatus!)
           : await ProposalService.getAllProposals();
-      
+
       setState(() {
         _proposals = proposals;
         _isLoading = false;
@@ -46,11 +46,12 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
     }
   }
 
-  Future<void> _updateProposalStatus(String proposalId, ProposalStatus newStatus) async {
+  Future<void> _updateProposalStatus(
+      String proposalId, ProposalStatus newStatus) async {
     try {
       await ProposalService.updateProposalStatus(proposalId, newStatus);
       _loadProposals(); // Reload to show updated status
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Statut mis à jour: ${newStatus.name}')),
@@ -70,7 +71,8 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
-        content: const Text('Voulez-vous vraiment supprimer cette proposition?'),
+        content:
+            const Text('Voulez-vous vraiment supprimer cette proposition?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -88,7 +90,7 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
       try {
         await ProposalService.deleteProposal(proposalId);
         _loadProposals();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Proposition supprimée')),
@@ -116,7 +118,8 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
             icon: const Icon(Icons.filter_list),
             onSelected: (status) {
               setState(() {
-                _filterStatus = status == ProposalStatus.values.first ? null : status;
+                _filterStatus =
+                    status == ProposalStatus.values.first ? null : status;
               });
               _loadProposals();
             },
@@ -126,9 +129,9 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
                 child: Text('Toutes'),
               ),
               ...ProposalStatus.values.map((status) => PopupMenuItem(
-                value: status,
-                child: Text(_getStatusText(status)),
-              )),
+                    value: status,
+                    child: Text(_getStatusText(status)),
+                  )),
             ],
           ),
         ],
@@ -145,7 +148,8 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
                     final proposal = _proposals[index];
                     return ProposalCard(
                       proposal: proposal,
-                      onStatusChanged: (newStatus) => _updateProposalStatus(proposal.id, newStatus),
+                      onStatusChanged: (newStatus) =>
+                          _updateProposalStatus(proposal.id, newStatus),
                       onDelete: () => _deleteProposal(proposal.id),
                     );
                   },
@@ -168,7 +172,7 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
 }
 
 class ProposalCard extends StatelessWidget {
-  final TranslationProposal proposal;
+  final TranslationSuggestion proposal;
   final Function(ProposalStatus) onStatusChanged;
   final VoidCallback onDelete;
 
@@ -206,27 +210,30 @@ class ProposalCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            
+
             // Proposed translations
             if (proposal.darijaProposal != null) ...[
-              _buildTranslationRow('Darija:', proposal.darijaProposal!, Colors.green),
+              _buildTranslationRow(
+                  'Darija:', proposal.darijaProposal!, Colors.green),
               const SizedBox(height: 8),
             ],
             if (proposal.tamazightProposal != null) ...[
-              _buildTranslationRow('Tamazight:', proposal.tamazightProposal!, Colors.blue),
+              _buildTranslationRow(
+                  'Tamazight:', proposal.tamazightProposal!, Colors.blue),
               const SizedBox(height: 12),
             ],
-            
+
             // Contributor info
             const Divider(),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.person, 'Contributeur:', proposal.contributorName),
+            _buildInfoRow(
+                Icons.person, 'Contributeur:', proposal.contributorName),
             _buildInfoRow(Icons.email, 'Email:', proposal.contributorEmail),
             if (proposal.region.isNotEmpty)
               _buildInfoRow(Icons.location_on, 'Région:', proposal.region),
-            _buildInfoRow(Icons.calendar_today, 'Date:', 
+            _buildInfoRow(Icons.calendar_today, 'Date:',
                 '${proposal.submittedAt.day}/${proposal.submittedAt.month}/${proposal.submittedAt.year}'),
-            
+
             if (proposal.notes.isNotEmpty) ...[
               const SizedBox(height: 8),
               Text(
@@ -237,7 +244,7 @@ class ProposalCard extends StatelessWidget {
                 ),
               ),
             ],
-            
+
             // Action buttons
             const SizedBox(height: 16),
             Row(
@@ -292,7 +299,7 @@ class ProposalCard extends StatelessWidget {
   Widget _buildStatusChip(ProposalStatus status) {
     Color color;
     String text;
-    
+
     switch (status) {
       case ProposalStatus.pending:
         color = Colors.orange;
@@ -311,7 +318,7 @@ class ProposalCard extends StatelessWidget {
         text = 'À revoir';
         break;
     }
-    
+
     return Chip(
       label: Text(
         text,

@@ -1,4 +1,4 @@
-class TranslationProposal {
+class TranslationSuggestion {
   final String id;
   final String scientificName;
   final String? darijaProposal;
@@ -14,7 +14,7 @@ class TranslationProposal {
   final String? reviewNotes;
   final bool isValidated;
 
-  TranslationProposal({
+  TranslationSuggestion({
     required this.id,
     required this.scientificName,
     this.darijaProposal,
@@ -31,8 +31,8 @@ class TranslationProposal {
     this.isValidated = false,
   });
 
-  factory TranslationProposal.fromJson(Map<String, dynamic> json) {
-    return TranslationProposal(
+  factory TranslationSuggestion.fromJson(Map<String, dynamic> json) {
+    return TranslationSuggestion(
       id: json['_id'] ?? json['id'] ?? '',
       scientificName: json['scientificName'] ?? '',
       darijaProposal: json['darijaProposal'] as String?,
@@ -84,7 +84,7 @@ class TranslationProposal {
     };
   }
 
-  TranslationProposal copyWith({
+  TranslationSuggestion copyWith({
     String? id,
     String? scientificName,
     String? darijaProposal,
@@ -96,7 +96,7 @@ class TranslationProposal {
     DateTime? submittedAt,
     ProposalStatus? status,
   }) {
-    return TranslationProposal(
+    return TranslationSuggestion(
       id: id ?? this.id,
       scientificName: scientificName ?? this.scientificName,
       darijaProposal: darijaProposal ?? this.darijaProposal,

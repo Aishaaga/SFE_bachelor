@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/plant.dart';
-import '../models/translation_proposal.dart';
+import '../models/translation_suggestion.dart';
 import '../services/proposal_service.dart';
 
 class TranslationProposalScreen extends StatefulWidget {
@@ -68,7 +68,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
     });
 
     try {
-      final proposal = TranslationProposal(
+      final suggestion = TranslationSuggestion(
         id: _generateId(),
         scientificName: widget.plant.scientificName,
         darijaProposal: _proposeDarija ? _darijaController.text.trim() : null,
@@ -81,7 +81,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
         submittedAt: DateTime.now(),
       );
 
-      await ProposalService.saveProposal(proposal);
+      await ProposalService.saveProposal(suggestion);
 
       if (mounted) {
         _showSuccessDialog();

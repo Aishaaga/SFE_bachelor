@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const translationProposalSchema = new mongoose.Schema({
+const translationSuggestionSchema = new mongoose.Schema({
   // Informations sur la plante
   scientificName: {
     type: String,
@@ -89,13 +89,13 @@ const translationProposalSchema = new mongoose.Schema({
 });
 
 // Index pour la recherche rapide
-translationProposalSchema.index({ scientificName: 1, status: 1 });
-translationProposalSchema.index({ contributorEmail: 1 });
-translationProposalSchema.index({ submittedAt: -1 });
-translationProposalSchema.index({ status: 1, submittedAt: -1 });
+translationSuggestionSchema.index({ scientificName: 1, status: 1 });
+translationSuggestionSchema.index({ contributorEmail: 1 });
+translationSuggestionSchema.index({ submittedAt: -1 });
+translationSuggestionSchema.index({ status: 1, submittedAt: -1 });
 
 // Validation : au moins une proposition doit exister
-translationProposalSchema.pre('save', async function() {
+translationSuggestionSchema.pre('save', async function() {
   if (!this.darijaProposal && !this.tamazightProposal) {
     const error = new Error('Au moins une proposition (Darija ou Tamazight) est requise');
     throw error;
@@ -103,13 +103,13 @@ translationProposalSchema.pre('save', async function() {
 });
 
 // Méthode virtuelle pour vérifier si la proposition est valide
-translationProposalSchema.virtual('hasValidProposal').get(function() {
+translationSuggestionSchema.virtual('hasValidProposal').get(function() {
   return (this.darijaProposal && this.darijaProposal.trim().length > 0) ||
          (this.tamazightProposal && this.tamazightProposal.trim().length > 0);
 });
 
 // Méthode pour approuver une proposition
-translationProposalSchema.methods.approve = function(adminId, reviewNotes = '') {
+translationSuggestionSchema.methods.approve = function(adminId, reviewNotes = '') {
   this.status = 'approved';
   this.reviewedAt = new Date();
   this.reviewedBy = adminId;
@@ -119,7 +119,7 @@ translationProposalSchema.methods.approve = function(adminId, reviewNotes = '') 
 };
 
 // Méthode pour rejeter une proposition
-translationProposalSchema.methods.reject = function(adminId, reviewNotes = '') {
+translationSuggestionSchema.methods.reject = function(adminId, reviewNotes = '') {
   this.status = 'rejected';
   this.reviewedAt = new Date();
   this.reviewedBy = adminId;
@@ -129,7 +129,7 @@ translationProposalSchema.methods.reject = function(adminId, reviewNotes = '') {
 };
 
 // Méthode pour marquer comme nécessitant une review
-translationProposalSchema.methods.requestReview = function(adminId, reviewNotes = '') {
+translationSuggestionSchema.methods.requestReview = function(adminId, reviewNotes = '') {
   this.status = 'needs_review';
   this.reviewedAt = new Date();
   this.reviewedBy = adminId;
@@ -138,7 +138,7 @@ translationProposalSchema.methods.requestReview = function(adminId, reviewNotes 
 };
 
 // Méthodes statiques pour les statistiques
-translationProposalSchema.statics.getStats = function() {
+translationSuggestionSchema.statics.getStats = function() {
   return this.aggregate([
     {
       $group: {
@@ -149,7 +149,7 @@ translationProposalSchema.statics.getStats = function() {
   ]);
 };
 
-translationProposalSchema.statics.getStatsByDateRange = function(startDate, endDate) {
+translationSuggestionSchema.statics.getStatsByDateRange = function(startDate, endDate) {
   return this.aggregate([
     {
       $match: {
@@ -169,10 +169,10 @@ translationProposalSchema.statics.getStatsByDateRange = function(startDate, endD
 };
 
 // Transformer en JSON pour l'API
-translationProposalSchema.methods.toJSON = function() {
-  const proposal = this.toObject();
-  delete proposal.__v;
-  return proposal;
+translationSuggestionSchema.methods.toJSON = function() {
+  const suggestion = this.toObject();
+  delete suggestion.__v;
+  return suggestion;
 };
 
-module.exports = mongoose.model('TranslationProposal', translationProposalSchema);
+module.exports = mongoose.model('TranslationSuggestion', translationSuggestionSchema);

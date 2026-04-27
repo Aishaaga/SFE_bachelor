@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/translation_proposal.dart';
+import '../models/translation_suggestion.dart';
 import '../services/auth_service.dart';
 
 class ProposalService {
   static const String _baseUrl =
-      'http://192.168.0.182:3000/api/translation-proposals';
+      'http://192.168.0.182:3000/api/translation-suggestions';
 
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
@@ -21,7 +21,7 @@ class ProposalService {
     return headers;
   }
 
-  static Future<List<TranslationProposal>> getAllProposals(
+  static Future<List<TranslationSuggestion>> getAllProposals(
       {int page = 1, int limit = 20}) async {
     try {
       final headers = await _getHeaders();
@@ -35,7 +35,7 @@ class ProposalService {
         if (data['success']) {
           final List<dynamic> proposalsList = data['proposals'];
           return proposalsList
-              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .map((proposal) => TranslationSuggestion.fromJson(proposal))
               .toList();
         }
       }
@@ -46,7 +46,7 @@ class ProposalService {
     }
   }
 
-  static Future<void> saveProposal(TranslationProposal proposal) async {
+  static Future<void> saveProposal(TranslationSuggestion proposal) async {
     try {
       final headers = await _getHeaders();
       final response = await http.post(
@@ -73,7 +73,7 @@ class ProposalService {
     }
   }
 
-  static Future<List<TranslationProposal>> getProposalsByStatus(
+  static Future<List<TranslationSuggestion>> getProposalsByStatus(
       ProposalStatus status,
       {int page = 1,
       int limit = 20}) async {
@@ -90,7 +90,7 @@ class ProposalService {
         if (data['success']) {
           final List<dynamic> proposalsList = data['proposals'];
           return proposalsList
-              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .map((proposal) => TranslationSuggestion.fromJson(proposal))
               .toList();
         }
       }
@@ -101,7 +101,7 @@ class ProposalService {
     }
   }
 
-  static Future<List<TranslationProposal>> getProposalsByScientificName(
+  static Future<List<TranslationSuggestion>> getProposalsByScientificName(
       String scientificName) async {
     try {
       final headers = await _getHeaders();
@@ -116,7 +116,7 @@ class ProposalService {
         if (data['success']) {
           final List<dynamic> proposalsList = data['proposals'];
           return proposalsList
-              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .map((proposal) => TranslationSuggestion.fromJson(proposal))
               .toList();
         }
       }
@@ -205,7 +205,7 @@ class ProposalService {
     }
   }
 
-  static Future<List<TranslationProposal>> searchProposals({
+  static Future<List<TranslationSuggestion>> searchProposals({
     String? q,
     String? scientificName,
     String? contributorName,
@@ -249,7 +249,7 @@ class ProposalService {
         if (data['success']) {
           final List<dynamic> proposalsList = data['proposals'];
           return proposalsList
-              .map((proposal) => TranslationProposal.fromJson(proposal))
+              .map((proposal) => TranslationSuggestion.fromJson(proposal))
               .toList();
         }
       }
