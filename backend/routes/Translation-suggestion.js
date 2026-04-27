@@ -4,7 +4,10 @@ const TranslationSuggestion = require('../models/TranslationSuggestion');
 
 const router = express.Router();
 
-// Route publique pour créer une proposition (pas d'authentification requise)
+// Toutes les routes suivantes nécessitent une authentification
+router.use(authMiddleware);
+
+// Route pour créer une proposition (authentification requise)
 router.post('/', async (req, res) => {
   try {
     const {
@@ -70,11 +73,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Toutes les routes suivantes nécessitent une authentification
-router.use(authMiddleware);
-
 // GET /api/translation-proposals - Lister toutes les propositions (admin)
-router.get('/', authMiddleware, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const {
       status,
@@ -132,7 +132,7 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 
 // GET /api/translation-proposals/stats - Statistiques (admin)
-router.get('/stats', authMiddleware, async (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
     const stats = await TranslationSuggestion.getStats();
     
@@ -165,7 +165,7 @@ router.get('/stats', authMiddleware, async (req, res) => {
 });
 
 // PUT /api/translation-proposals/:id/status - Mettre à jour le statut (admin)
-router.put('/:id/status', authMiddleware, async (req, res) => {
+router.put('/:id/status', async (req, res) => {
   try {
     const { status, reviewNotes } = req.body;
     const proposalId = req.params.id;
@@ -211,7 +211,7 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
 });
 
 // DELETE /api/translation-proposals/:id - Supprimer une proposition (admin)
-router.delete('/:id', authMiddleware, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const proposalId = req.params.id;
     

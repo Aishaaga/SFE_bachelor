@@ -1,19 +1,24 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/translation_proposal.dart';
+import '../models/translation_suggestion.dart';
 import '../services/auth_service.dart';
 
 class ProposalService {
   static const String _baseUrl =
-      'http://192.168.0.182:3000/api/translation-proposals';
+      'http://192.168.0.182:3000/api/translation-suggestion';
 
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
     final token = await authService.getToken();
-    return {
+    final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
     };
+
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
   }
 
   static Future<List<TranslationSuggestion>> getAllProposals(
