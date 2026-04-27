@@ -9,7 +9,7 @@ const gbifRoutes = require('./routes/gbif');
 const identifyRoutes = require('./routes/identify');
 const authRoutes = require('./routes/auth');
 const identificationsRoutes = require('./routes/identifications');
-const translationProposalsRoutes = require('./routes/Translation-suggestion');
+const translationSuggestionsRoutes = require('./routes/translation-suggestions');
 const adminRoutes = require('./routes/admin');
 console.log('✅ Admin routes imported');
 
@@ -38,7 +38,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/gbif', gbifRoutes);
 app.use('/api/identify', identifyRoutes);
 app.use('/api', authRoutes);  // /api/register, /api/login
-app.use('/api/translation-suggestion', translationProposalsRoutes);  // /api/translation-suggestion (POST publique)
+app.use('/api/translation-suggestions', translationSuggestionsRoutes);  // /api/translation-suggestions (auth requise)
 app.use('/api', identificationsRoutes);  // /api/save-identification, etc. (avec auth)
 app.use('/api/admin', adminRoutes);  // Admin endpoints
 console.log('✅ Admin routes mounted at /api/admin');

@@ -5,7 +5,7 @@ import '../services/auth_service.dart';
 
 class ProposalService {
   static const String _baseUrl =
-      'http://192.168.0.182:3000/api/translation-suggestion';
+      'http://192.168.0.182:3000/api/translation-suggestions';
 
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
