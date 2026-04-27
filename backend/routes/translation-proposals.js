@@ -4,7 +4,10 @@ const TranslationProposal = require('../models/TranslationProposal');
 
 const router = express.Router();
 
-// Route publique pour créer une proposition (pas d'authentification requise)
+// Toutes les routes suivantes nécessitent une authentification
+router.use(authMiddleware);
+
+// Route pour créer une proposition (authentification requise)
 router.post('/', async (req, res) => {
   try {
     const {
@@ -69,9 +72,6 @@ router.post('/', async (req, res) => {
     });
   }
 });
-
-// Toutes les routes suivantes nécessitent une authentification
-router.use(authMiddleware);
 
 // GET /api/translation-proposals - Lister toutes les propositions (admin)
 router.get('/', authMiddleware, async (req, res) => {

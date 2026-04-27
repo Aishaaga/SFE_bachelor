@@ -10,10 +10,15 @@ class ProposalService {
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
     final token = await authService.getToken();
-    return {
+    final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
     };
+
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
   }
 
   static Future<List<TranslationProposal>> getAllProposals(
@@ -43,11 +48,10 @@ class ProposalService {
 
   static Future<void> saveProposal(TranslationProposal proposal) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.post(
         Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json'
-        }, // Pas d'auth pour la création
+        headers: headers,
         body: json.encode({
           'scientificName': proposal.scientificName,
           'darijaProposal': proposal.darijaProposal,
