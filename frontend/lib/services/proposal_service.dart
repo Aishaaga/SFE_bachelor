@@ -10,12 +10,17 @@ class ProposalService {
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
     final token = await authService.getToken();
+    print('DEBUG: Token récupéré: $token');
+
     final headers = {
       'Content-Type': 'application/json',
     };
 
-    if (token != null) {
+    if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
+      print('DEBUG: Headers avec auth: $headers');
+    } else {
+      print('DEBUG: Headers sans auth: $headers');
     }
 
     return headers;
@@ -48,11 +53,21 @@ class ProposalService {
 
   static Future<void> saveProposal(TranslationSuggestion proposal) async {
     try {
+      final headers = await _getHeaders();
+      print('DEBUG: Envoi de la requête vers $_baseUrl');
+      print('DEBUG: Corps de la requête: ${json.encode({
+            'scientificName': proposal.scientificName,
+            'darijaProposal': proposal.darijaProposal,
+            'tamazightProposal': proposal.tamazightProposal,
+            'contributorName': proposal.contributorName,
+            'contributorEmail': proposal.contributorEmail,
+            'contributorRegion': proposal.region,
+            'notes': proposal.notes,
+          })}');
+
       final response = await http.post(
         Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json'
-        }, // Pas d'auth pour la création
+        headers: headers,
         body: json.encode({
           'scientificName': proposal.scientificName,
           'darijaProposal': proposal.darijaProposal,
@@ -63,6 +78,9 @@ class ProposalService {
           'notes': proposal.notes,
         }),
       );
+
+      print('DEBUG: Status code: ${response.statusCode}');
+      print('DEBUG: Response body: ${response.body}');
 
       if (response.statusCode != 201) {
         final errorData = json.decode(response.body);

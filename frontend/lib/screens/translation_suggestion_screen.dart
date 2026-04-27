@@ -4,22 +4,20 @@ import 'package:flutter/services.dart';
 import '../models/plant.dart';
 import '../models/translation_suggestion.dart';
 import '../services/proposal_service.dart';
-import '../services/auth_service.dart';
 
-class TranslationProposalScreen extends StatefulWidget {
+class TranslationSuggestionScreen extends StatefulWidget {
   final Plant plant;
 
-  const TranslationProposalScreen({
+  const TranslationSuggestionScreen({
     super.key,
     required this.plant,
   });
 
   @override
-  State<TranslationProposalScreen> createState() =>
-      _TranslationProposalScreenState();
+  State<TranslationSuggestionScreen> createState() => _TranslationSuggestionScreenState();
 }
 
-class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
+class _TranslationSuggestionScreenState extends State<TranslationSuggestionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _darijaController = TextEditingController();
   final _tamazightController = TextEditingController();
@@ -28,9 +26,9 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
   final _regionController = TextEditingController();
   final _notesController = TextEditingController();
 
+  bool _proposeDarija = false;
+  bool _proposeTamazight = false;
   bool _isSubmitting = false;
-  bool _proposeDarija = true;
-  bool _proposeTamazight = true;
 
   @override
   void dispose() {
@@ -49,8 +47,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
     }
 
     if (!_proposeDarija && !_proposeTamazight) {
-      _showErrorDialog(
-          'Veuillez proposer au moins une traduction (Darija ou Tamazight)');
+      _showErrorDialog('Veuillez sélectionner au moins une langue à proposer');
       return;
     }
 
@@ -64,26 +61,16 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
       return;
     }
 
-    // Vérifier si l'utilisateur est connecté
-    final authService = AuthService();
-    final isLoggedIn = await authService.isLoggedIn();
-    if (!isLoggedIn) {
-      _showErrorDialog(
-          'Vous devez être connecté pour soumettre une traduction');
-      return;
-    }
-
     setState(() {
       _isSubmitting = true;
     });
 
     try {
-      final proposal = TranslationSuggestion(
+      final suggestion = TranslationSuggestion(
         id: _generateId(),
         scientificName: widget.plant.scientificName,
         darijaProposal: _proposeDarija ? _darijaController.text.trim() : null,
-        tamazightProposal:
-            _proposeTamazight ? _tamazightController.text.trim() : null,
+        tamazightProposal: _proposeTamazight ? _tamazightController.text.trim() : null,
         contributorName: _contributorNameController.text.trim(),
         contributorEmail: _contributorEmailController.text.trim(),
         region: _regionController.text.trim(),
@@ -91,7 +78,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
         submittedAt: DateTime.now(),
       );
 
-      await ProposalService.saveProposal(proposal);
+      await ProposalService.saveSuggestion(suggestion);
 
       if (mounted) {
         _showSuccessDialog();
@@ -110,21 +97,15 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
   }
 
   String _generateId() {
-    final random = Random();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final randomNum = random.nextInt(10000);
-    return 'proposal_${timestamp}_$randomNum';
+    return DateTime.now().millisecondsSinceEpoch.toString() + Random().nextInt(1000).toString();
   }
 
   void _showSuccessDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Merci!'),
-        content: const Text(
-          'Votre proposition de traduction a été soumise avec succès.\n'
-          'Elle sera examinée par notre équipe avant d\'être validée.',
-        ),
+        title: const Text('Succès'),
+        content: const Text('Votre suggestion de traduction a été soumise avec succès!'),
         actions: [
           TextButton(
             onPressed: () {
@@ -158,12 +139,12 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Proposer une traduction'),
+        title: Text('Suggérer une traduction - ${widget.plant.scientificName}'),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -171,27 +152,19 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
             children: [
               // Plant info card
               Card(
-                elevation: 4,
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         widget.plant.scientificName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Famille: ${widget.plant.family}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        'Proposez une traduction pour cette plante',
+                        style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -199,173 +172,154 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Translation options
-              const Text(
-                'Quelles traductions souhaitez-vous proposer?',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+              // Language selection
+              Text(
+                'Langues à proposer',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
               CheckboxListTile(
                 title: const Text('Darija (Marocain Arabe)'),
-                subtitle: const Text('Traduction en arabe marocain'),
+                subtitle: const Text('Proposer une traduction en Darija'),
                 value: _proposeDarija,
                 onChanged: (value) {
                   setState(() {
-                    _proposeDarija = value ?? true;
+                    _proposeDarija = value!;
                   });
                 },
-                activeColor: Colors.green,
               ),
-              CheckboxListTile(
-                title: const Text('Tamazight'),
-                subtitle: const Text('Traduction en berbère marocain'),
-                value: _proposeTamazight,
-                onChanged: (value) {
-                  setState(() {
-                    _proposeTamazight = value ?? true;
-                  });
-                },
-                activeColor: Colors.green,
-              ),
-              const SizedBox(height: 24),
-
-              // Darija translation field
               if (_proposeDarija) ...[
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _darijaController,
                   decoration: const InputDecoration(
                     labelText: 'Traduction en Darija',
-                    hintText: 'Entrez le nom en arabe marocain',
-                    prefixIcon: Icon(Icons.translate),
+                    hintText: 'Entrez la traduction en Darija',
                     border: OutlineInputBorder(),
                   ),
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                  style: const TextStyle(fontFamily: 'Arabic'),
-                  validator: (value) {
-                    if (_proposeDarija &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Ce champ est requis';
-                    }
-                    return null;
-                  },
+                  textInputAction: TextInputAction.next,
                 ),
-                const SizedBox(height: 16),
               ],
-
-              // Tamazight translation field
+              CheckboxListTile(
+                title: const Text('Tamazight'),
+                subtitle: const Text('Proposer une traduction en Tamazight'),
+                value: _proposeTamazight,
+                onChanged: (value) {
+                  setState(() {
+                    _proposeTamazight = value!;
+                  });
+                },
+              ),
               if (_proposeTamazight) ...[
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _tamazightController,
                   decoration: const InputDecoration(
                     labelText: 'Traduction en Tamazight',
-                    hintText: 'Entrez le nom en tamazight',
-                    prefixIcon: Icon(Icons.translate),
+                    hintText: 'ⵜⴰⵎⴰⵣⵉⵖⵜ - Entrez la traduction en Tamazight',
                     border: OutlineInputBorder(),
                   ),
-                  style: const TextStyle(fontFamily: 'Tifinagh'),
-                  validator: (value) {
-                    if (_proposeTamazight &&
-                        (value == null || value.trim().isEmpty)) {
-                      return 'Ce champ est requis';
-                    }
-                    return null;
-                  },
+                  textInputAction: TextInputAction.next,
                 ),
-                const SizedBox(height: 24),
               ],
+              const SizedBox(height: 24),
 
               // Contributor information
-              const Text(
+              Text(
                 'Vos informations',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _contributorNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Votre nom',
-                  prefixIcon: Icon(Icons.person),
+                  labelText: 'Nom complet',
+                  hintText: 'Entrez votre nom',
                   border: OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Ce champ est requis';
+                    return 'Veuillez entrer votre nom';
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _contributorEmailController,
                 decoration: const InputDecoration(
-                  labelText: 'Votre email',
-                  prefixIcon: Icon(Icons.email),
+                  labelText: 'Email',
+                  hintText: 'Entrez votre email',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Ce champ est requis';
+                    return 'Veuillez entrer votre email';
                   }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                      .hasMatch(value)) {
+                  if (!value.contains('@')) {
                     return 'Veuillez entrer un email valide';
                   }
                   return null;
                 },
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _regionController,
                 decoration: const InputDecoration(
                   labelText: 'Région (optionnel)',
-                  hintText: 'Ex: Rabat, Marrakech, Souss...',
-                  prefixIcon: Icon(Icons.location_on),
+                  hintText: 'Ex: Rabat, Casablanca, Marrakech...',
                   border: OutlineInputBorder(),
                 ),
+                textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
                 decoration: const InputDecoration(
-                  labelText: 'Notes supplémentaires (optionnel)',
-                  hintText:
-                      'Informations additionnelles sur votre traduction...',
-                  prefixIcon: Icon(Icons.note_add),
+                  labelText: 'Notes additionnelles (optionnel)',
+                  hintText: 'Informations complémentaires sur votre traduction',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
+                textInputAction: TextInputAction.done,
               ),
               const SizedBox(height: 32),
 
               // Submit button
               SizedBox(
                 width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitProposal,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: _isSubmitting
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            Text('Soumission en cours...'),
+                          ],
+                        )
                       : const Text(
-                          'Soumettre la proposition',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          'Soumettre la suggestion',
+                          style: TextStyle(fontSize: 16),
                         ),
                 ),
               ),
