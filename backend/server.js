@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
-console.log('🔑 Clé API chargée:', process.env.PLANTNET_API_KEY ? 'OUI (' + process.env.PLANTNET_API_KEY.substring(0, 10) + '...)' : 'NON (manquante)');
+console.log(' Clé API chargée:', process.env.PLANTNET_API_KEY ? 'OUI (' + process.env.PLANTNET_API_KEY.substring(0, 10) + '...)' : 'NON (manquante)');
 
 // Import des routes
 const gbifRoutes = require('./routes/gbif');
@@ -10,6 +10,8 @@ const identifyRoutes = require('./routes/identify');
 const authRoutes = require('./routes/auth');
 const identificationsRoutes = require('./routes/identifications');
 const translationProposalsRoutes = require('./routes/Translation-suggestion');
+const adminRoutes = require('./routes/admin');
+console.log('✅ Admin routes imported');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +40,8 @@ app.use('/api/identify', identifyRoutes);
 app.use('/api', authRoutes);  // /api/register, /api/login
 app.use('/api/translation-suggestion', translationProposalsRoutes);  // /api/translation-suggestion (POST publique)
 app.use('/api', identificationsRoutes);  // /api/save-identification, etc. (avec auth)
+app.use('/api/admin', adminRoutes);  // Admin endpoints
+console.log('✅ Admin routes mounted at /api/admin');
 
 // Route 404
 app.use((req, res) => {
@@ -65,4 +69,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(` Endpoint identification: http://localhost:${PORT}/api/identify`);
   console.log(` Endpoints auth: /api/register, /api/login`);
   console.log(` Endpoints historique: /api/my-identifications`);
+  console.log(` Admin endpoints: /api/admin/pending, /api/admin/stats`);
 });

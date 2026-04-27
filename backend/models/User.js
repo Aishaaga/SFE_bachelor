@@ -15,22 +15,18 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
+    enum: ['user', 'admin'],
     default: 'user'
   },
   createdAt: {
     type: Date,
     default: Date.now
-  },
-    role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
   }
 });
 
 // Version avec async/await - PAS de paramètre 'next'
 userSchema.pre('save', async function() {
-  console.log('🔐 pre save - hachage');
+  console.log(' pre save - hachage');
   
   if (!this.isModified('password')) {
     console.log('Mot de passe non modifié');

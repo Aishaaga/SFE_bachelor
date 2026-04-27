@@ -16,14 +16,30 @@ const Identification = require('../models/Identification');
 router.get('/pending', auth, adminAuth, async (req, res) => {
   try {
     // Find all suggestions with status 'pending'
-    // Populate('user') means: also fetch the user's details (name, email)
     const suggestions = await TranslationSuggestion.find({ status: 'pending' })
-      .populate('user', 'name email')  // Get user's name and email
-      .sort({ createdAt: -1 });        // Newest first
+      .sort({ submittedAt: -1 });        // Newest first
+    
+    // Transform field names for dashboard compatibility
+    const transformedSuggestions = suggestions.map(s => ({
+      _id: s._id,
+      plantScientificName: s.scientificName,
+      suggestedDarija: s.darijaProposal,
+      suggestedTamazight: s.tamazightProposal,
+      user: {
+        name: s.contributorName,
+        email: s.contributorEmail
+      },
+      status: s.status,
+      submittedAt: s.submittedAt,
+      contributorName: s.contributorName,
+      contributorEmail: s.contributorEmail,
+      contributorRegion: s.contributorRegion,
+      notes: s.notes
+    }));
     
     res.json({
       success: true,
-      suggestions: suggestions
+      suggestions: transformedSuggestions
     });
     
   } catch (error) {
