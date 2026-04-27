@@ -14,7 +14,8 @@ class TranslationProposalScreen extends StatefulWidget {
   });
 
   @override
-  State<TranslationProposalScreen> createState() => _TranslationProposalScreenState();
+  State<TranslationProposalScreen> createState() =>
+      _TranslationProposalScreenState();
 }
 
 class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
@@ -47,7 +48,8 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
     }
 
     if (!_proposeDarija && !_proposeTamazight) {
-      _showErrorDialog('Veuillez proposer au moins une traduction (Darija ou Tamazight)');
+      _showErrorDialog(
+          'Veuillez proposer au moins une traduction (Darija ou Tamazight)');
       return;
     }
 
@@ -66,11 +68,12 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
     });
 
     try {
-      final proposal = TranslationProposal(
+      final proposal = TranslationSuggestion(
         id: _generateId(),
         scientificName: widget.plant.scientificName,
         darijaProposal: _proposeDarija ? _darijaController.text.trim() : null,
-        tamazightProposal: _proposeTamazight ? _tamazightController.text.trim() : null,
+        tamazightProposal:
+            _proposeTamazight ? _tamazightController.text.trim() : null,
         contributorName: _contributorNameController.text.trim(),
         contributorEmail: _contributorEmailController.text.trim(),
         region: _regionController.text.trim(),
@@ -233,7 +236,8 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                   textAlign: TextAlign.right,
                   style: const TextStyle(fontFamily: 'Arabic'),
                   validator: (value) {
-                    if (_proposeDarija && (value == null || value.trim().isEmpty)) {
+                    if (_proposeDarija &&
+                        (value == null || value.trim().isEmpty)) {
                       return 'Ce champ est requis';
                     }
                     return null;
@@ -254,7 +258,8 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                   ),
                   style: const TextStyle(fontFamily: 'Tifinagh'),
                   validator: (value) {
-                    if (_proposeTamazight && (value == null || value.trim().isEmpty)) {
+                    if (_proposeTamazight &&
+                        (value == null || value.trim().isEmpty)) {
                       return 'Ce champ est requis';
                     }
                     return null;
@@ -299,7 +304,8 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Ce champ est requis';
                   }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                      .hasMatch(value)) {
                     return 'Veuillez entrer un email valide';
                   }
                   return null;
@@ -320,7 +326,8 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                 controller: _notesController,
                 decoration: const InputDecoration(
                   labelText: 'Notes supplémentaires (optionnel)',
-                  hintText: 'Informations additionnelles sur votre traduction...',
+                  hintText:
+                      'Informations additionnelles sur votre traduction...',
                   prefixIcon: Icon(Icons.note_add),
                   border: OutlineInputBorder(),
                 ),

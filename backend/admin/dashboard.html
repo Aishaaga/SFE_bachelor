@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - SFE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e5a3a 0%, #2e8b57 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .stat-card.pending .stat-number { color: #ffc107; }
+        .stat-card.approved .stat-number { color: #28a745; }
+        .stat-card.rejected .stat-number { color: #dc3545; }
+        .stat-card.total .stat-number { color: #17a2b8; }
+        
+        .suggestions-section {
+            padding: 0 30px 30px 30px;
+        }
+        .suggestions-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .suggestion-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #ffc107;
+        }
+        .suggestion-plant {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2e8b57;
+            margin-bottom: 10px;
+        }
+        .suggestion-translations {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .translation-box {
+            flex: 1;
+            min-width: 150px;
+        }
+        .translation-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .translation-value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        .translation-value.darija {
+            font-family: 'Segoe UI', 'Arabic', sans-serif;
+            font-size: 20px;
+        }
+        .translation-value.tamazight {
+            font-family: 'Segoe UI', 'Tifinagh', sans-serif;
+            font-size: 20px;
+        }
+        .suggestion-user {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 15px;
+        }
+        .btn-approve {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .btn-approve:hover {
+            background: #218838;
+        }
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-reject:hover {
+            background: #c82333;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+            background: white;
+            border-radius: 12px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌿 SFE Admin Dashboard</h1>
+        <button class="btn-logout" id="logoutBtn">Logout</button>
+    </div>
+    
+    <div class="stats-container" id="statsContainer">
+        <div class="stat-card pending">
+            <div class="stat-number" id="pendingCount">-</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card approved">
+            <div class="stat-number" id="approvedCount">-</div>
+            <div class="stat-label">Approved</div>
+        </div>
+        <div class="stat-card rejected">
+            <div class="stat-number" id="rejectedCount">-</div>
+            <div class="stat-label">Rejected</div>
+        </div>
+        <div class="stat-card total">
+            <div class="stat-number" id="totalCount">-</div>
+            <div class="stat-label">Total Suggestions</div>
+        </div>
+    </div>
+    
+    <div class="suggestions-section">
+        <h2>📝 Pending Suggestions</h2>
+        <div id="suggestionsList">
+            <div class="loading">Loading suggestions...</div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            window.location.href = '/';
+        }
+        
+        // Display admin email
+        const adminEmail = localStorage.getItem('adminEmail');
+        if (adminEmail) {
+            console.log('Logged in as:', adminEmail);
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('http://localhost:3000/api/admin/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('pendingCount').textContent = data.stats.pending || 0;
+                    document.getElementById('approvedCount').textContent = data.stats.approved || 0;
+                    document.getElementById('rejectedCount').textContent = data.stats.rejected || 0;
+                    document.getElementById('totalCount').textContent = data.stats.totalSuggestions || 0;
+                }
+            } catch (err) {
+                console.error('Error loading stats:', err);
+            }
+        }
+        
+        async function loadSuggestions() {
+            const container = document.getElementById('suggestionsList');
+            container.innerHTML = '<div class="loading">Loading suggestions...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/admin/pending', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                
+                if (data.success && data.suggestions && data.suggestions.length > 0) {
+                    container.innerHTML = data.suggestions.map(s => `
+                        <div class="suggestion-card">
+                            <div class="suggestion-plant">🌿 ${escapeHtml(s.plantScientificName)}</div>
+                            <div class="suggestion-translations">
+                                <div class="translation-box">
+                                    <div class="translation-label">الدارجة (Darija)</div>
+                                    <div class="translation-value darija">${escapeHtml(s.suggestedDarija)}</div>
+                                </div>
+                                <div class="translation-box">
+                                    <div class="translation-label">ⵜⴰⵎⴰⵣⵉⵖⵜ (Tamazight)</div>
+                                    <div class="translation-value tamazight">${escapeHtml(s.suggestedTamazight)}</div>
+                                </div>
+                            </div>
+                            <div class="suggestion-user">
+                                Suggested by: ${escapeHtml(s.user?.name || 'Unknown')} (${escapeHtml(s.user?.email || '')})
+                            </div>
+                            <div>
+                                <button class="btn-approve" onclick="approveSuggestion('${s._id}')">✅ Approve</button>
+                                <button class="btn-reject" onclick="rejectSuggestion('${s._id}')">❌ Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">✨ No pending suggestions. Great job!</div>';
+                }
+            } catch (err) {
+                console.error('Error loading suggestions:', err);
+                container.innerHTML = '<div class="empty-state">Error loading suggestions. Make sure backend is running.</div>';
+            }
+        }
+        
+        async function approveSuggestion(id) {
+            if (confirm('Approve this translation?')) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/admin/approve/${id}`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        loadStats();
+                        loadSuggestions();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                } catch (err) {
+                    alert('Network error: ' + err.message);
+                }
+            }
+        }
+        
+        async function rejectSuggestion(id) {
+            const reason = prompt('Optional: Why are you rejecting this?');
+            try {
+                const response = await fetch(`http://localhost:3000/api/admin/reject/${id}`, {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason: reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    loadStats();
+                    loadSuggestions();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
+            }
+        }
+        
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminEmail');
+            window.location.href = '/';
+        });
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        loadStats();
+        loadSuggestions();
+    </script>
+</body>
+</html>

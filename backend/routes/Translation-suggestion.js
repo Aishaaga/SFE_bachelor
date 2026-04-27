@@ -1,6 +1,6 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
-const TranslationProposal = require('../models/TranslationProposal');
+const TranslationSuggestion = require('../models/TranslationSuggestion');
 
 const router = express.Router();
 
@@ -42,7 +42,7 @@ router.post('/', async (req, res) => {
     }
     
     // Créer la proposition
-    const proposal = new TranslationProposal({
+    const proposal = new TranslationSuggestion({
       scientificName: scientificName.trim(),
       darijaProposal: darijaProposal ? darijaProposal.trim() : null,
       tamazightProposal: tamazightProposal ? tamazightProposal.trim() : null,
@@ -103,13 +103,13 @@ router.get('/', authMiddleware, async (req, res) => {
     // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const proposals = await TranslationProposal.find(filter)
+    const proposals = await TranslationSuggestion.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
       .populate('reviewedBy', 'name email');
     
-    const total = await TranslationProposal.countDocuments(filter);
+    const total = await TranslationSuggestion.countDocuments(filter);
     
     res.json({
       success: true,
@@ -134,7 +134,7 @@ router.get('/', authMiddleware, async (req, res) => {
 // GET /api/translation-proposals/stats - Statistiques (admin)
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
-    const stats = await TranslationProposal.getStats();
+    const stats = await TranslationSuggestion.getStats();
     
     // Formater les statistiques
     const formattedStats = {
@@ -177,7 +177,7 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
       });
     }
     
-    const proposal = await TranslationProposal.findById(proposalId);
+    const proposal = await TranslationSuggestion.findById(proposalId);
     
     if (!proposal) {
       return res.status(404).json({
@@ -215,7 +215,7 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   try {
     const proposalId = req.params.id;
     
-    const result = await TranslationProposal.findByIdAndDelete(proposalId);
+    const result = await TranslationSuggestion.findByIdAndDelete(proposalId);
     
     if (!result) {
       return res.status(404).json({
@@ -244,7 +244,7 @@ router.get('/scientific/:scientificName', async (req, res) => {
     const { scientificName } = req.params;
     const { status = 'approved' } = req.query;
     
-    const proposals = await TranslationProposal.find({
+    const proposals = await TranslationSuggestion.find({
       scientificName: scientificName.trim(),
       status: status
     }).sort({ submittedAt: -1 });
@@ -302,13 +302,13 @@ router.get('/search', async (req, res) => {
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const proposals = await TranslationProposal.find(filter)
+    const proposals = await TranslationSuggestion.find(filter)
       .sort({ submittedAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .populate('reviewedBy', 'name email');
     
-    const total = await TranslationProposal.countDocuments(filter);
+    const total = await TranslationSuggestion.countDocuments(filter);
     
     res.json({
       success: true,
