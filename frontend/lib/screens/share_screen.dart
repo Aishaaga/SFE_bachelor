@@ -24,6 +24,16 @@ class _ShareScreenState extends State<ShareScreen> {
   String _postAs = 'Ahmed';
   String _location = 'Morocco only';
   String? _userEmail;
+  final List<String> _moroccanCities = [
+    'Morocco only',
+    'Casablanca',
+    'Rabat',
+    'Marrakech',
+    'Fez',
+    'Tangier',
+    'Agadir',
+    'Meknes'
+  ];
 
   @override
   void initState() {
@@ -140,28 +150,18 @@ class _ShareScreenState extends State<ShareScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  RadioListTile<String>(
-                    title: const Text('Morocco only'),
-                    value: 'Morocco only',
-                    groupValue: _location,
-                    onChanged: (value) {
-                      setState(() {
-                        _location = value!;
-                      });
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  RadioListTile<String>(
-                    title: const Text('Add city (Casablanca)'),
-                    value: 'Casablanca',
-                    groupValue: _location,
-                    onChanged: (value) {
-                      setState(() {
-                        _location = value!;
-                      });
-                    },
-                    activeColor: Colors.green,
-                  ),
+                  ..._moroccanCities.map((city) => RadioListTile<String>(
+                        title: Text(
+                            city == 'Morocco only' ? city : 'Add city ($city)'),
+                        value: city,
+                        groupValue: _location,
+                        onChanged: (value) {
+                          setState(() {
+                            _location = value!;
+                          });
+                        },
+                        activeColor: Colors.green,
+                      )),
                   const SizedBox(height: 8),
 
                   // Info message
