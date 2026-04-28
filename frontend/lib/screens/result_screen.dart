@@ -4,6 +4,7 @@ import '../models/plant.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 import 'translation_proposal_screen.dart';
+import 'share_screen.dart';
 
 class ResultScreen extends StatefulWidget {
   final Plant plant;
@@ -140,34 +141,65 @@ class _ResultScreenState extends State<ResultScreen> {
             const SizedBox(height: 24),
 
             // Bottom buttons
-            Row(
+            Column(
               children: [
-                Expanded(
+                // Share with community button
+                SizedBox(
+                  width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Nouvelle photo'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: OutlinedButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const HistoryScreen()),
+                          builder: (_) => ShareScreen(
+                            plant: widget.plant,
+                            photo: widget.photo,
+                            identificationId: widget.identificationId,
+                          ),
+                        ),
                       );
                     },
-                    icon: const Icon(Icons.history),
-                    label: const Text('Voir historique'),
-                    style: OutlinedButton.styleFrom(
+                    icon: const Icon(Icons.share),
+                    label: const Text('Share with community'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
+                ),
+                const SizedBox(height: 16),
+                // Existing buttons row
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Nouvelle photo'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const HistoryScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.history),
+                        label: const Text('Voir historique'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

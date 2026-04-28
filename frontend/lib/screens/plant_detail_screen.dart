@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/plant_translations.dart';
 import '../utils/constants.dart';
+import 'share_from_history_screen.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final Map<String, dynamic> identification;
@@ -163,6 +164,35 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
 
             // Technical Information Card
             _buildTechnicalCard(),
+
+            // Share with community button
+            Container(
+              margin: const EdgeInsets.all(16),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  final images = _getPlantImages();
+                  if (images.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ShareFromHistoryScreen(
+                          identification: widget.identification,
+                          imageUrl: images[0],
+                        ),
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.share),
+                label: const Text('Share with community'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+            ),
 
             const SizedBox(height: 20),
           ],
