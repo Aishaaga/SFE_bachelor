@@ -165,7 +165,7 @@ class _AdminProposalsScreenState extends State<AdminProposalsScreen> {
         return 'Approuvée';
       case ProposalStatus.rejected:
         return 'Rejetée';
-      case ProposalStatus.needs_review:
+      case ProposalStatus.needsReview:
         return 'Nécessite une review';
     }
   }
@@ -313,7 +313,7 @@ class ProposalCard extends StatelessWidget {
         color = Colors.red;
         text = 'Rejetée';
         break;
-      case ProposalStatus.needs_review:
+      case ProposalStatus.needsReview:
         color = Colors.purple;
         text = 'À revoir';
         break;
