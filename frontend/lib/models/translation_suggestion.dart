@@ -27,7 +27,7 @@ class TranslationSuggestion {
     this.status = ProposalStatus.pending,
     this.reviewedAt,
     this.reviewedBy,
-    this.reviewNotes,
+    this.reviewNotes = '',
     this.isValidated = false,
   });
 
@@ -41,30 +41,21 @@ class TranslationSuggestion {
       contributorEmail: json['contributorEmail'] ?? '',
       region: json['contributorRegion'] ?? json['region'] ?? '',
       notes: json['notes'] ?? '',
-      submittedAt: DateTime.parse(
-          json['submittedAt'] ?? DateTime.now().toIso8601String()),
-      status: _parseStatus(json['status']),
-      reviewedAt: json['reviewedAt'] != null
-          ? DateTime.parse(json['reviewedAt'])
-          : null,
-      reviewedBy: json['reviewedBy']?.toString(),
-      reviewNotes: json['reviewNotes'] as String?,
+      submittedAt: json['submittedAt'] != null
+          ? DateTime.parse(json['submittedAt'])
+          : DateTime.now(),
       isValidated: json['isValidated'] ?? false,
     );
   }
 
-  static ProposalStatus _parseStatus(String? statusString) {
-    if (statusString == null) return ProposalStatus.pending;
-
-    switch (statusString.toLowerCase()) {
-      case 'pending':
-        return ProposalStatus.pending;
+  static ProposalStatus _parseStatus(String? status) {
+    switch (status) {
       case 'approved':
         return ProposalStatus.approved;
       case 'rejected':
         return ProposalStatus.rejected;
       case 'needs_review':
-        return ProposalStatus.needs_review;
+        return ProposalStatus.needsReview;
       default:
         return ProposalStatus.pending;
     }
@@ -72,15 +63,20 @@ class TranslationSuggestion {
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'scientificName': scientificName,
       'darijaProposal': darijaProposal,
       'tamazightProposal': tamazightProposal,
       'contributorName': contributorName,
       'contributorEmail': contributorEmail,
-      'contributorRegion': region,
+      'region': region,
       'notes': notes,
       'submittedAt': submittedAt.toIso8601String(),
       'status': status.toString().split('.').last,
+      'reviewedAt': reviewedAt?.toIso8601String(),
+      'reviewedBy': reviewedBy,
+      'reviewNotes': reviewNotes,
+      'isValidated': isValidated,
     };
   }
 
@@ -95,6 +91,10 @@ class TranslationSuggestion {
     String? notes,
     DateTime? submittedAt,
     ProposalStatus? status,
+    DateTime? reviewedAt,
+    String? reviewedBy,
+    String? reviewNotes,
+    bool? isValidated,
   }) {
     return TranslationSuggestion(
       id: id ?? this.id,
@@ -107,12 +107,11 @@ class TranslationSuggestion {
       notes: notes ?? this.notes,
       submittedAt: submittedAt ?? this.submittedAt,
       status: status ?? this.status,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      reviewedBy: reviewedBy ?? this.reviewedBy,
+      reviewNotes: reviewNotes ?? this.reviewNotes,
+      isValidated: isValidated ?? this.isValidated,
     );
-  }
-
-  bool get hasValidProposal {
-    return (darijaProposal != null && darijaProposal!.isNotEmpty) ||
-        (tamazightProposal != null && tamazightProposal!.isNotEmpty);
   }
 }
 
@@ -120,5 +119,19 @@ enum ProposalStatus {
   pending,
   approved,
   rejected,
-  needs_review,
+  needsReview;
+
+  @override
+  String toString() {
+    switch (this) {
+      case ProposalStatus.pending:
+        return 'pending';
+      case ProposalStatus.approved:
+        return 'approved';
+      case ProposalStatus.rejected:
+        return 'rejected';
+      case ProposalStatus.needsReview:
+        return 'needs_review';
+    }
+  }
 }

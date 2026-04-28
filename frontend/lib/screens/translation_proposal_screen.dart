@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../models/plant.dart';
 import '../models/translation_suggestion.dart';
 import '../services/proposal_service.dart';
+import '../services/auth_service.dart';
 
 class TranslationProposalScreen extends StatefulWidget {
   final Plant plant;
@@ -60,6 +61,15 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
 
     if (_proposeTamazight && _tamazightController.text.trim().isEmpty) {
       _showErrorDialog('Veuillez entrer une traduction en Tamazight');
+      return;
+    }
+
+    // Vérifier si l'utilisateur est connecté
+    final authService = AuthService();
+    final isLoggedIn = await authService.isLoggedIn();
+    if (!isLoggedIn) {
+      _showErrorDialog(
+          'Vous devez être connecté pour soumettre une traduction');
       return;
     }
 

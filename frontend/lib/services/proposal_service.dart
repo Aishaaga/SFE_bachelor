@@ -10,15 +10,10 @@ class ProposalService {
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
     final token = await authService.getToken();
-    final headers = {
+    return {
       'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
     };
-
-    if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
-    }
-
-    return headers;
   }
 
   static Future<List<TranslationSuggestion>> getAllProposals(
@@ -62,6 +57,9 @@ class ProposalService {
           'notes': proposal.notes,
         }),
       );
+
+      print('DEBUG: Status code: ${response.statusCode}');
+      print('DEBUG: Response body: ${response.body}');
 
       if (response.statusCode != 201) {
         final errorData = json.decode(response.body);
