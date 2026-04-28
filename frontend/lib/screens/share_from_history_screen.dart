@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class ShareFromHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> identification;
@@ -15,8 +16,26 @@ class ShareFromHistoryScreen extends StatefulWidget {
 }
 
 class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
+  final AuthService _authService = AuthService();
   String _postAs = 'Ahmed';
   String _location = 'Morocco only';
+  String? _userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final email = await _authService.getCurrentUserEmail();
+    if (mounted && email != null) {
+      setState(() {
+        _userEmail = email;
+        _postAs = email; // Set default to user email
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +124,8 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
-                    title: const Text('Ahmed'),
-                    value: 'Ahmed',
+                    title: Text(_userEmail != null ? _userEmail! : 'User'),
+                    value: _userEmail != null ? _userEmail! : 'User',
                     groupValue: _postAs,
                     onChanged: (value) {
                       setState(() {

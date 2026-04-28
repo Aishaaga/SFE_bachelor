@@ -91,4 +91,9 @@ class AuthService {
   Future<String?> getToken() async {
     return await storage.read(key: Constants.tokenKey);
   }
+
+  // Récupérer l'email de l'utilisateur actuel
+  Future<String?> getCurrentUserEmail() async {
+    return await storage.read(key: Constants.userEmailKey);
+  }
 }

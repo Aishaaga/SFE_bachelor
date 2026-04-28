@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
+import '../services/auth_service.dart';
 
 class ShareScreen extends StatefulWidget {
   final Plant plant;
@@ -19,8 +20,26 @@ class ShareScreen extends StatefulWidget {
 }
 
 class _ShareScreenState extends State<ShareScreen> {
+  final AuthService _authService = AuthService();
   String _postAs = 'Ahmed';
   String _location = 'Morocco only';
+  String? _userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+
+  Future<void> _loadUserInfo() async {
+    final email = await _authService.getCurrentUserEmail();
+    if (mounted && email != null) {
+      setState(() {
+        _userEmail = email;
+        _postAs = email; // Set default to user email
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,8 +107,8 @@ class _ShareScreenState extends State<ShareScreen> {
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
-                    title: const Text('Ahmed'),
-                    value: 'Ahmed',
+                    title: Text(_userEmail != null ? _userEmail! : 'User'),
+                    value: _userEmail != null ? _userEmail! : 'User',
                     groupValue: _postAs,
                     onChanged: (value) {
                       setState(() {
