@@ -442,11 +442,18 @@ class _ShareScreenState extends State<ShareScreen> {
           break;
       }
 
+      // Debug logging
+      print(
+          'DEBUG: Plant data - ID: ${widget.plant.id}, Name: ${widget.plant.name}, Scientific: ${widget.plant.scientificName}');
+
       // Share to feed
       final result = await feedService.shareToFeed(
-        plantId: widget.plant.id ?? '',
-        plantName: widget.plant.name,
-        scientificName: widget.plant.scientificName,
+        plantId: widget.plant.id.isNotEmpty ? widget.plant.id : 'unknown',
+        plantName:
+            widget.plant.name.isNotEmpty ? widget.plant.name : 'Unknown Plant',
+        scientificName: widget.plant.scientificName.isNotEmpty
+            ? widget.plant.scientificName
+            : 'Unknown',
         imageUrl: widget.identificationId != null
             ? '/uploads/plant-${widget.identificationId}.jpg'
             : null,

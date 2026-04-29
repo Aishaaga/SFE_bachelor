@@ -19,8 +19,22 @@ router.post('/share', auth, async (req, res) => {
       location
     } = req.body;
 
+    // Debug logging
+    console.log('DEBUG: Feed share request received:');
+    console.log('  plantId:', plantId);
+    console.log('  plantName:', plantName);
+    console.log('  scientificName:', scientificName);
+    console.log('  imageUrl:', imageUrl);
+    console.log('  identificationId:', identificationId);
+    console.log('  isAnonymous:', isAnonymous);
+    console.log('  location:', location);
+
     // Validate required fields
     if (!plantId || !plantName || !scientificName) {
+      console.log('DEBUG: Validation failed - missing required fields');
+      console.log('  plantId exists:', !!plantId);
+      console.log('  plantName exists:', !!plantName);
+      console.log('  scientificName exists:', !!scientificName);
       return res.status(400).json({
         success: false,
         message: 'Plant information is required'

@@ -455,9 +455,13 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
 
       // Get plant data from identification
       final plant = widget.identification['plant'];
-      final plantId = plant['_id'] ?? '';
-      final plantName = plant['name'] ?? '';
-      final scientificName = plant['scientificName'] ?? '';
+      final plantId = plant['_id'] ?? plant['id'] ?? 'unknown';
+      final plantName = plant['name'] ?? 'Unknown Plant';
+      final scientificName = plant['scientificName'] ?? 'Unknown';
+
+      // Debug logging
+      print(
+          'DEBUG: Plant data from history - ID: $plantId, Name: $plantName, Scientific: $scientificName');
 
       // Get image URL
       final images = widget.identification['photoUrls'] as List<dynamic>? ?? [];
