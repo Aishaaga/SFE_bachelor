@@ -65,7 +65,7 @@ router.post('/posts/:postId/comments', auth, async (req, res) => {
   try {
     const { postId } = req.params;
     const { content, parentId = null } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Validate content
     if (!content || content.trim().length === 0) {
@@ -119,7 +119,7 @@ router.put('/comments/:commentId', auth, async (req, res) => {
   try {
     const { commentId } = req.params;
     const { content } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Validate content
     if (!content || content.trim().length === 0) {
@@ -155,7 +155,7 @@ router.put('/comments/:commentId', auth, async (req, res) => {
 router.delete('/comments/:commentId', auth, async (req, res) => {
   try {
     const { commentId } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Find comment and check ownership
     const comment = await FeedComment.findById(commentId);

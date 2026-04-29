@@ -1,21 +1,48 @@
 const express = require('express');
 const router = express.Router();
 const TranslationVote = require('../models/TranslationVote');
-const TranslationSuggestion = require('../models/TranslationSuggestion');
+const FeedPost = require('../models/FeedPost');
 const auth = require('../middleware/auth');
 
-// Get vote counts for a translation suggestion
-router.get('/suggestions/:suggestionId/votes', async (req, res) => {
+// Get vote counts for a feed post (translation suggestion type)
+router.get('/posts/:postId/votes', async (req, res) => {
   try {
-    const { suggestionId } = req.params;
+    const { postId } = req.params;
     
-    // Check if suggestion exists
-    const suggestion = await TranslationSuggestion.findById(suggestionId);
-    if (!suggestion) {
-      return res.status(404).json({ message: 'Translation suggestion not found' });
+    // Check if post exists and is a translation suggestion
+    const post = await FeedPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
     
-    const voteCounts = await TranslationVote.getVoteCounts(suggestionId);
+    if (post.type !== 'translation_suggestion') {
+      return res.status(400).json({ message: 'Post is not a translation suggestion' });
+    }
+    
+    // Use TranslationVote model for accurate counts
+    console.log('DEBUG: Getting votes for post:', postId);
+    
+    const upvotes = await TranslationVote.countDocuments({
+      translationSuggestionId: postId,
+      voteType: 'upvote'
+    });
+    const downvotes = await TranslationVote.countDocuments({
+      translationSuggestionId: postId,
+      voteType: 'downvote'
+    });
+    
+    const voteCounts = {
+      upvotes,
+      downvotes,
+      total: upvotes + downvotes
+    };
+    
+    console.log('DEBUG: Vote counts from TranslationVote:', voteCounts);
+    
+    // Also update the post's vote counts for consistency
+    post.upvotes = upvotes;
+    post.downvotes = downvotes;
+    await post.save();
     
     res.json(voteCounts);
   } catch (error) {
@@ -51,12 +78,12 @@ router.get('/suggestions/:suggestionId/votes/user/:userId', auth, async (req, re
   }
 });
 
-// Cast or update a vote on a translation suggestion
-router.post('/suggestions/:suggestionId/votes', auth, async (req, res) => {
+// Cast or update a vote on a feed post (translation suggestion)
+router.post('/posts/:postId/votes', auth, async (req, res) => {
   try {
-    const { suggestionId } = req.params;
+    const { postId } = req.params;
     const { voteType, reason } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Validate voteType
     if (!['upvote', 'downvote'].includes(voteType)) {
@@ -68,30 +95,89 @@ router.post('/suggestions/:suggestionId/votes', auth, async (req, res) => {
       return res.status(400).json({ message: 'Reason too long (max 500 characters)' });
     }
     
-    // Check if suggestion exists
-    const suggestion = await TranslationSuggestion.findById(suggestionId);
-    if (!suggestion) {
-      return res.status(404).json({ message: 'Translation suggestion not found' });
+    // Check if post exists and is a translation suggestion
+    const post = await FeedPost.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Cast or update vote
-    const result = await TranslationVote.castVote(suggestionId, userId, voteType, reason);
+    if (post.type !== 'translation_suggestion') {
+      return res.status(400).json({ message: 'Post is not a translation suggestion' });
+    }
     
-    // Get updated vote counts
-    const voteCounts = await TranslationVote.getVoteCounts(suggestionId);
+    // Use TranslationVote model for proper tracking
+    console.log('DEBUG: Casting vote - postId:', postId, 'userId:', userId, 'voteType:', voteType);
+    
+    // Check if user has already voted
+    const existingVote = await TranslationVote.findOne({
+      translationSuggestionId: postId,
+      userId: userId
+    });
+    
+    let voteCounts;
+    if (existingVote) {
+      // Update existing vote
+      const previousVoteType = existingVote.voteType;
+      existingVote.voteType = voteType;
+      existingVote.updatedAt = new Date();
+      await existingVote.save();
+      
+      // Recalculate vote counts
+      const upvotes = await TranslationVote.countDocuments({
+        translationSuggestionId: postId,
+        voteType: 'upvote'
+      });
+      const downvotes = await TranslationVote.countDocuments({
+        translationSuggestionId: postId,
+        voteType: 'downvote'
+      });
+      
+      voteCounts = { upvotes, downvotes, total: upvotes + downvotes };
+      
+      // Update the post's vote counts for display
+      post.upvotes = upvotes;
+      post.downvotes = downvotes;
+      await post.save();
+      
+      console.log('DEBUG: Vote updated - from', previousVoteType, 'to', voteType);
+    } else {
+      // Create new vote
+      await TranslationVote.create({
+        translationSuggestionId: postId,
+        userId: userId,
+        voteType: voteType
+      });
+      
+      // Recalculate vote counts
+      const upvotes = await TranslationVote.countDocuments({
+        translationSuggestionId: postId,
+        voteType: 'upvote'
+      });
+      const downvotes = await TranslationVote.countDocuments({
+        translationSuggestionId: postId,
+        voteType: 'downvote'
+      });
+      
+      voteCounts = { upvotes, downvotes, total: upvotes + downvotes };
+      
+      // Update the post's vote counts for display
+      post.upvotes = upvotes;
+      post.downvotes = downvotes;
+      await post.save();
+      
+      console.log('DEBUG: New vote created');
+    }
+    
+    console.log('DEBUG: Final vote counts:', voteCounts);
     
     res.status(201).json({
-      ...result,
-      voteCounts
+      success: true,
+      message: 'Vote recorded successfully',
+      action: existingVote ? 'updated' : 'created',
+      voteCounts: voteCounts
     });
   } catch (error) {
     console.error('Error casting vote:', error);
-    
-    // Handle duplicate key error
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'You have already voted on this suggestion' });
-    }
-    
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -101,7 +187,7 @@ router.put('/suggestions/:suggestionId/votes', auth, async (req, res) => {
   try {
     const { suggestionId } = req.params;
     const { voteType, reason } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Validate voteType
     if (!['upvote', 'downvote'].includes(voteType)) {
@@ -139,7 +225,7 @@ router.put('/suggestions/:suggestionId/votes', auth, async (req, res) => {
 router.delete('/suggestions/:suggestionId/votes', auth, async (req, res) => {
   try {
     const { suggestionId } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Check if suggestion exists
     const suggestion = await TranslationSuggestion.findById(suggestionId);

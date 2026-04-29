@@ -7,12 +7,14 @@ class FeedPostCard extends StatefulWidget {
   final FeedPost post;
   final VoidCallback onLike;
   final VoidCallback onFlag;
+  final Function(FeedPost)? onVoteUpdate;
 
   const FeedPostCard({
     super.key,
     required this.post,
     required this.onLike,
     required this.onFlag,
+    this.onVoteUpdate,
   });
 
   @override
@@ -24,6 +26,15 @@ class _FeedPostCardState extends State<FeedPostCard> {
   final _tamazightController = TextEditingController();
   bool _isSubmitting = false;
   final FeedService _feedService = FeedService();
+  late int _currentUpvotes;
+  late int _currentDownvotes;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUpvotes = widget.post.upvotes;
+    _currentDownvotes = widget.post.downvotes;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -366,42 +377,50 @@ class _FeedPostCardState extends State<FeedPostCard> {
               ),
               const Spacer(),
               if (widget.post.type == 'translation_suggestion') ...[
-                Row(
-                  children: [
-                    Icon(
-                      Icons.thumb_up_outlined,
-                      size: 16,
-                      color: Colors.green[600],
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      widget.post.upvotes.toString(),
-                      style: TextStyle(
-                        fontSize: 12,
+                IconButton(
+                  onPressed: () => _handleVote('upvote'),
+                  icon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.thumb_up_outlined,
+                        size: 16,
                         color: Colors.green[600],
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 2),
+                      Text(
+                        _currentUpvotes.toString(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.green[600],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 16),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.thumb_down_outlined,
-                      size: 16,
-                      color: Colors.red[600],
-                    ),
-                    const SizedBox(width: 2),
-                    Text(
-                      widget.post.downvotes.toString(),
-                      style: TextStyle(
-                        fontSize: 12,
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => _handleVote('downvote'),
+                  icon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.thumb_down_outlined,
+                        size: 16,
                         color: Colors.red[600],
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 2),
+                      Text(
+                        _currentDownvotes.toString(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.red[600],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 8),
               ],
               IconButton(
                 onPressed: widget.onFlag,
@@ -637,6 +656,61 @@ class _FeedPostCardState extends State<FeedPostCard> {
         setState(() {
           _isSubmitting = false;
         });
+      }
+    }
+  }
+
+  Future<void> _handleVote(String voteType) async {
+    try {
+      final result = await _feedService.voteOnTranslation(
+        postId: widget.post.id!,
+        voteType: voteType,
+      );
+
+      if (result['success']) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Vote recorded successfully'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+
+        // Update the vote counts in the UI immediately
+        if (result['voteCounts'] != null) {
+          setState(() {
+            final voteCounts = result['voteCounts'];
+            _currentUpvotes = voteCounts['upvotes'] ?? _currentUpvotes;
+            _currentDownvotes = voteCounts['downvotes'] ?? _currentDownvotes;
+          });
+
+          // Notify parent widget if callback is provided
+          if (widget.onVoteUpdate != null) {
+            final updatedPost = widget.post.copyWith(
+              upvotes: _currentUpvotes,
+              downvotes: _currentDownvotes,
+            );
+            widget.onVoteUpdate!(updatedPost);
+          }
+        }
+      } else {
+        // Show error message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Error voting'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error voting: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

@@ -142,11 +142,11 @@ class FeedService {
     }
   }
 
-  // Like a feed post
+  // Like a feed post (updated to use new API)
   Future<Map<String, dynamic>> likePost(String postId) async {
     try {
       final response = await http.post(
-        Uri.parse('${Constants.apiUrl}/feed/$postId/like'),
+        Uri.parse('${Constants.apiUrl}/feed-likes/posts/$postId/likes'),
         headers: {
           'Authorization': 'Bearer ${await _getToken()}',
         },
@@ -154,11 +154,13 @@ class FeedService {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return {
           'success': true,
-          'message': data['message'],
+          'message': data['message'] ?? 'Like recorded successfully',
           'likes': data['likes'],
+          'action': data['action'],
+          'liked': data['liked'] ?? true,
         };
       } else {
         return {
@@ -195,6 +197,79 @@ class FeedService {
         return {
           'success': false,
           'message': data['message'] ?? 'Error flagging post',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Vote on a translation suggestion
+  Future<Map<String, dynamic>> voteOnTranslation({
+    required String postId,
+    required String voteType, // 'upvote' or 'downvote'
+    String? reason,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.apiUrl}/translation-votes/posts/$postId/votes'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+        body: jsonEncode({
+          'voteType': voteType,
+          if (reason != null) 'reason': reason,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        return {
+          'success': data['success'] ?? true,
+          'message': data['message'] ?? 'Vote recorded successfully',
+          'voteCounts': data['voteCounts'],
+          'action': data['action'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error voting on translation',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Get vote counts for a translation suggestion
+  Future<Map<String, dynamic>> getTranslationVotes(String postId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${Constants.apiUrl}/translation-votes/posts/$postId/votes'),
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'voteCounts': data,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error fetching vote counts',
         };
       }
     } catch (e) {

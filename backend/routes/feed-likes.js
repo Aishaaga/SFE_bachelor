@@ -56,7 +56,7 @@ router.get('/posts/:postId/likes/user/:userId', auth, async (req, res) => {
 router.post('/posts/:postId/likes', auth, async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user.id; // Get from auth middleware
+    const userId = req.userId; // Get from auth middleware
     
     // Check if post exists
     const post = await FeedPost.findById(postId);
@@ -101,7 +101,7 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
 router.delete('/posts/:postId/likes', auth, async (req, res) => {
   try {
     const { postId } = req.params;
-    const userId = req.user.id;
+    const userId = req.userId;
     
     // Check if post exists
     const post = await FeedPost.findById(postId);
