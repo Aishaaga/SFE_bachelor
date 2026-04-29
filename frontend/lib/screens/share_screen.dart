@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
 import '../services/auth_service.dart';
+import '../services/location_service.dart';
 
 class ShareScreen extends StatefulWidget {
   final Plant plant;
@@ -24,8 +25,13 @@ class _ShareScreenState extends State<ShareScreen> {
   String _postAs = 'Ahmed';
   String _location = 'Morocco only';
   String? _userEmail;
+  String? _detectedCity;
+  bool _isLoadingLocation = false;
+  bool _locationPermissionDenied = false;
+
+  // Location levels
+  final List<String> _locationLevels = ['Morocco only', 'City', 'None'];
   final List<String> _moroccanCities = [
-    'Morocco only',
     'Casablanca',
     'Rabat',
     'Marrakech',
@@ -49,6 +55,104 @@ class _ShareScreenState extends State<ShareScreen> {
         _postAs = email; // Set default to user email
       });
     }
+  }
+
+  Future<void> _detectLocation() async {
+    print('DEBUG: _detectLocation called');
+    setState(() {
+      _isLoadingLocation = true;
+      _locationPermissionDenied = false;
+    });
+
+    try {
+      print('DEBUG: Calling LocationService.getCurrentCity...');
+      final city = await LocationService.getCurrentCity();
+      print('DEBUG: LocationService returned: $city');
+      if (mounted) {
+        setState(() {
+          _detectedCity = city;
+          _isLoadingLocation = false;
+          if (city != null) {
+            _location = city;
+          }
+        });
+      }
+    } catch (e) {
+      print('DEBUG: Exception in _detectLocation: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingLocation = false;
+          _locationPermissionDenied = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _openSettings() async {
+    await LocationService.openAppSettings();
+  }
+
+  String _getLocationTitle(String level) {
+    switch (level) {
+      case 'Morocco only':
+        return 'Morocco only';
+      case 'City':
+        return 'City level';
+      case 'None':
+        return 'No location';
+      default:
+        return level;
+    }
+  }
+
+  String _getLocationSubtitle(String level) {
+    switch (level) {
+      case 'Morocco only':
+        return 'Show only country level';
+      case 'City':
+        return 'Show your specific city';
+      case 'None':
+        return 'Hide location completely';
+      default:
+        return '';
+    }
+  }
+
+  void _showCitySelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select City'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: _moroccanCities.length,
+            itemBuilder: (context, index) {
+              final city = _moroccanCities[index];
+              return ListTile(
+                title: Text(city),
+                trailing: _location == city
+                    ? const Icon(Icons.check, color: Colors.green)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _location = city;
+                  });
+                  Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -150,18 +254,91 @@ class _ShareScreenState extends State<ShareScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  ..._moroccanCities.map((city) => RadioListTile<String>(
-                        title: Text(
-                            city == 'Morocco only' ? city : 'Add city ($city)'),
-                        value: city,
+                  // Location level selection
+                  ..._locationLevels.map((level) => RadioListTile<String>(
+                        title: Text(_getLocationTitle(level)),
+                        subtitle: Text(_getLocationSubtitle(level)),
+                        value: level,
                         groupValue: _location,
                         onChanged: (value) {
                           setState(() {
                             _location = value!;
+                            if (value == 'City' && _detectedCity == null) {
+                              _detectLocation();
+                            }
                           });
                         },
                         activeColor: Colors.green,
                       )),
+                  // City selection and detection
+                  if (_location == 'City') ...[
+                    if (_isLoadingLocation)
+                      const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            CircularProgressIndicator(color: Colors.green),
+                            SizedBox(width: 16),
+                            Text('Detecting your city...'),
+                          ],
+                        ),
+                      )
+                    else if (_locationPermissionDenied)
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Location permission denied',
+                              style: TextStyle(
+                                color: Colors.red[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ElevatedButton(
+                              onPressed: _openSettings,
+                              child: const Text('Open Settings'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (_detectedCity != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.location_on,
+                                color: Colors.green, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Detected city: $_detectedCity',
+                                style: TextStyle(
+                                  color: Colors.green[800],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () => _showCitySelectionDialog(),
+                              child: const Text('Change'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                   const SizedBox(height: 8),
 
                   // Info message
