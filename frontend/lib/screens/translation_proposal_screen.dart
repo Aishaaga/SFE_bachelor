@@ -23,24 +23,44 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
   final _formKey = GlobalKey<FormState>();
   final _darijaController = TextEditingController();
   final _tamazightController = TextEditingController();
-  final _contributorNameController = TextEditingController();
-  final _contributorEmailController = TextEditingController();
   final _regionController = TextEditingController();
   final _notesController = TextEditingController();
+  final _authService = AuthService();
 
   bool _isSubmitting = false;
   bool _proposeDarija = true;
   bool _proposeTamazight = true;
+  String? _userEmail;
+  String? _userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
 
   @override
   void dispose() {
     _darijaController.dispose();
     _tamazightController.dispose();
-    _contributorNameController.dispose();
-    _contributorEmailController.dispose();
     _regionController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserInfo() async {
+    try {
+      final email = await _authService.getCurrentUserEmail();
+      if (email != null) {
+        setState(() {
+          _userEmail = email;
+          // Extract name from email (before @ symbol) or use full email as name
+          _userName = email.split('@')[0];
+        });
+      }
+    } catch (e) {
+      print('Error loading user info: $e');
+    }
   }
 
   Future<void> _submitProposal() async {
@@ -84,8 +104,8 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
         darijaProposal: _proposeDarija ? _darijaController.text.trim() : null,
         tamazightProposal:
             _proposeTamazight ? _tamazightController.text.trim() : null,
-        contributorName: _contributorNameController.text.trim(),
-        contributorEmail: _contributorEmailController.text.trim(),
+        contributorName: _userName ?? 'Anonymous',
+        contributorEmail: _userEmail ?? 'anonymous@example.com',
         region: _regionController.text.trim(),
         notes: _notesController.text.trim(),
         submittedAt: DateTime.now(),
@@ -278,48 +298,46 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                 const SizedBox(height: 24),
               ],
 
-              // Contributor information
-              const Text(
-                'Vos informations',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+              // Contributor information (auto-detected)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _contributorNameController,
-                decoration: const InputDecoration(
-                  labelText: 'Votre nom',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      color: Colors.grey[600],
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Soumis par: ${_userName ?? 'Chargement...'}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _userEmail ?? 'Chargement...',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Ce champ est requis';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _contributorEmailController,
-                decoration: const InputDecoration(
-                  labelText: 'Votre email',
-                  prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Ce champ est requis';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                      .hasMatch(value)) {
-                    return 'Veuillez entrer un email valide';
-                  }
-                  return null;
-                },
               ),
               const SizedBox(height: 16),
               TextFormField(
