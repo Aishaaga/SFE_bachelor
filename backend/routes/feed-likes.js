@@ -15,13 +15,17 @@ router.get('/posts/:postId/likes/count', async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // For identification posts, use the likes field
-    if (post.type === 'identification') {
-      return res.json({ likes: post.likes });
-    }
+    // Use FeedLike model for accurate counts for all post types
+    console.log('DEBUG: Getting like count for post:', postId, 'type:', post.type);
     
-    // For other posts, count from FeedLike collection
     const likeCount = await FeedLike.getLikeCount(postId);
+    
+    // Update the post's likes field for consistency
+    post.likes = likeCount;
+    await post.save();
+    
+    console.log('DEBUG: Like count from FeedLike:', likeCount);
+    
     res.json({ likes: likeCount });
   } catch (error) {
     console.error('Error getting like count:', error);
@@ -34,17 +38,19 @@ router.get('/posts/:postId/likes/user/:userId', auth, async (req, res) => {
   try {
     const { postId, userId } = req.params;
     
-    // Only check for non-identification posts
+    // Check if post exists
     const post = await FeedPost.findById(postId);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    if (post.type === 'identification') {
-      return res.json({ liked: false }); // Identification posts use simple likes counter
-    }
+    // Use FeedLike model for all post types
+    console.log('DEBUG: Checking if user liked - postId:', postId, 'userId:', userId);
     
     const isLiked = await FeedLike.isUserLiked(postId, userId);
+    
+    console.log('DEBUG: User liked status:', isLiked);
+    
     res.json({ liked: isLiked });
   } catch (error) {
     console.error('Error checking user like:', error);
@@ -64,22 +70,39 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // For identification posts, increment/decrement the likes counter
-    if (post.type === 'identification') {
-      post.likes += 1;
-      await post.save();
-      return res.json({ 
-        liked: true, 
-        action: 'liked',
-        likes: post.likes 
+    // Use FeedLike model for all post types to prevent multiple likes per user
+    console.log('DEBUG: Toggling like - postId:', postId, 'userId:', userId, 'postType:', post.type);
+    
+    // Check if user already liked this post
+    const existingLike = await FeedLike.findOne({
+      feedPostId: postId,
+      userId: userId
+    });
+    
+    let result;
+    if (existingLike) {
+      // Unlike the post
+      await FeedLike.deleteOne({ _id: existingLike._id });
+      result = { liked: false, action: 'unliked' };
+      console.log('DEBUG: Post unliked');
+    } else {
+      // Like the post
+      await FeedLike.create({
+        feedPostId: postId,
+        userId: userId
       });
+      result = { liked: true, action: 'liked' };
+      console.log('DEBUG: Post liked');
     }
     
-    // For other posts, use FeedLike model
-    const result = await FeedLike.toggleLike(postId, userId);
-    
-    // Update the post's comment count if needed
+    // Get accurate like count
     const likeCount = await FeedLike.getLikeCount(postId);
+    
+    // Update the post's likes field for consistency (for all post types)
+    post.likes = likeCount;
+    await post.save();
+    
+    console.log('DEBUG: Updated like count:', likeCount);
     
     res.json({ 
       ...result,
@@ -97,35 +120,6 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
   }
 });
 
-// Unlike a post (for identification posts)
-router.delete('/posts/:postId/likes', auth, async (req, res) => {
-  try {
-    const { postId } = req.params;
-    const userId = req.userId;
-    
-    // Check if post exists
-    const post = await FeedPost.findById(postId);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
-    
-    // Only for identification posts
-    if (post.type === 'identification' && post.likes > 0) {
-      post.likes -= 1;
-      await post.save();
-      return res.json({ 
-        liked: false, 
-        action: 'unliked',
-        likes: post.likes 
-      });
-    }
-    
-    res.status(400).json({ message: 'Cannot unlike this post type' });
-  } catch (error) {
-    console.error('Error unliking post:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
 
 // Get all users who liked a post (admin only)
 router.get('/posts/:postId/likes', auth, async (req, res) => {

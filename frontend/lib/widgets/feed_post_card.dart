@@ -28,12 +28,16 @@ class _FeedPostCardState extends State<FeedPostCard> {
   final FeedService _feedService = FeedService();
   late int _currentUpvotes;
   late int _currentDownvotes;
+  late int _currentLikes;
+  bool _isLiked = false;
 
   @override
   void initState() {
     super.initState();
     _currentUpvotes = widget.post.upvotes;
     _currentDownvotes = widget.post.downvotes;
+    _currentLikes = widget.post.likes;
+    _checkLikeStatus();
   }
 
   @override
@@ -331,21 +335,21 @@ class _FeedPostCardState extends State<FeedPostCard> {
           Row(
             children: [
               IconButton(
-                onPressed: widget.onLike,
+                onPressed: _handleLike,
                 icon: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons.favorite_border,
+                      _isLiked ? Icons.favorite : Icons.favorite_border,
                       size: 20,
-                      color: Colors.grey[600],
+                      color: _isLiked ? Colors.pink : Colors.grey[600],
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      widget.post.likes.toString(),
+                      _currentLikes.toString(),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: _isLiked ? Colors.pink : Colors.grey[600],
                       ),
                     ),
                   ],
@@ -712,6 +716,55 @@ class _FeedPostCardState extends State<FeedPostCard> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _checkLikeStatus() async {
+    // This would require getting the current user ID
+    // For now, we'll skip this and rely on the toggle response
+    // TODO: Implement user authentication check
+  }
+
+  Future<void> _handleLike() async {
+    try {
+      final result = await _feedService.likePost(widget.post.id!);
+
+      if (result['success']) {
+        // Update the like count and status
+        setState(() {
+          _currentLikes = result['likes'] ?? _currentLikes;
+          _isLiked = result['liked'] ?? !_isLiked;
+        });
+
+        // Show feedback
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(result['message'] ?? (_isLiked ? 'Liked!' : 'Unliked!')),
+            backgroundColor: _isLiked ? Colors.pink : Colors.grey,
+            duration: const Duration(seconds: 1),
+          ),
+        );
+
+        // Notify parent widget
+        if (widget.onLike != null) {
+          widget.onLike!();
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message'] ?? 'Error liking post'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
