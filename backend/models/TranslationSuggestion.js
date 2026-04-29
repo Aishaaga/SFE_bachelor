@@ -168,6 +168,33 @@ TranslationSuggestionSchema.statics.getStatsByDateRange = function(startDate, en
   ]);
 };
 
+// Virtual methods for getting vote counts from relationships
+TranslationSuggestionSchema.virtual('voteData', {
+  ref: 'TranslationVote',
+  localField: '_id',
+  foreignField: 'translationSuggestionId'
+});
+
+// Method to get suggestion with vote counts
+TranslationSuggestionSchema.methods.getWithVotes = async function() {
+  const TranslationVote = mongoose.model('TranslationVote');
+  
+  const voteCounts = await TranslationVote.getVoteCounts(this._id);
+  
+  const suggestionObj = this.toObject();
+  suggestionObj.upvotes = voteCounts.upvotes;
+  suggestionObj.downvotes = voteCounts.downvotes;
+  suggestionObj.totalVotes = voteCounts.total;
+  
+  return suggestionObj;
+};
+
+// Method to get user's vote on this suggestion
+TranslationSuggestionSchema.methods.getUserVote = async function(userId) {
+  const TranslationVote = mongoose.model('TranslationVote');
+  return await TranslationVote.getUserVote(this._id, userId);
+};
+
 // Transformer en JSON pour l'API
 TranslationSuggestionSchema.methods.toJSON = function() {
   const suggestion = this.toObject();
