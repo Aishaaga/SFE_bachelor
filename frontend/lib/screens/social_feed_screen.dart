@@ -75,8 +75,17 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
           final List<dynamic> postsData = result['posts'];
           final pagination = result['pagination'];
 
-          final newPosts =
-              postsData.map((postJson) => FeedPost.fromJson(postJson)).toList();
+          final newPosts = <FeedPost>[];
+          for (final postJson in postsData) {
+            try {
+              newPosts.add(FeedPost.fromJson(postJson));
+            } catch (e) {
+              print('Error parsing post: $e');
+              print('Post data: $postJson');
+              // Skip this post but continue with others
+              continue;
+            }
+          }
 
           setState(() {
             if (refresh) {
@@ -84,7 +93,12 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
             } else {
               _posts.addAll(newPosts);
             }
-            _hasMore = _currentPage < pagination['pages'];
+
+            print('Pagination data: $pagination');
+            final totalPages =
+                int.tryParse(pagination['pages']?.toString() ?? '1') ?? 1;
+            print('Total pages: $totalPages, current page: $_currentPage');
+            _hasMore = _currentPage < totalPages;
             _isLoading = false;
           });
         } else {
@@ -319,21 +333,31 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
       padding: const EdgeInsets.all(8),
       itemCount: _posts.length + (_hasMore ? 1 : 0),
       itemBuilder: (context, index) {
-        if (index == _posts.length) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+        try {
+          if (index == _posts.length) {
+            return const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
 
-        final post = _posts[index];
-        return FeedPostCard(
-          post: post,
-          onLike: () => _likePost(post.id!),
-          onFlag: () => _flagPost(post.id!),
-        );
+          if (index < 0 || index >= _posts.length) {
+            print('Invalid index: $index, posts length: ${_posts.length}');
+            return const SizedBox.shrink();
+          }
+
+          final post = _posts[index];
+          return FeedPostCard(
+            post: post,
+            onLike: () => _likePost(post.id!),
+            onFlag: () => _flagPost(post.id!),
+          );
+        } catch (e) {
+          print('Error in itemBuilder at index $index: $e');
+          return const SizedBox.shrink();
+        }
       },
     );
   }

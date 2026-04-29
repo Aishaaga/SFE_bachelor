@@ -1,6 +1,7 @@
 class FeedPost {
   final String? id;
-  final String type; // 'identification', 'translation_suggestion', 'plant_of_day'
+  final String
+      type; // 'identification', 'translation_suggestion', 'plant_of_day'
   final String? userId;
   final bool isAnonymous;
   final String plantId;
@@ -44,28 +45,71 @@ class FeedPost {
   });
 
   factory FeedPost.fromJson(Map<String, dynamic> json) {
-    return FeedPost(
-      id: json['_id'] ?? json['id'],
-      type: json['type'] ?? 'identification',
-      userId: json['userId']?['_id'] ?? json['userId'],
-      isAnonymous: json['isAnonymous'] ?? false,
-      plantId: json['plantId']?['_id']?.toString() ?? json['plantId']?.toString() ?? '',
-      plantName: json['plantName'] ?? '',
-      scientificName: json['scientificName'] ?? '',
-      imageUrl: json['imageUrl'],
-      identificationId: json['identificationId']?['_id'] ?? json['identificationId'],
-      suggestedDarija: json['suggestedDarija'],
-      suggestedTamazight: json['suggestedTamazight'],
-      upvotes: json['upvotes'] ?? 0,
-      downvotes: json['downvotes'] ?? 0,
-      location: Location.fromJson(json['location'] ?? {}),
-      likes: json['likes'] ?? 0,
-      commentCount: json['commentCount'] ?? 0,
-      status: json['status'] ?? 'active',
-      createdAt: DateTime.parse(json['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: DateTime.parse(json['updatedAt'] ?? DateTime.now().toIso8601String()),
-      user: json['userId'] != null ? User.fromJson(json['userId']) : null,
-    );
+    try {
+      // Safely extract userId
+      String? userId;
+      if (json['userId'] != null) {
+        if (json['userId'] is Map) {
+          userId = json['userId']['_id']?.toString();
+        } else {
+          userId = json['userId']?.toString();
+        }
+      }
+
+      // Safely extract plantId
+      String plantId;
+      if (json['plantId'] != null) {
+        if (json['plantId'] is Map) {
+          plantId = json['plantId']['_id']?.toString() ?? '';
+        } else {
+          plantId = json['plantId']?.toString() ?? '';
+        }
+      } else {
+        plantId = '';
+      }
+
+      // Safely extract identificationId
+      String? identificationId;
+      if (json['identificationId'] != null) {
+        if (json['identificationId'] is Map) {
+          identificationId = json['identificationId']['_id']?.toString();
+        } else {
+          identificationId = json['identificationId']?.toString();
+        }
+      }
+
+      return FeedPost(
+        id: json['_id']?.toString() ?? json['id']?.toString(),
+        type: json['type']?.toString() ?? 'identification',
+        userId: userId,
+        isAnonymous: json['isAnonymous'] == true,
+        plantId: plantId,
+        plantName: json['plantName']?.toString() ?? '',
+        scientificName: json['scientificName']?.toString() ?? '',
+        imageUrl: json['imageUrl']?.toString(),
+        identificationId: identificationId,
+        suggestedDarija: json['suggestedDarija']?.toString(),
+        suggestedTamazight: json['suggestedTamazight']?.toString(),
+        upvotes: int.tryParse(json['upvotes']?.toString() ?? '0') ?? 0,
+        downvotes: int.tryParse(json['downvotes']?.toString() ?? '0') ?? 0,
+        location: Location.fromJson(json['location'] ?? {}),
+        likes: int.tryParse(json['likes']?.toString() ?? '0') ?? 0,
+        commentCount:
+            int.tryParse(json['commentCount']?.toString() ?? '0') ?? 0,
+        status: json['status']?.toString() ?? 'active',
+        createdAt: DateTime.parse(
+            json['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
+        updatedAt: DateTime.parse(
+            json['updatedAt']?.toString() ?? DateTime.now().toIso8601String()),
+        user: json['userId'] != null && json['userId'] is Map
+            ? User.fromJson(json['userId'])
+            : null,
+      );
+    } catch (e) {
+      print('Error in FeedPost.fromJson: $e');
+      print('JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -148,11 +192,17 @@ class Location {
   });
 
   factory Location.fromJson(Map<String, dynamic> json) {
-    return Location(
-      level: json['level'] ?? 'country',
-      country: json['country'] ?? 'Morocco',
-      city: json['city'],
-    );
+    try {
+      return Location(
+        level: json['level']?.toString() ?? 'country',
+        country: json['country']?.toString() ?? 'Morocco',
+        city: json['city']?.toString(),
+      );
+    } catch (e) {
+      print('Error in Location.fromJson: $e');
+      print('Location JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -187,10 +237,16 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['_id'] ?? json['id'],
-      email: json['email'],
-    );
+    try {
+      return User(
+        id: json['_id']?.toString() ?? json['id']?.toString(),
+        email: json['email']?.toString(),
+      );
+    } catch (e) {
+      print('Error in User.fromJson: $e');
+      print('User JSON data: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
