@@ -52,15 +52,11 @@ const feedPostSchema = new mongoose.Schema({
   // For translation suggestion posts
   suggestedDarija: {
     type: String,
-    required: function() {
-      return this.type === 'translation_suggestion';
-    }
+    required: false // Make optional for translation suggestions
   },
   suggestedTamazight: {
     type: String,
-    required: function() {
-      return this.type === 'translation_suggestion';
-    }
+    required: false // Make optional for translation suggestions
   },
   upvotes: {
     type: Number,

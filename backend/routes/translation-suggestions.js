@@ -1,6 +1,7 @@
 const express = require('express');
 const authMiddleware = require('../middleware/auth');
-const TranslationSuggestion = require('../models/TranslationSuggestion');
+const FeedPost = require('../models/FeedPost');
+const User = require('../models/User');
 
 const router = express.Router();
 
@@ -44,31 +45,57 @@ router.post('/', async (req, res) => {
       });
     }
     
-    // Créer la proposition
-    const proposal = new TranslationSuggestion({
+    // Find user by email
+    const user = await User.findOne({ email: contributorEmail });
+    
+    // Create feed post for translation suggestion
+    const feedPost = new FeedPost({
+      type: 'translation_suggestion',
+      userId: user ? user._id : null,
+      isAnonymous: false,
+      
+      // Plant information
+      plantId: `translation_${Date.now()}`,
+      plantName: scientificName.trim(),
       scientificName: scientificName.trim(),
-      darijaProposal: darijaProposal ? darijaProposal.trim() : null,
-      tamazightProposal: tamazightProposal ? tamazightProposal.trim() : null,
-      contributorName: contributorName.trim(),
-      contributorEmail: contributorEmail.toLowerCase().trim(),
-      contributorRegion: contributorRegion ? contributorRegion.trim() : '',
-      notes: notes ? notes.trim() : '',
-      source: 'mobile_app'
+      
+      // Translation suggestion fields
+      suggestedDarija: darijaProposal ? darijaProposal.trim() : null,
+      suggestedTamazight: tamazightProposal ? tamazightProposal.trim() : null,
+      upvotes: 0,
+      downvotes: 0,
+      
+      // Location
+      location: {
+        level: contributorRegion ? 'city' : 'country',
+        country: 'Morocco',
+        city: contributorRegion || undefined
+      },
+      
+      // Status
+      status: 'flagged', // New translation suggestions start as flagged for review
+      
+      // Metadata
+      likes: 0,
+      commentCount: 0,
+      
+      // Additional info
+      notes: notes ? notes.trim() : ''
     });
     
-    await proposal.save();
+    await feedPost.save();
     
     res.status(201).json({
       success: true,
       message: 'Proposition de traduction soumise avec succès',
-      proposal: proposal.toJSON()
+      data: feedPost
     });
     
   } catch (error) {
-    console.error('Erreur création proposition:', error);
+    console.error('Erreur lors de la soumission de la proposition:', error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la création de la proposition'
+      message: 'Erreur lors de la soumission de la proposition'
     });
   }
 });
@@ -82,18 +109,23 @@ router.get('/', async (req, res) => {
       contributorName,
       page = 1,
       limit = 20,
-      sortBy = 'submittedAt',
+      sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
     
     // Construire le filtre
-    const filter = {};
-    if (status) filter.status = status;
+    const filter = { type: 'translation_suggestion' };
+    if (status) {
+      // Map old status to new status
+      const statusMap = {
+        'pending': 'flagged',
+        'approved': 'active',
+        'rejected': 'hidden'
+      };
+      filter.status = statusMap[status] || status;
+    }
     if (scientificName) {
       filter.scientificName = { $regex: scientificName, $options: 'i' };
-    }
-    if (contributorName) {
-      filter.contributorName = { $regex: contributorName, $options: 'i' };
     }
     
     // Construire le tri
@@ -103,17 +135,17 @@ router.get('/', async (req, res) => {
     // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const proposals = await TranslationSuggestion.find(filter)
+    const proposals = await FeedPost.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('reviewedBy', 'name email');
+      .populate('userId', 'name email');
     
-    const total = await TranslationSuggestion.countDocuments(filter);
+    const total = await FeedPost.countDocuments(filter);
     
     res.json({
       success: true,
-      proposals: proposals.map(p => p.toJSON()),
+      proposals: proposals,
       pagination: {
         current: parseInt(page),
         limit: parseInt(limit),
@@ -134,15 +166,23 @@ router.get('/', async (req, res) => {
 // GET /api/translation-proposals/stats - Statistiques (admin)
 router.get('/stats', async (req, res) => {
   try {
-    const stats = await TranslationSuggestion.getStats();
+    // Get statistics for translation suggestions
+    const stats = await FeedPost.aggregate([
+      { $match: { type: 'translation_suggestion' } },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
     
     // Formater les statistiques
     const formattedStats = {
       total: 0,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-      needs_review: 0
+      flagged: 0,
+      active: 0,
+      hidden: 0
     };
     
     stats.forEach(stat => {
@@ -170,14 +210,14 @@ router.put('/:id/status', async (req, res) => {
     const { status, reviewNotes } = req.body;
     const proposalId = req.params.id;
     
-    if (!['pending', 'approved', 'rejected', 'needs_review'].includes(status)) {
+    if (!['flagged', 'active', 'hidden'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Statut invalide'
       });
     }
     
-    const proposal = await TranslationSuggestion.findById(proposalId);
+    const proposal = await FeedPost.findById(proposalId);
     
     if (!proposal) {
       return res.status(404).json({
@@ -188,17 +228,14 @@ router.put('/:id/status', async (req, res) => {
     
     // Mettre à jour le statut
     proposal.status = status;
-    proposal.reviewedAt = new Date();
-    proposal.reviewedBy = req.userId;
-    proposal.reviewNotes = reviewNotes || '';
-    proposal.isValidated = status === 'approved';
+    proposal.updatedAt = new Date();
     
     await proposal.save();
     
     res.json({
       success: true,
       message: `Statut mis à jour: ${status}`,
-      proposal: proposal.toJSON()
+      proposal: proposal
     });
     
   } catch (error) {
@@ -215,7 +252,7 @@ router.delete('/:id', async (req, res) => {
   try {
     const proposalId = req.params.id;
     
-    const result = await TranslationSuggestion.findByIdAndDelete(proposalId);
+    const result = await FeedPost.findByIdAndDelete(proposalId);
     
     if (!result) {
       return res.status(404).json({
@@ -242,16 +279,17 @@ router.delete('/:id', async (req, res) => {
 router.get('/scientific/:scientificName', async (req, res) => {
   try {
     const { scientificName } = req.params;
-    const { status = 'approved' } = req.query;
+    const { status = 'active' } = req.query;
     
-    const proposals = await TranslationSuggestion.find({
+    const proposals = await FeedPost.find({
+      type: 'translation_suggestion',
       scientificName: scientificName.trim(),
       status: status
-    }).sort({ submittedAt: -1 });
+    }).sort({ createdAt: -1 });
     
     res.json({
       success: true,
-      proposals: proposals.map(p => p.toJSON())
+      proposals: proposals
     });
     
   } catch (error) {
@@ -276,43 +314,40 @@ router.get('/search', async (req, res) => {
       limit = 10
     } = req.query;
     
-    const filter = {};
+    const filter = { type: 'translation_suggestion' };
     
     // Recherche textuelle
     if (q) {
       filter.$or = [
         { scientificName: { $regex: q, $options: 'i' } },
-        { darijaProposal: { $regex: q, $options: 'i' } },
-        { tamazightProposal: { $regex: q, $options: 'i' } },
-        { contributorName: { $regex: q, $options: 'i' } },
-        { notes: { $regex: q, $options: 'i' } }
+        { suggestedDarija: { $regex: q, $options: 'i' } },
+        { suggestedTamazight: { $regex: q, $options: 'i' } }
       ];
     }
     
-    // Filtres spécifiques
     if (status) filter.status = status;
-    if (contributorEmail) filter.contributorEmail = contributorEmail.toLowerCase();
     
-    // Filtre de date
+    // Filtrage par date
     if (startDate || endDate) {
-      filter.submittedAt = {};
-      if (startDate) filter.submittedAt.$gte = new Date(startDate);
-      if (endDate) filter.submittedAt.$lte = new Date(endDate);
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
     
+    // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const proposals = await TranslationSuggestion.find(filter)
-      .sort({ submittedAt: -1 })
+    const proposals = await FeedPost.find(filter)
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
-      .populate('reviewedBy', 'name email');
+      .populate('userId', 'name email');
     
-    const total = await TranslationSuggestion.countDocuments(filter);
+    const total = await FeedPost.countDocuments(filter);
     
     res.json({
       success: true,
-      proposals: proposals.map(p => p.toJSON()),
+      proposals: proposals,
       pagination: {
         current: parseInt(page),
         limit: parseInt(limit),
@@ -322,7 +357,7 @@ router.get('/search', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Erreur recherche:', error);
+    console.error('Erreur recherche avancée:', error);
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la recherche'
