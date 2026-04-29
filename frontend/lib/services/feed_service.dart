@@ -1,0 +1,210 @@
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import '../utils/constants.dart';
+
+class FeedService {
+  // Share a discovery to the community feed
+  Future<Map<String, dynamic>> shareToFeed({
+    required String plantId,
+    required String plantName,
+    required String scientificName,
+    String? imageUrl,
+    String? identificationId,
+    required bool isAnonymous,
+    required Map<String, dynamic> location,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.apiUrl}/feed/share'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+        body: jsonEncode({
+          'type': 'identification',
+          'plantId': plantId,
+          'plantName': plantName,
+          'scientificName': scientificName,
+          'imageUrl': imageUrl,
+          'identificationId': identificationId,
+          'isAnonymous': isAnonymous,
+          'location': location,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        return {
+          'success': true,
+          'message': data['message'],
+          'data': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error sharing to feed',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Get all feed posts
+  Future<Map<String, dynamic>> getFeedPosts({
+    String? type,
+    int page = 1,
+    int limit = 20,
+    String? locationLevel,
+    String? city,
+  }) async {
+    try {
+      // Build query parameters
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+
+      if (type != null) queryParams['type'] = type;
+      if (locationLevel != null) queryParams['locationLevel'] = locationLevel;
+      if (city != null) queryParams['city'] = city;
+
+      final uri = Uri.parse('${Constants.apiUrl}/feed')
+          .replace(queryParameters: queryParams);
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'posts': data['data'],
+          'pagination': data['pagination'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error fetching feed posts',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Get a specific feed post
+  Future<Map<String, dynamic>> getFeedPost(String postId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('${Constants.apiUrl}/feed/$postId'),
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'post': data['data'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error fetching feed post',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Like a feed post
+  Future<Map<String, dynamic>> likePost(String postId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.apiUrl}/feed/$postId/like'),
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'],
+          'likes': data['likes'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error liking post',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Flag a feed post
+  Future<Map<String, dynamic>> flagPost(String postId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.apiUrl}/feed/$postId/flag'),
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error flagging post',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Get auth token
+  Future<String> _getToken() async {
+    // This should be imported from your auth service
+    // For now, returning empty string - you'll need to integrate with your auth system
+    const flutterSecureStorage = FlutterSecureStorage();
+    return await flutterSecureStorage.read(key: Constants.tokenKey) ?? '';
+  }
+}

@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth');
 const identificationsRoutes = require('./routes/identifications');
 const translationSuggestionsRoutes = require('./routes/translation-suggestions');
 const adminRoutes = require('./routes/admin');
+const feedRoutes = require('./routes/feed');
 console.log('✅ Admin routes imported');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/identify', identifyRoutes);
 app.use('/api', authRoutes);  // /api/register, /api/login
 app.use('/api/translation-suggestions', translationSuggestionsRoutes);  // /api/translation-suggestions (auth requise)
 app.use('/api', identificationsRoutes);  // /api/save-identification, etc. (avec auth)
+app.use('/api/feed', feedRoutes);  // Feed endpoints
 app.use('/api/admin', adminRoutes);  // Admin endpoints
 console.log('✅ Admin routes mounted at /api/admin');
 

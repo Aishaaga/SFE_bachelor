@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
+import '../services/feed_service.dart';
 
 class ShareFromHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> identification;
@@ -413,49 +414,163 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
     );
   }
 
-  void _shareDiscovery() {
+  void _shareDiscovery() async {
     final locationText = _getLocationDisplayText();
+    final feedService = FeedService();
 
-    // Show success message
+    // Show loading dialog
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
+      builder: (context) => const AlertDialog(
+        content: Row(
           children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            const SizedBox(width: 8),
-            const Text('Discovery Posted!'),
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Sharing to community...'),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Your discovery has been posted ${_postAs == 'Anonymous' ? 'anonymously' : 'as $_postAs'} and will be visible to the community.',
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Location: $locationText',
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to detail screen
-            },
-            child: const Text('OK'),
-          ),
-        ],
       ),
     );
+
+    try {
+      // Prepare location data
+      Map<String, dynamic> locationData;
+      switch (_location) {
+        case 'Morocco only':
+          locationData = {'level': 'country', 'country': 'Morocco'};
+          break;
+        case 'None':
+          locationData = {'level': 'none', 'country': 'Morocco'};
+          break;
+        default:
+          // City level
+          locationData = {
+            'level': 'city',
+            'country': 'Morocco',
+            'city': _location,
+          };
+          break;
+      }
+
+      // Get plant data from identification
+      final plant = widget.identification['plant'];
+      final plantId = plant['_id'] ?? '';
+      final plantName = plant['name'] ?? '';
+      final scientificName = plant['scientificName'] ?? '';
+
+      // Get image URL
+      final images = widget.identification['photoUrls'] as List<dynamic>? ?? [];
+      final imageUrl = images.isNotEmpty ? images.first : null;
+
+      // Get identification ID
+      final identificationIds =
+          widget.identification['identificationIds'] as List<dynamic>? ?? [];
+      final identificationId =
+          identificationIds.isNotEmpty ? identificationIds.first : null;
+
+      // Share to feed
+      final result = await feedService.shareToFeed(
+        plantId: plantId,
+        plantName: plantName,
+        scientificName: scientificName,
+        imageUrl: imageUrl,
+        identificationId: identificationId,
+        isAnonymous: _postAs == 'Anonymous',
+        location: locationData,
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (result['success']) {
+        // Show success message
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                const SizedBox(width: 8),
+                const Text('Discovery Posted!'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Your discovery has been posted ${_postAs == 'Anonymous' ? 'anonymously' : 'as $_postAs'} and will be visible to the community.',
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Location: $locationText',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Go back to detail screen
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // Show error message
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text('Error'),
+              ],
+            ),
+            content: Text(result['message'] ?? 'Failed to share discovery'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error message
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.error, color: Colors.red),
+              const SizedBox(width: 8),
+              const Text('Error'),
+            ],
+          ),
+          content: Text('Failed to share discovery: $e'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   String _getLocationDisplayText() {
