@@ -403,6 +403,8 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   void _shareDiscovery() {
+    final locationText = _getLocationDisplayText();
+
     // Show success message
     showDialog(
       context: context,
@@ -415,8 +417,22 @@ class _ShareScreenState extends State<ShareScreen> {
             const Text('Discovery Posted!'),
           ],
         ),
-        content: Text(
-          'Your discovery has been posted ${_postAs == 'Anonymous' ? 'anonymously' : 'as $_postAs'} and will be visible to the community.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Your discovery has been posted ${_postAs == 'Anonymous' ? 'anonymously' : 'as $_postAs'} and will be visible to the community.',
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Location: $locationText',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -429,5 +445,25 @@ class _ShareScreenState extends State<ShareScreen> {
         ],
       ),
     );
+  }
+
+  String _getLocationDisplayText() {
+    switch (_location) {
+      case 'Morocco only':
+        return 'Morocco only';
+      case 'None':
+        return 'No location';
+      default:
+        // If it's a detected city (not in predefined list)
+        if (!_moroccanCities.contains(_location) && _detectedCity != null) {
+          return '$_detectedCity (detected)';
+        }
+        // If it's a manually selected city
+        if (_moroccanCities.contains(_location)) {
+          return _location;
+        }
+        // Fallback
+        return _location;
+    }
   }
 }
