@@ -467,9 +467,6 @@ class _ShareScreenState extends State<ShareScreen> {
         scientificName: widget.plant.scientificName.isNotEmpty
             ? widget.plant.scientificName
             : 'Unknown',
-        imageUrl: widget.identificationId != null
-            ? '/uploads/plant-${widget.identificationId}.jpg'
-            : null,
         identificationId: widget.identificationId,
         isAnonymous: _postAs == 'Anonymous',
         location: locationData,

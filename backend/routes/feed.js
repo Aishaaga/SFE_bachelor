@@ -61,6 +61,23 @@ router.post('/share', auth, async (req, res) => {
     
     console.log('DEBUG: Final plantId for database:', finalPlantId);
 
+    // Get the actual image URL from identification if identificationId is provided
+    let actualImageUrl = imageUrl;
+    if (type === 'identification' && identificationId) {
+      try {
+        const Identification = require('../models/Identification');
+        const identification = await Identification.findById(identificationId);
+        if (identification && identification.photoUrl) {
+          actualImageUrl = identification.photoUrl;
+          console.log('DEBUG: Using photoUrl from identification:', actualImageUrl);
+          console.log('DEBUG: Overriding provided imageUrl:', imageUrl);
+        }
+      } catch (error) {
+        console.log('DEBUG: Could not fetch identification for photoUrl:', error.message);
+        console.log('DEBUG: Falling back to provided imageUrl:', imageUrl);
+      }
+    }
+
     // Create the feed post
     const feedPost = new FeedPost({
       type,
@@ -69,7 +86,7 @@ router.post('/share', auth, async (req, res) => {
       plantId: finalPlantId,
       plantName,
       scientificName,
-      imageUrl: type === 'identification' ? imageUrl : undefined,
+      imageUrl: type === 'identification' ? actualImageUrl : undefined,
       identificationId: type === 'identification' ? identificationId : undefined,
       location: {
         level: location.level,

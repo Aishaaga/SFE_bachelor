@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/feed_post.dart';
+import '../utils/constants.dart';
 
 class FeedPostCard extends StatelessWidget {
   final FeedPost post;
@@ -98,10 +99,33 @@ class FeedPostCard extends StatelessWidget {
   }
 
   Widget _buildImage() {
+    // Construct full URL from relative path
+    final imageUrl = post.imageUrl;
+    if (imageUrl == null) {
+      return Container(
+        height: 200,
+        color: Colors.grey[200],
+        child: Center(
+          child: Icon(
+            Icons.image_not_supported,
+            size: 40,
+            color: Colors.grey[400],
+          ),
+        ),
+      );
+    }
+
+    String fullImageUrl = imageUrl;
+    if (!fullImageUrl.startsWith('http')) {
+      // Remove the /api part from Constants.apiUrl to get the base URL
+      final baseUrl = Constants.apiUrl.replaceFirst('/api', '');
+      fullImageUrl = '$baseUrl$imageUrl';
+    }
+
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
       child: Image.network(
-        post.imageUrl!,
+        fullImageUrl,
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,
@@ -120,17 +144,21 @@ class FeedPostCard extends StatelessWidget {
             ),
           );
         },
-        errorBuilder: (context, error, stackTrace) => Container(
-          height: 200,
-          color: Colors.grey[200],
-          child: Center(
-            child: Icon(
-              Icons.image_not_supported,
-              size: 40,
-              color: Colors.grey[400],
+        errorBuilder: (context, error, stackTrace) {
+          print('Image loading error: $error');
+          print('Image URL: $fullImageUrl');
+          return Container(
+            height: 200,
+            color: Colors.grey[200],
+            child: Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: 40,
+                color: Colors.grey[400],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
