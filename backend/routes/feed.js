@@ -15,6 +15,8 @@ router.post('/share', auth, async (req, res) => {
       scientificName,
       imageUrl,
       identificationId,
+      suggestedDarija,
+      suggestedTamazight,
       isAnonymous,
       location
     } = req.body;
@@ -26,6 +28,8 @@ router.post('/share', auth, async (req, res) => {
     console.log('  scientificName:', scientificName);
     console.log('  imageUrl:', imageUrl);
     console.log('  identificationId:', identificationId);
+    console.log('  suggestedDarija:', suggestedDarija);
+    console.log('  suggestedTamazight:', suggestedTamazight);
     console.log('  isAnonymous:', isAnonymous);
     console.log('  location:', location);
 
@@ -88,6 +92,8 @@ router.post('/share', auth, async (req, res) => {
       scientificName,
       imageUrl: type === 'identification' ? actualImageUrl : undefined,
       identificationId: type === 'identification' ? identificationId : undefined,
+      suggestedDarija: type === 'translation_suggestion' ? suggestedDarija : undefined,
+      suggestedTamazight: type === 'translation_suggestion' ? suggestedTamazight : undefined,
       location: {
         level: location.level,
         country: location.country || 'Morocco',

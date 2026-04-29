@@ -6,11 +6,14 @@ import '../utils/constants.dart';
 class FeedService {
   // Share a discovery to the community feed
   Future<Map<String, dynamic>> shareToFeed({
+    String type = 'identification',
     required String plantId,
     required String plantName,
     required String scientificName,
     String? imageUrl,
     String? identificationId,
+    String? suggestedDarija,
+    String? suggestedTamazight,
     required bool isAnonymous,
     required Map<String, dynamic> location,
   }) async {
@@ -22,12 +25,14 @@ class FeedService {
           'Authorization': 'Bearer ${await _getToken()}',
         },
         body: jsonEncode({
-          'type': 'identification',
+          'type': type,
           'plantId': plantId,
           'plantName': plantName,
           'scientificName': scientificName,
           'imageUrl': imageUrl,
           'identificationId': identificationId,
+          'suggestedDarija': suggestedDarija,
+          'suggestedTamazight': suggestedTamazight,
           'isAnonymous': isAnonymous,
           'location': location,
         }),

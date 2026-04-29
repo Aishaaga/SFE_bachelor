@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/feed_post.dart';
+import '../services/feed_service.dart';
 import '../utils/constants.dart';
 
-class FeedPostCard extends StatelessWidget {
+class FeedPostCard extends StatefulWidget {
   final FeedPost post;
   final VoidCallback onLike;
   final VoidCallback onFlag;
@@ -13,6 +14,16 @@ class FeedPostCard extends StatelessWidget {
     required this.onLike,
     required this.onFlag,
   });
+
+  @override
+  State<FeedPostCard> createState() => _FeedPostCardState();
+}
+
+class _FeedPostCardState extends State<FeedPostCard> {
+  final _darijaController = TextEditingController();
+  final _tamazightController = TextEditingController();
+  bool _isSubmitting = false;
+  final FeedService _feedService = FeedService();
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +37,8 @@ class FeedPostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(),
-          if (post.type == 'identification' && post.imageUrl != null)
+          if (widget.post.type == 'identification' &&
+              widget.post.imageUrl != null)
             _buildImage(),
           _buildContent(),
           _buildActions(),
@@ -43,7 +55,7 @@ class FeedPostCard extends StatelessWidget {
           CircleAvatar(
             radius: 20,
             backgroundColor: Colors.green.shade100,
-            child: post.isAnonymous
+            child: widget.post.isAnonymous
                 ? Icon(
                     Icons.person_outline,
                     color: Colors.green.shade700,
@@ -59,9 +71,9 @@ class FeedPostCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  post.isAnonymous
+                  widget.post.isAnonymous
                       ? 'Anonymous'
-                      : (post.user?.email ?? 'Unknown'),
+                      : (widget.post.user?.email ?? 'Unknown'),
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
@@ -69,7 +81,7 @@ class FeedPostCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  post.location.displayText,
+                  widget.post.location.displayText,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -100,7 +112,7 @@ class FeedPostCard extends StatelessWidget {
 
   Widget _buildImage() {
     // Construct full URL from relative path
-    final imageUrl = post.imageUrl;
+    final imageUrl = widget.post.imageUrl;
     if (imageUrl == null) {
       return Container(
         height: 200,
@@ -170,7 +182,7 @@ class FeedPostCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            post.plantName,
+            widget.post.plantName,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -178,14 +190,14 @@ class FeedPostCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            post.scientificName,
+            widget.post.scientificName,
             style: TextStyle(
               fontSize: 14,
               fontStyle: FontStyle.italic,
               color: Colors.grey[600],
             ),
           ),
-          if (post.type == 'translation_suggestion') ...[
+          if (widget.post.type == 'translation_suggestion') ...[
             const SizedBox(height: 12),
             _buildTranslationSuggestions(),
           ],
@@ -221,13 +233,13 @@ class FeedPostCard extends StatelessWidget {
               color: Colors.blue.shade700,
             ),
           ),
-          if (post.suggestedDarija != null) ...[
+          if (widget.post.suggestedDarija != null) ...[
             const SizedBox(height: 8),
-            _buildSuggestion('Darija', post.suggestedDarija!),
+            _buildSuggestion('Darija', widget.post.suggestedDarija!),
           ],
-          if (post.suggestedTamazight != null) ...[
+          if (widget.post.suggestedTamazight != null) ...[
             const SizedBox(height: 8),
-            _buildSuggestion('Tamazight', post.suggestedTamazight!),
+            _buildSuggestion('Tamazight', widget.post.suggestedTamazight!),
           ],
         ],
       ),
@@ -272,99 +284,134 @@ class FeedPostCard extends StatelessWidget {
           top: BorderSide(color: Colors.grey.shade200),
         ),
       ),
-      child: Row(
+      child: Column(
         children: [
-          IconButton(
-            onPressed: onLike,
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.favorite_border,
+          // Translation suggestion button for identification posts
+          if (widget.post.type == 'identification')
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ElevatedButton.icon(
+                onPressed: () => _showTranslationDialog(context),
+                icon: Icon(
+                  Icons.translate,
+                  size: 18,
+                  color: Colors.blue[700],
+                ),
+                label: Text(
+                  'Proposer traduction',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[50],
+                  foregroundColor: Colors.blue[700],
+                  elevation: 0,
+                  side: BorderSide(color: Colors.blue[200]!),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                ),
+              ),
+            ),
+          // Regular action buttons
+          Row(
+            children: [
+              IconButton(
+                onPressed: widget.onLike,
+                icon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.favorite_border,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.post.likes.toString(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () {
+                  // TODO: Implement comments
+                },
+                icon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.comment_outlined,
+                      size: 20,
+                      color: Colors.grey[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      widget.post.commentCount.toString(),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              if (widget.post.type == 'translation_suggestion') ...[
+                Row(
+                  children: [
+                    Icon(
+                      Icons.thumb_up_outlined,
+                      size: 16,
+                      color: Colors.green[600],
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      widget.post.upvotes.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green[600],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.thumb_down_outlined,
+                      size: 16,
+                      color: Colors.red[600],
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      widget.post.downvotes.toString(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.red[600],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 16),
+              ],
+              IconButton(
+                onPressed: widget.onFlag,
+                icon: Icon(
+                  Icons.flag_outlined,
                   size: 20,
                   color: Colors.grey[600],
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  post.likes.toString(),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            onPressed: () {
-              // TODO: Implement comments
-            },
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.comment_outlined,
-                  size: 20,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  post.commentCount.toString(),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          if (post.type == 'translation_suggestion') ...[
-            Row(
-              children: [
-                Icon(
-                  Icons.thumb_up_outlined,
-                  size: 16,
-                  color: Colors.green[600],
-                ),
-                const SizedBox(width: 2),
-                Text(
-                  post.upvotes.toString(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.green[600],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Row(
-              children: [
-                Icon(
-                  Icons.thumb_down_outlined,
-                  size: 16,
-                  color: Colors.red[600],
-                ),
-                const SizedBox(width: 2),
-                Text(
-                  post.downvotes.toString(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.red[600],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-          ],
-          IconButton(
-            onPressed: onFlag,
-            icon: Icon(
-              Icons.flag_outlined,
-              size: 20,
-              color: Colors.grey[600],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -372,7 +419,7 @@ class FeedPostCard extends StatelessWidget {
   }
 
   Color _getTypeColor() {
-    switch (post.type) {
+    switch (widget.post.type) {
       case 'identification':
         return Colors.green;
       case 'translation_suggestion':
@@ -385,7 +432,7 @@ class FeedPostCard extends StatelessWidget {
   }
 
   String _getTypeDisplayText() {
-    switch (post.type) {
+    switch (widget.post.type) {
       case 'identification':
         return 'Identification';
       case 'translation_suggestion':
@@ -399,7 +446,7 @@ class FeedPostCard extends StatelessWidget {
 
   String _getTimeAgo() {
     final now = DateTime.now();
-    final difference = now.difference(post.createdAt);
+    final difference = now.difference(widget.post.createdAt);
 
     if (difference.inDays > 0) {
       return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
@@ -410,5 +457,175 @@ class FeedPostCard extends StatelessWidget {
     } else {
       return 'Just now';
     }
+  }
+
+  void _showTranslationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Proposer traduction pour ${widget.post.plantName}',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.post.scientificName,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _darijaController,
+                decoration: InputDecoration(
+                  labelText: 'Traduction Darija',
+                  hintText: 'Entrez la traduction en darija...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: const Icon(Icons.translate, color: Colors.blue),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _tamazightController,
+                decoration: InputDecoration(
+                  labelText: 'Traduction Tamazight',
+                  hintText: 'Entrez la traduction en tamazight...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: const Icon(Icons.translate, color: Colors.green),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Au moins une traduction est requise',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _darijaController.clear();
+              _tamazightController.clear();
+            },
+            child: const Text('Annuler'),
+          ),
+          ElevatedButton(
+            onPressed: _isSubmitting ? null : () => _submitTranslation(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : const Text('Proposer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitTranslation(BuildContext context) async {
+    final darija = _darijaController.text.trim();
+    final tamazight = _tamazightController.text.trim();
+
+    if (darija.isEmpty && tamazight.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez fournir au moins une traduction'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      // Create a translation suggestion feed post
+      final result = await _feedService.shareToFeed(
+        type: 'translation_suggestion',
+        plantId: widget.post.plantId,
+        plantName: widget.post.plantName,
+        scientificName: widget.post.scientificName,
+        suggestedDarija: darija.isNotEmpty ? darija : null,
+        suggestedTamazight: tamazight.isNotEmpty ? tamazight : null,
+        isAnonymous: false,
+        location: {
+          'level': 'country',
+          'country': 'Morocco',
+        },
+      );
+
+      if (mounted) {
+        Navigator.pop(context);
+        _darijaController.clear();
+        _tamazightController.clear();
+
+        if (result['success']) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Traduction proposée avec succès!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(result['message'] ?? 'Erreur lors de la proposition'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _darijaController.dispose();
+    _tamazightController.dispose();
+    super.dispose();
   }
 }
