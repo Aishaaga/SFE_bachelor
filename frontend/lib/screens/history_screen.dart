@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../utils/constants.dart';
+import '../models/plant.dart';
 import 'plant_detail_screen.dart';
+import 'translation_proposal_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -48,51 +50,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _deletePlantGroup(Map<String, dynamic> plantGroup) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (context) => AlertDialog(
         title: const Text('Supprimer'),
-        content: const Text('Voulez-vous supprimer cette identification ?'),
+        content: const Text(
+            'Êtes-vous sûr de vouloir supprimer toutes les identifications de cette plante ?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Annuler')),
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Annuler'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child:
-                  const Text('Supprimer', style: TextStyle(color: Colors.red))),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Supprimer'),
+          ),
         ],
       ),
     );
 
-    if (confirm != true) return;
-
-    // Delete all identifications for this plant group
-    bool allDeleted = true;
-    String? errorMessage;
-
-    final identificationIds =
-        plantGroup['identificationIds'] as List<dynamic>? ?? [];
-    for (String identificationId in identificationIds) {
-      final result = await _apiService.deleteIdentification(identificationId);
-      if (!result['success']) {
-        allDeleted = false;
-        errorMessage = result['message'];
-        break;
+    if (confirm == true) {
+      final result = await _apiService.deletePlantGroup(plantGroup['_id']);
+      if (result['success']) {
+        _loadHistory();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Plante supprimée avec succès')),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content:
+                    Text(result['message'] ?? 'Erreur lors de la suppression')),
+          );
+        }
       }
-    }
-
-    if (allDeleted) {
-      await _loadHistory();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Plante supprimée de l\'historique'),
-            backgroundColor: Colors.green),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(errorMessage ?? 'Erreur lors de la suppression'),
-            backgroundColor: Colors.red),
-      );
     }
   }
 

@@ -249,4 +249,31 @@ class ApiService {
       };
     }
   }
+
+  // Supprimer un groupe de plantes
+  Future<Map<String, dynamic>> deletePlantGroup(String id) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Non authentifié'};
+      }
+
+      final response = await http.delete(
+        Uri.parse('${Constants.apiUrl}/plants/$id'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(response.body);
+
+      return {
+        'success': response.statusCode == 200,
+        'message': data['message'],
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Erreur: $e',
+      };
+    }
+  }
 }

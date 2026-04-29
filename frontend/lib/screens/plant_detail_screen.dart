@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../data/plant_translations.dart';
 import '../utils/constants.dart';
+import '../models/plant.dart';
 import 'share_from_history_screen.dart';
+import 'translation_proposal_screen.dart';
 
 class PlantDetailScreen extends StatefulWidget {
   final Map<String, dynamic> identification;
@@ -187,6 +189,24 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                 label: const Text('Share with community'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Proposer traduction button
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                onPressed: () => _navigateToTranslationProposal(),
+                icon: const Icon(Icons.translate),
+                label: const Text('Proposer traduction'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   minimumSize: const Size(double.infinity, 48),
@@ -617,6 +637,29 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToTranslationProposal() {
+    // Extract plant data from identification
+    final plantData = widget.identification.containsKey('plant')
+        ? widget.identification['plant']
+        : widget.identification;
+
+    // Create a Plant object
+    final plant = Plant(
+      id: plantData['_id']?.toString() ?? '',
+      name: plantData['name']?.toString() ?? 'Unknown Plant',
+      scientificName: plantData['scientificName']?.toString() ?? '',
+      family: plantData['family']?.toString() ?? 'Unknown Family',
+      confidence: 0.0, // Default confidence since it's not in detail data
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TranslationProposalScreen(plant: plant),
       ),
     );
   }
