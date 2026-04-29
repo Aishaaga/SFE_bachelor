@@ -22,8 +22,7 @@ const feedPostSchema = new mongoose.Schema({
   
   // What plant is this about?
   plantId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Plant',
+    type: mongoose.Schema.Types.Mixed, // Allow both ObjectId and string
     required: true
   },
   plantName: {

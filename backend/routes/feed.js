@@ -49,12 +49,24 @@ router.post('/share', auth, async (req, res) => {
       });
     }
 
+    // Generate a valid ObjectId if plantId is unknown
+    let finalPlantId = plantId;
+    if (plantId === 'unknown' || !plantId) {
+      // Generate a temporary ObjectId based on plant name and timestamp
+      const { ObjectId } = require('mongoose');
+      const timestamp = Date.now();
+      const plantHash = plantName.substring(0, 8).replace(/\s/g, '').toLowerCase();
+      finalPlantId = new ObjectId(timestamp.toString(16) + plantHash.padEnd(16, '0'));
+    }
+    
+    console.log('DEBUG: Final plantId for database:', finalPlantId);
+
     // Create the feed post
     const feedPost = new FeedPost({
       type,
       userId: isAnonymous ? null : req.userId,
       isAnonymous,
-      plantId,
+      plantId: finalPlantId,
       plantName,
       scientificName,
       imageUrl: type === 'identification' ? imageUrl : undefined,
