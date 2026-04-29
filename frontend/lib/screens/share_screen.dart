@@ -433,22 +433,35 @@ class _ShareScreenState extends State<ShareScreen> {
           locationData = {'level': 'none', 'country': 'Morocco'};
           break;
         default:
-          // City level
+          // City level - use detected city if available, otherwise use selected city
+          final cityName = _detectedCity ?? _location;
           locationData = {
             'level': 'city',
             'country': 'Morocco',
-            'city': _location,
+            'city': cityName,
           };
           break;
       }
 
-      // Debug logging
+      // Debug logging - check all available plant fields
+      print('DEBUG: Plant object: ${widget.plant.toString()}');
       print(
           'DEBUG: Plant data - ID: ${widget.plant.id}, Name: ${widget.plant.name}, Scientific: ${widget.plant.scientificName}');
+      print('DEBUG: Identification ID: ${widget.identificationId}');
+
+      // Try to get a meaningful plant ID
+      String plantId = 'unknown';
+      if (widget.plant.id.isNotEmpty) {
+        plantId = widget.plant.id;
+      } else if (widget.identificationId != null) {
+        plantId = 'plant_${widget.identificationId}';
+      }
+
+      print('DEBUG: Final plant ID: $plantId');
 
       // Share to feed
       final result = await feedService.shareToFeed(
-        plantId: widget.plant.id.isNotEmpty ? widget.plant.id : 'unknown',
+        plantId: plantId,
         plantName:
             widget.plant.name.isNotEmpty ? widget.plant.name : 'Unknown Plant',
         scientificName: widget.plant.scientificName.isNotEmpty

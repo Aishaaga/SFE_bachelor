@@ -444,11 +444,12 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
           locationData = {'level': 'none', 'country': 'Morocco'};
           break;
         default:
-          // City level
+          // City level - use detected city if available, otherwise use selected city
+          final cityName = _detectedCity ?? _location;
           locationData = {
             'level': 'city',
             'country': 'Morocco',
-            'city': _location,
+            'city': cityName,
           };
           break;
       }
