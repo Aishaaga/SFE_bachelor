@@ -567,10 +567,29 @@ class _FeedPostCardState extends State<FeedPostCard> {
     });
 
     try {
+      // Debug the plant information
+      print('DEBUG: FeedPostCard - Creating translation suggestion:');
+      print('  post.plantId: ${widget.post.plantId}');
+      print('  post.identificationId: ${widget.post.identificationId}');
+      print('  post.plantName: ${widget.post.plantName}');
+      print('  post.scientificName: ${widget.post.scientificName}');
+
+      // Ensure we have a valid plantId
+      String plantId = widget.post.plantId;
+      if (plantId.isEmpty && widget.post.identificationId != null) {
+        // Use identificationId as fallback for plantId
+        plantId = widget.post.identificationId!;
+        print('  Using identificationId as plantId: $plantId');
+      }
+
+      if (plantId.isEmpty) {
+        throw Exception('Plant ID is required for translation suggestions');
+      }
+
       // Create a translation suggestion feed post
       final result = await _feedService.shareToFeed(
         type: 'translation_suggestion',
-        plantId: widget.post.plantId,
+        plantId: plantId,
         plantName: widget.post.plantName,
         scientificName: widget.post.scientificName,
         suggestedDarija: darija.isNotEmpty ? darija : null,
