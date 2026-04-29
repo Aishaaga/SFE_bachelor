@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
       },
       
       // Status
-      status: 'flagged', // New translation suggestions start as flagged for review
+      status: 'active', // New translation suggestions are immediately visible for crowdsourcing
       
       // Metadata
       likes: 0,
