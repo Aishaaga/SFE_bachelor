@@ -306,22 +306,36 @@
         }
         
         async function approveSuggestion(id) {
+            console.log('🔥 FRONTEND: approveSuggestion called with ID:', id);
             if (confirm('Approve this translation?')) {
+                console.log('🔥 FRONTEND: User confirmed approval');
                 try {
+                    console.log('🔥 FRONTEND: Making API call to:', `http://localhost:3000/api/admin/approve/${id}`);
+                    console.log('🔥 FRONTEND: Token:', token ? 'present' : 'missing');
+                    
                     const response = await fetch(`http://localhost:3000/api/admin/approve/${id}`, {
                         method: 'POST',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
+                    
+                    console.log('🔥 FRONTEND: Response status:', response.status);
                     const data = await response.json();
+                    console.log('🔥 FRONTEND: Response data:', data);
+                    
                     if (data.success) {
+                        console.log('🔥 FRONTEND: Approval successful, reloading data');
                         loadStats();
                         loadSuggestions();
                     } else {
+                        console.log('🔥 FRONTEND: Approval failed:', data.message);
                         alert('Error: ' + data.message);
                     }
                 } catch (err) {
+                    console.log('🔥 FRONTEND: Network error:', err);
                     alert('Network error: ' + err.message);
                 }
+            } else {
+                console.log('🔥 FRONTEND: User cancelled approval');
             }
         }
         
@@ -360,6 +374,22 @@
             div.textContent = text;
             return div.innerHTML;
         }
+        
+        // Test admin routes
+        async function testAdminRoutes() {
+            try {
+                const response = await fetch('http://localhost:3000/api/admin/test', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                console.log('🔥 ADMIN TEST RESULT:', data);
+            } catch (err) {
+                console.error('🔥 ADMIN TEST ERROR:', err);
+            }
+        }
+        
+        // Call test once
+        testAdminRoutes();
         
         loadStats();
         loadSuggestions();

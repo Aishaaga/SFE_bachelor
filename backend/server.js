@@ -11,6 +11,8 @@ const authRoutes = require('./routes/auth');
 const identificationsRoutes = require('./routes/identifications');
 const translationSuggestionsRoutes = require('./routes/translation-suggestions');
 const adminRoutes = require('./routes/admin');
+console.log('🔥 Admin routes loaded:', typeof adminRoutes);
+console.log('🔥 Admin routes methods:', Object.getOwnPropertyNames(adminRoutes));
 const feedRoutes = require('./routes/feed');
 const feedLikesRoutes = require('./routes/feed-likes');
 const feedCommentsRoutes = require('./routes/feed-comments');

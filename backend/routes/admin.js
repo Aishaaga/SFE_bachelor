@@ -18,10 +18,16 @@ const ApprovedTranslation = require('../models/ApprovedTranslation');
 // GET /api/admin/pending - Get all active translation suggestions with vote counts
 router.get('/pending', auth, adminAuth, async (req, res) => {
   try {
-    // Find all translation suggestions with status 'active' (visible for voting)
+    // Get all plants that already have approved translations
+    const approvedPlants = await ApprovedTranslation.find({ status: 'active' })
+      .distinct('scientificName');
+    
+    // Find all translation suggestions with status 'active' 
+    // but exclude plants that already have approved translations
     const suggestions = await FeedPost.find({ 
       type: 'translation_suggestion',
-      status: 'active'
+      status: 'active',
+      scientificName: { $nin: approvedPlants }
     })
       .populate('userId', 'name email')
       .sort({ createdAt: -1 });
@@ -104,41 +110,78 @@ router.get('/rejected', auth, adminAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/test - Test endpoint
+router.get('/test', auth, adminAuth, async (req, res) => {
+  console.log('🔥 ADMIN TEST ENDPOINT CALLED');
+  res.json({ success: true, message: 'Admin routes are working!' });
+});
+
 // POST /api/admin/approve/:id - Approve a suggestion
 router.post('/approve/:id', auth, adminAuth, async (req, res) => {
   try {
+    console.log('🔥 APPROVAL REQUEST RECEIVED');
+    console.log('- Suggestion ID:', req.params.id);
+    console.log('- Admin ID:', req.userId);
+    console.log('- Request body:', req.body);
+    
     const suggestionId = req.params.id;
     const adminId = req.userId;
     
     // Find the suggestion in FeedPost
+    console.log('🔍 Finding suggestion...');
     const suggestion = await FeedPost.findById(suggestionId);
+    console.log('🔍 Found suggestion:', suggestion ? 'YES' : 'NO');
     
     if (!suggestion) {
+      console.log('❌ Suggestion not found');
       return res.status(404).json({ success: false, message: 'Suggestion not found' });
     }
     
     // Get vote counts for this suggestion
+    console.log('🔍 Getting vote counts...');
     const voteMap = await TranslationVote.getBatchVoteCounts([suggestionId]);
     const votes = voteMap[suggestionId] || { upvotes: 0, downvotes: 0, total: 0 };
+    console.log('🔍 Vote counts:', votes);
     
     // Check if translation already exists for this plant
+    console.log('🔍 Checking existing translation...');
     const existingTranslation = await ApprovedTranslation.existsForPlant(suggestion.scientificName);
+    console.log('🔍 Existing translation:', existingTranslation ? 'YES' : 'NO');
     if (existingTranslation) {
+      console.log('❌ Translation already exists for this plant');
       return res.status(400).json({ 
         success: false, 
         message: 'An approved translation already exists for this plant' 
       });
     }
     
+    // Get user info for contributor
+    console.log('🔍 Getting contributor info...');
+    let contributorName = 'Anonymous';
+    let contributorEmail = '';
+    if (suggestion.userId) {
+      try {
+        const user = await User.findById(suggestion.userId);
+        if (user) {
+          contributorName = user.name;
+          contributorEmail = user.email;
+        }
+      } catch (err) {
+        console.log('Could not fetch user info:', err.message);
+      }
+    }
+    console.log('🔍 Contributor:', contributorName, contributorEmail);
+    
     // Create approved translation record
+    console.log('🔍 Creating ApprovedTranslation...');
     const approvedTranslation = new ApprovedTranslation({
       scientificName: suggestion.scientificName,
       plantName: suggestion.plantName,
       darijaTranslation: suggestion.suggestedDarija,
       tamazightTranslation: suggestion.suggestedTamazight,
       suggestedBy: suggestion.userId,
-      contributorName: suggestion.userId ? suggestion.userId.name : 'Anonymous',
-      contributorEmail: suggestion.userId ? suggestion.userId.email : '',
+      contributorName: contributorName,
+      contributorEmail: contributorEmail,
       contributorRegion: suggestion.location?.city || '',
       approvedBy: adminId,
       approvedAt: new Date(),
@@ -150,12 +193,35 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
       status: 'active'
     });
     
+    console.log('🔍 Saving ApprovedTranslation...');
     await approvedTranslation.save();
+    console.log('✅ ApprovedTranslation saved:', approvedTranslation._id);
     
     // Update suggestion status to indicate it's been approved
-    suggestion.status = 'active';
+    console.log('🔍 Updating suggestion status...');
+    suggestion.status = 'approved';
     suggestion.updatedAt = new Date();
     await suggestion.save();
+    console.log('✅ FeedPost status updated to approved:', suggestion._id);
+    
+    // Clean up: Hide other active suggestions for the same plant
+    console.log('🔍 Cleaning up duplicates...');
+    await FeedPost.updateMany(
+      {
+        type: 'translation_suggestion',
+        scientificName: suggestion.scientificName,
+        status: 'active',
+        _id: { $ne: suggestion._id } // Exclude the one we just approved
+      },
+      {
+        status: 'hidden',
+        updatedAt: new Date(),
+        $push: {
+          notes: 'Automatically hidden due to approval of another suggestion for this plant'
+        }
+      }
+    );
+    console.log('✅ Cleaned up duplicate suggestions for:', suggestion.scientificName);
     
     res.json({
       success: true,
@@ -205,10 +271,15 @@ router.post('/reject/:id', auth, adminAuth, async (req, res) => {
 // GET /api/admin/stats - Get dashboard statistics
 router.get('/stats', auth, adminAuth, async (req, res) => {
   try {
+    // Get all plants that already have approved translations
+    const approvedPlants = await ApprovedTranslation.find({ status: 'active' })
+      .distinct('scientificName');
+    
     // Get counts of suggestions by status from FeedPost
     const pendingCount = await FeedPost.countDocuments({ 
       type: 'translation_suggestion', 
-      status: 'active' 
+      status: 'active',
+      scientificName: { $nin: approvedPlants }
     });
     const approvedCount = await ApprovedTranslation.countDocuments({ 
       status: 'active' 

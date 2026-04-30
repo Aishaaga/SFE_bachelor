@@ -33,13 +33,15 @@ const approvedTranslationSchema = new mongoose.Schema({
   },
   contributorName: {
     type: String,
-    required: true,
-    trim: true
+    required: false,
+    trim: true,
+    default: 'Anonymous'
   },
   contributorEmail: {
     type: String,
-    required: true,
-    trim: true
+    required: false,
+    trim: true,
+    default: ''
   },
   contributorRegion: {
     type: String,
