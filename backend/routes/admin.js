@@ -10,6 +10,7 @@ const FeedPost = require('../models/FeedPost');
 const TranslationVote = require('../models/TranslationVote');
 const User = require('../models/User');
 const Identification = require('../models/Identification');
+const ApprovedTranslation = require('../models/ApprovedTranslation');
 
 // All admin routes require: first regular auth (user logged in), then admin check
 // Apply both middlewares in order
@@ -71,9 +72,10 @@ router.get('/pending', auth, adminAuth, async (req, res) => {
 // GET /api/admin/approved - Get approved suggestions
 router.get('/approved', auth, adminAuth, async (req, res) => {
   try {
-    const suggestions = await TranslationSuggestion.find({ status: 'approved' })
-      .populate('user', 'name email')
-      .sort({ reviewedAt: -1 });
+    const suggestions = await ApprovedTranslation.find({ status: 'active' })
+      .populate('approvedBy', 'name email')
+      .populate('suggestedBy', 'name email')
+      .sort({ approvedAt: -1 });
     
     res.json({
       success: true,
@@ -115,15 +117,50 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Suggestion not found' });
     }
     
-    // Update suggestion status
-    suggestion.status = 'active'; // approved = active
-    suggestion.updatedAt = new Date();
+    // Get vote counts for this suggestion
+    const voteMap = await TranslationVote.getBatchVoteCounts([suggestionId]);
+    const votes = voteMap[suggestionId] || { upvotes: 0, downvotes: 0, total: 0 };
     
+    // Check if translation already exists for this plant
+    const existingTranslation = await ApprovedTranslation.existsForPlant(suggestion.scientificName);
+    if (existingTranslation) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'An approved translation already exists for this plant' 
+      });
+    }
+    
+    // Create approved translation record
+    const approvedTranslation = new ApprovedTranslation({
+      scientificName: suggestion.scientificName,
+      plantName: suggestion.plantName,
+      darijaTranslation: suggestion.suggestedDarija,
+      tamazightTranslation: suggestion.suggestedTamazight,
+      suggestedBy: suggestion.userId,
+      contributorName: suggestion.userId ? suggestion.userId.name : 'Anonymous',
+      contributorEmail: suggestion.userId ? suggestion.userId.email : '',
+      contributorRegion: suggestion.location?.city || '',
+      approvedBy: adminId,
+      approvedAt: new Date(),
+      originalSuggestionId: suggestion._id,
+      upvotesAtApproval: votes.upvotes,
+      downvotesAtApproval: votes.downvotes,
+      totalVotesAtApproval: votes.total,
+      notes: suggestion.notes || '',
+      status: 'active'
+    });
+    
+    await approvedTranslation.save();
+    
+    // Update suggestion status to indicate it's been approved
+    suggestion.status = 'active';
+    suggestion.updatedAt = new Date();
     await suggestion.save();
     
     res.json({
       success: true,
-      message: 'Translation approved successfully'
+      message: 'Translation approved and saved successfully',
+      approvedTranslation: approvedTranslation
     });
     
   } catch (error) {
@@ -173,7 +210,9 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
       type: 'translation_suggestion', 
       status: 'active' 
     });
-    const approvedCount = 0; // Not using separate approved status in this workflow
+    const approvedCount = await ApprovedTranslation.countDocuments({ 
+      status: 'active' 
+    });
     const rejectedCount = await FeedPost.countDocuments({ 
       type: 'translation_suggestion', 
       status: 'hidden' 

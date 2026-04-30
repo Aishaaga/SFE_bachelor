@@ -15,6 +15,7 @@ const feedRoutes = require('./routes/feed');
 const feedLikesRoutes = require('./routes/feed-likes');
 const feedCommentsRoutes = require('./routes/feed-comments');
 const translationVotesRoutes = require('./routes/translation-votes');
+const approvedTranslationsRoutes = require('./routes/approved-translations');
 console.log('✅ Admin routes imported');
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/feed', feedRoutes);  // Feed endpoints
 app.use('/api/feed-likes', feedLikesRoutes);  // Feed likes endpoints
 app.use('/api/feed-comments', feedCommentsRoutes);  // Feed comments endpoints
 app.use('/api/translation-votes', translationVotesRoutes);  // Translation votes endpoints
+app.use('/api/approved-translations', approvedTranslationsRoutes);  // Approved translations endpoints
 app.use('/api/admin', adminRoutes);  // Admin endpoints
 console.log('✅ Admin routes mounted at /api/admin');
 
