@@ -144,7 +144,7 @@ translationVoteSchema.statics.removeVote = async function(translationSuggestionI
 
 // Method to get vote statistics for multiple translation suggestions
 translationVoteSchema.statics.getBatchVoteCounts = async function(translationSuggestionIds) {
-  const objectIds = translationSuggestionIds.map(id => mongoose.Types.ObjectId(id));
+  const objectIds = translationSuggestionIds.map(id => new mongoose.Types.ObjectId(id));
   
   const results = await this.aggregate([
     { $match: { translationSuggestionId: { $in: objectIds } } },

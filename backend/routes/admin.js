@@ -6,35 +6,52 @@ const router = express.Router();
 const adminAuth = require('../middleware/adminAuth');
 const auth = require('../middleware/auth'); // Regular auth first
 const TranslationSuggestion = require('../models/TranslationSuggestion');
+const FeedPost = require('../models/FeedPost');
+const TranslationVote = require('../models/TranslationVote');
 const User = require('../models/User');
 const Identification = require('../models/Identification');
 
 // All admin routes require: first regular auth (user logged in), then admin check
 // Apply both middlewares in order
 
-// GET /api/admin/pending - Get all pending translation suggestions
+// GET /api/admin/pending - Get all active translation suggestions with vote counts
 router.get('/pending', auth, adminAuth, async (req, res) => {
   try {
-    // Find all suggestions with status 'pending'
-    const suggestions = await TranslationSuggestion.find({ status: 'pending' })
-      .sort({ submittedAt: -1 });        // Newest first
+    // Find all translation suggestions with status 'active' (visible for voting)
+    const suggestions = await FeedPost.find({ 
+      type: 'translation_suggestion',
+      status: 'active'
+    })
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 });
     
-    // Transform field names for dashboard compatibility
+    // Get vote counts for all suggestions
+    const suggestionIds = suggestions.map(s => s._id.toString());
+    const voteMap = await TranslationVote.getBatchVoteCounts(suggestionIds);
+    
+    // Transform data for dashboard compatibility
     const transformedSuggestions = suggestions.map(s => ({
       _id: s._id,
       plantScientificName: s.scientificName,
-      suggestedDarija: s.darijaProposal,
-      suggestedTamazight: s.tamazightProposal,
-      user: {
-        name: s.contributorName,
-        email: s.contributorEmail
+      suggestedDarija: s.suggestedDarija,
+      suggestedTamazight: s.suggestedTamazight,
+      user: s.userId ? {
+        name: s.userId.name,
+        email: s.userId.email
+      } : {
+        name: 'Anonymous',
+        email: ''
       },
-      status: s.status,
-      submittedAt: s.submittedAt,
-      contributorName: s.contributorName,
-      contributorEmail: s.contributorEmail,
-      contributorRegion: s.contributorRegion,
-      notes: s.notes
+      status: 'pending', // Map 'flagged' to 'pending' for dashboard
+      submittedAt: s.createdAt,
+      contributorName: s.userId ? s.userId.name : 'Anonymous',
+      contributorEmail: s.userId ? s.userId.email : '',
+      contributorRegion: s.location?.city || '',
+      notes: s.notes || '',
+      // Include vote counts
+      upvotes: voteMap[s._id.toString()]?.upvotes || 0,
+      downvotes: voteMap[s._id.toString()]?.downvotes || 0,
+      totalVotes: voteMap[s._id.toString()]?.total || 0
     }));
     
     res.json({
@@ -91,22 +108,18 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
     const suggestionId = req.params.id;
     const adminId = req.userId;
     
-    // Find the suggestion
-    const suggestion = await TranslationSuggestion.findById(suggestionId);
+    // Find the suggestion in FeedPost
+    const suggestion = await FeedPost.findById(suggestionId);
     
     if (!suggestion) {
       return res.status(404).json({ success: false, message: 'Suggestion not found' });
     }
     
     // Update suggestion status
-    suggestion.status = 'approved';
-    suggestion.reviewedAt = new Date();
-    suggestion.reviewedBy = adminId;
+    suggestion.status = 'active'; // approved = active
+    suggestion.updatedAt = new Date();
     
     await suggestion.save();
-    
-    // TODO: Also add to PlantTranslations in your Flutter app
-    // For now, just mark as approved
     
     res.json({
       success: true,
@@ -126,16 +139,18 @@ router.post('/reject/:id', auth, adminAuth, async (req, res) => {
     const adminId = req.userId;
     const { reason } = req.body; // Optional rejection reason
     
-    const suggestion = await TranslationSuggestion.findById(suggestionId);
+    const suggestion = await FeedPost.findById(suggestionId);
     
     if (!suggestion) {
       return res.status(404).json({ success: false, message: 'Suggestion not found' });
     }
     
-    suggestion.status = 'rejected';
-    suggestion.reviewedAt = new Date();
-    suggestion.reviewedBy = adminId;
-    suggestion.rejectionReason = reason || null;
+    suggestion.status = 'hidden'; // rejected = hidden
+    suggestion.updatedAt = new Date();
+    // Store rejection reason in notes field for now
+    if (reason) {
+      suggestion.notes = (suggestion.notes || '') + `\n\nRejection reason: ${reason}`;
+    }
     
     await suggestion.save();
     
@@ -153,10 +168,16 @@ router.post('/reject/:id', auth, adminAuth, async (req, res) => {
 // GET /api/admin/stats - Get dashboard statistics
 router.get('/stats', auth, adminAuth, async (req, res) => {
   try {
-    // Get counts of suggestions by status
-    const pendingCount = await TranslationSuggestion.countDocuments({ status: 'pending' });
-    const approvedCount = await TranslationSuggestion.countDocuments({ status: 'approved' });
-    const rejectedCount = await TranslationSuggestion.countDocuments({ status: 'rejected' });
+    // Get counts of suggestions by status from FeedPost
+    const pendingCount = await FeedPost.countDocuments({ 
+      type: 'translation_suggestion', 
+      status: 'active' 
+    });
+    const approvedCount = 0; // Not using separate approved status in this workflow
+    const rejectedCount = await FeedPost.countDocuments({ 
+      type: 'translation_suggestion', 
+      status: 'hidden' 
+    });
     
     // Get total users
     const totalUsers = await User.countDocuments();
@@ -168,7 +189,8 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
-    const recentSuggestions = await TranslationSuggestion.countDocuments({
+    const recentSuggestions = await FeedPost.countDocuments({
+      type: 'translation_suggestion',
       createdAt: { $gte: sevenDaysAgo }
     });
     
