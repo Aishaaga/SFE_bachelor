@@ -130,10 +130,25 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     // Build query
-    const query = { status: 'active' };
-    
-    if (type) {
-      query.type = type;
+    // Show both active and approved posts (approved translations should appear in feed)
+    let query;
+    if (type === 'translation_suggestion') {
+      // For translation suggestions, show both active and approved
+      query = { 
+        type: 'translation_suggestion',
+        status: { $in: ['active', 'approved'] }
+      };
+    } else if (type) {
+      // For specific other types, only show active
+      query = { status: 'active', type: type };
+    } else {
+      // When no type specified, show all active posts plus approved translation suggestions
+      query = { 
+        $or: [
+          { status: 'active' },
+          { type: 'translation_suggestion', status: 'approved' }
+        ]
+      };
     }
     
     if (locationLevel) {

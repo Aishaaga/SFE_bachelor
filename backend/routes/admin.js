@@ -18,16 +18,10 @@ const ApprovedTranslation = require('../models/ApprovedTranslation');
 // GET /api/admin/pending - Get all active translation suggestions with vote counts
 router.get('/pending', auth, adminAuth, async (req, res) => {
   try {
-    // Get all plants that already have approved translations
-    const approvedPlants = await ApprovedTranslation.find({ status: 'active' })
-      .distinct('scientificName');
-    
-    // Find all translation suggestions with status 'active' 
-    // but exclude plants that already have approved translations
+    // Find all translation suggestions with status 'active'
     const suggestions = await FeedPost.find({ 
       type: 'translation_suggestion',
-      status: 'active',
-      scientificName: { $nin: approvedPlants }
+      status: 'active'
     })
       .populate('userId', 'name email')
       .sort({ createdAt: -1 });
@@ -145,14 +139,19 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
     
     // Check if translation already exists for this plant
     console.log('🔍 Checking existing translation...');
-    const existingTranslation = await ApprovedTranslation.existsForPlant(suggestion.scientificName);
+    const existingTranslation = await ApprovedTranslation.getForPlant(suggestion.scientificName);
     console.log('🔍 Existing translation:', existingTranslation ? 'YES' : 'NO');
+    
+    // Allow approval but warn admin about replacement
     if (existingTranslation) {
-      console.log('❌ Translation already exists for this plant');
-      return res.status(400).json({ 
-        success: false, 
-        message: 'An approved translation already exists for this plant' 
-      });
+      console.log('⚠️ Translation already exists, will replace existing one');
+      // Mark existing translation as deprecated
+      existingTranslation.status = 'deprecated';
+      existingTranslation.updatedAt = new Date();
+      existingTranslation.notes = (existingTranslation.notes || '') + 
+        `\n\nDeprecated on ${new Date().toISOString()} - Replaced by new suggestion: ${suggestion._id}`;
+      await existingTranslation.save();
+      console.log('✅ Existing translation marked as deprecated');
     }
     
     // Get user info for contributor
@@ -204,14 +203,14 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
     await suggestion.save();
     console.log('✅ FeedPost status updated to approved:', suggestion._id);
     
-    // Clean up: Hide other active suggestions for the same plant
-    console.log('🔍 Cleaning up duplicates...');
+    // Clean up: Hide other active suggestions for the same plant (but keep the approved one visible)
+    console.log('🔍 Cleaning up competing suggestions...');
     await FeedPost.updateMany(
       {
         type: 'translation_suggestion',
         scientificName: suggestion.scientificName,
         status: 'active',
-        _id: { $ne: suggestion._id } // Exclude the one we just approved
+        _id: { $ne: suggestion._id } // Exclude the one we just approved - it stays as 'approved'
       },
       {
         status: 'hidden',
@@ -221,7 +220,8 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
         }
       }
     );
-    console.log('✅ Cleaned up duplicate suggestions for:', suggestion.scientificName);
+    console.log('✅ Cleaned up competing suggestions for:', suggestion.scientificName);
+    console.log('✅ Approved suggestion remains visible with status "approved"');
     
     res.json({
       success: true,

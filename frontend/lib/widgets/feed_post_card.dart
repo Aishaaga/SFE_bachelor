@@ -42,6 +42,10 @@ class _FeedPostCardState extends State<FeedPostCard> {
 
   @override
   Widget build(BuildContext context) {
+    // Debug logging to verify isApproved
+    print(
+        'DEBUG FeedPostCard: ${widget.post.scientificName} - status: ${widget.post.status} - isApproved: ${widget.post.isApproved}');
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -85,14 +89,49 @@ class _FeedPostCardState extends State<FeedPostCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.post.isAnonymous
-                      ? 'Anonymous'
-                      : (widget.post.user?.email ?? 'Unknown'),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      widget.post.isAnonymous
+                          ? 'Anonymous'
+                          : (widget.post.user?.email ?? 'Unknown'),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (widget.post.isApproved &&
+                        widget.post.type == 'translation_suggestion') ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.verified,
+                              size: 12,
+                              color: Colors.purple.shade700,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              'Approved by admin',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.purple.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -380,7 +419,8 @@ class _FeedPostCardState extends State<FeedPostCard> {
                 ),
               ),
               const Spacer(),
-              if (widget.post.type == 'translation_suggestion') ...[
+              if (widget.post.type == 'translation_suggestion' &&
+                  !widget.post.isApproved) ...[
                 IconButton(
                   onPressed: () => _handleVote('upvote'),
                   icon: Row(
