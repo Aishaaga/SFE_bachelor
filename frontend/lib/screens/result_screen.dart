@@ -36,15 +36,14 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Future<void> _loadTranslations() async {
     try {
+      // Clear cache for this plant to get fresh data
+      PlantTranslations.clearDatabaseCacheEntry(widget.plant.scientificName);
+
       // Get all translations from database
       final darijaNames = await PlantTranslations.getAllDarijaNames(
           widget.plant.scientificName);
       final tamazightNames = await PlantTranslations.getAllTamazightNames(
           widget.plant.scientificName);
-
-      // Also get the primary translations (static + first database)
-      final primaryDarija = await widget.plant.getDarijaNameAsync();
-      final primaryTamazight = await widget.plant.getTamazightNameAsync();
 
       if (mounted) {
         setState(() {
@@ -122,8 +121,24 @@ class _ResultScreenState extends State<ResultScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.translate),
-                    title: const Text('بالدارجة',
-                        style: TextStyle(fontFamily: 'Arabic')),
+                    title: Row(
+                      children: [
+                        const Text('بالدارجة',
+                            style: TextStyle(fontFamily: 'Arabic')),
+                        const Spacer(),
+                        if (!_isLoadingTranslations)
+                          IconButton(
+                            icon: const Icon(Icons.refresh, size: 20),
+                            onPressed: () {
+                              setState(() {
+                                _isLoadingTranslations = true;
+                              });
+                              _loadTranslations();
+                            },
+                            tooltip: 'Actualiser les traductions',
+                          ),
+                      ],
+                    ),
                     subtitle: _isLoadingTranslations
                         ? const CircularProgressIndicator()
                         : _darijaNames.isEmpty
