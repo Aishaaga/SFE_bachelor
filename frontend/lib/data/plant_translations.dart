@@ -1,4 +1,9 @@
+import '../services/api_service.dart';
+
 class PlantTranslations {
+  static final ApiService _apiService = ApiService();
+  static final Map<String, Map<String, dynamic>?> _databaseCache = {};
+
   static final Map<String, Map<String, dynamic>> _translations = {
     'Rosa rubiginosa': {
       'translations': {
@@ -547,18 +552,6 @@ class PlantTranslations {
       },
       'metadata': {'region': '', 'notes': ''}
     },
-    'Quercus robur': {
-      'translations': {
-        'darija': {'value': 'السنديان القوي', 'source': '', 'confidence': ''},
-        'tamazight': {
-          'value': 'ⴰⵙⵙⴰⴼ assaf \nⵡⴰⵙⵙⴰⴼ wassaf \nⵉⵟⵏ itn',
-          'source': 'regional_usage',
-          'confidence': 'medium',
-          'dialect': ''
-        }
-      },
-      'metadata': {'region': '', 'notes': ''}
-    },
     'Quercus coccifera': {
       'translations': {
         'darija': {'value': 'البلوط القرمزي', 'source': '', 'confidence': ''},
@@ -730,16 +723,64 @@ class PlantTranslations {
   // UPDATED METHODS
   // =========================
 
-  static String getDarijaName(String scientificName) {
+  static Future<String> getDarijaName(String scientificName) async {
+    // Step 1: Check STATIC FILE first
     final match = _translations[scientificName];
-    return match?['translations']?['darija']?['value'] ??
-        _extractSimpleName(scientificName);
+    final staticValue = match?['translations']?['darija']?['value'];
+
+    if (staticValue != null && staticValue.isNotEmpty) {
+      return staticValue;
+    }
+
+    // Step 2: Check DATABASE (approved translations)
+    final dbTranslation = await _getFromDatabase(scientificName);
+    final dbValue = dbTranslation?['darijaTranslation'];
+
+    if (dbValue != null && dbValue.isNotEmpty) {
+      return dbValue;
+    }
+
+    // Step 3: Fallback to simple name extraction
+    return _extractSimpleName(scientificName);
   }
 
-  static String getTamazightName(String scientificName) {
+  static Future<String> getTamazightName(String scientificName) async {
+    // Step 1: Check STATIC FILE first
     final match = _translations[scientificName];
-    return match?['translations']?['tamazight']?['value'] ??
-        getDarijaName(scientificName);
+    final staticValue = match?['translations']?['tamazight']?['value'];
+
+    if (staticValue != null && staticValue.isNotEmpty) {
+      return staticValue;
+    }
+
+    // Step 2: Check DATABASE (approved translations)
+    final dbTranslation = await _getFromDatabase(scientificName);
+    final dbValue = dbTranslation?['tamazightTranslation'];
+
+    if (dbValue != null && dbValue.isNotEmpty) {
+      return dbValue;
+    }
+
+    // Step 3: Fallback to Darija name
+    return await getDarijaName(scientificName);
+  }
+
+  // Helper method to fetch translation from database with caching
+  static Future<Map<String, dynamic>?> _getFromDatabase(
+      String scientificName) async {
+    // Check cache first
+    if (_databaseCache.containsKey(scientificName)) {
+      return _databaseCache[scientificName];
+    }
+
+    // Fetch from API
+    final translation =
+        await _apiService.getApprovedTranslation(scientificName);
+
+    // Cache the result (even if null to avoid repeated API calls)
+    _databaseCache[scientificName] = translation;
+
+    return translation;
   }
 
   static Map<String, dynamic>? getFullData(String scientificName) {
@@ -749,6 +790,56 @@ class PlantTranslations {
   static String _extractSimpleName(String scientificName) {
     final parts = scientificName.split(' ');
     return parts.isNotEmpty ? parts[0] : scientificName;
+  }
+
+  // Synchronous versions for backward compatibility
+  // These only check static file (no database access)
+  static String getDarijaNameSync(String scientificName) {
+    final match = _translations[scientificName];
+    return match?['translations']?['darija']?['value'] ??
+        _extractSimpleName(scientificName);
+  }
+
+  static String getTamazightNameSync(String scientificName) {
+    final match = _translations[scientificName];
+    return match?['translations']?['tamazight']?['value'] ??
+        getDarijaNameSync(scientificName);
+  }
+
+  // Cache management methods
+  static void clearDatabaseCache() {
+    _databaseCache.clear();
+  }
+
+  static void clearDatabaseCacheEntry(String scientificName) {
+    _databaseCache.remove(scientificName);
+  }
+
+  // Method to check if plant has any translation (static or database)
+  static Future<bool> hasTranslation(String scientificName) async {
+    // Check static file first
+    if (_translations.containsKey(scientificName)) {
+      final match = _translations[scientificName];
+      final darijaValue = match?['translations']?['darija']?['value'];
+      final tamazightValue = match?['translations']?['tamazight']?['value'];
+
+      if ((darijaValue != null && darijaValue.isNotEmpty) ||
+          (tamazightValue != null && tamazightValue.isNotEmpty)) {
+        return true;
+      }
+    }
+
+    // Check database
+    final dbTranslation = await _getFromDatabase(scientificName);
+    if (dbTranslation != null) {
+      final darijaValue = dbTranslation['darijaTranslation'];
+      final tamazightValue = dbTranslation['tamazightTranslation'];
+
+      return (darijaValue != null && darijaValue.isNotEmpty) ||
+          (tamazightValue != null && tamazightValue.isNotEmpty);
+    }
+
+    return false;
   }
 
   static void addTranslation(
@@ -775,10 +866,6 @@ class PlantTranslations {
       },
       'metadata': {'region': 'Morocco', 'notes': 'user contributed'}
     };
-  }
-
-  static bool hasTranslation(String scientificName) {
-    return _translations.containsKey(scientificName);
   }
 
   //counting translated palnts:

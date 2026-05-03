@@ -8,8 +8,15 @@ class Plant {
   final String? localName;
   final double confidence;
 
-  String get darijaName => PlantTranslations.getDarijaName(scientificName);
+  // Synchronous getters (static file only)
+  String get darijaName => PlantTranslations.getDarijaNameSync(scientificName);
   String get tamazightName =>
+      PlantTranslations.getTamazightNameSync(scientificName);
+
+  // Async methods (static file + database fallback)
+  Future<String> getDarijaNameAsync() =>
+      PlantTranslations.getDarijaName(scientificName);
+  Future<String> getTamazightNameAsync() =>
       PlantTranslations.getTamazightName(scientificName);
 
   Plant({

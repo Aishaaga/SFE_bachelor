@@ -134,8 +134,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       }
     }
     final images = _getPlantImages();
-    final darijaName = PlantTranslations.getDarijaName(scientificName);
-    final tamazightName = PlantTranslations.getTamazightName(scientificName);
+    final darijaName = PlantTranslations.getDarijaNameSync(scientificName);
+    final tamazightName =
+        PlantTranslations.getTamazightNameSync(scientificName);
     final confidence = _getConfidence();
     final date = _getDate();
 

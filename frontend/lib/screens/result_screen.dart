@@ -23,6 +23,40 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
+  String? _darijaName;
+  String? _tamazightName;
+  bool _isLoadingTranslations = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTranslations();
+  }
+
+  Future<void> _loadTranslations() async {
+    try {
+      final darijaName = await widget.plant.getDarijaNameAsync();
+      final tamazightName = await widget.plant.getTamazightNameAsync();
+
+      if (mounted) {
+        setState(() {
+          _darijaName = darijaName;
+          _tamazightName = tamazightName;
+          _isLoadingTranslations = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading translations: $e');
+      if (mounted) {
+        setState(() {
+          _darijaName = widget.plant.darijaName; // Fallback to sync
+          _tamazightName = widget.plant.tamazightName; // Fallback to sync
+          _isLoadingTranslations = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,11 +114,15 @@ class _ResultScreenState extends State<ResultScreen> {
                 leading: const Icon(Icons.translate),
                 title: const Text('بالدارجة',
                     style: TextStyle(fontFamily: 'Arabic')),
-                subtitle: Text(
-                  widget.plant.darijaName,
-                  style: const TextStyle(fontSize: 18, fontFamily: 'Arabic'),
-                ),
-                trailing: widget.plant.darijaName != widget.plant.scientificName
+                subtitle: _isLoadingTranslations
+                    ? const CircularProgressIndicator()
+                    : Text(
+                        _darijaName ?? widget.plant.darijaName,
+                        style:
+                            const TextStyle(fontSize: 18, fontFamily: 'Arabic'),
+                      ),
+                trailing: (_darijaName ?? widget.plant.darijaName) !=
+                        widget.plant.scientificName
                     ? null
                     : const Icon(Icons.hourglass_empty, size: 16),
               ),
@@ -96,14 +134,17 @@ class _ResultScreenState extends State<ResultScreen> {
                 leading: const Icon(Icons.translate),
                 title: const Text('ⵜⴰⵎⴰⵣⵉⵖⵜ',
                     style: TextStyle(fontFamily: 'Tifinagh')),
-                subtitle: Text(
-                  widget.plant.tamazightName,
-                  style: const TextStyle(fontSize: 18, fontFamily: 'Tifinagh'),
-                ),
-                trailing:
-                    widget.plant.tamazightName != widget.plant.scientificName
-                        ? null
-                        : const Icon(Icons.hourglass_empty, size: 16),
+                subtitle: _isLoadingTranslations
+                    ? const CircularProgressIndicator()
+                    : Text(
+                        _tamazightName ?? widget.plant.tamazightName,
+                        style: const TextStyle(
+                            fontSize: 18, fontFamily: 'Tifinagh'),
+                      ),
+                trailing: (_tamazightName ?? widget.plant.tamazightName) !=
+                        widget.plant.scientificName
+                    ? null
+                    : const Icon(Icons.hourglass_empty, size: 16),
               ),
             ),
 

@@ -276,4 +276,30 @@ class ApiService {
       };
     }
   }
+
+  // Get approved translation for a specific plant from database
+  Future<Map<String, dynamic>?> getApprovedTranslation(
+      String scientificName) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) return null;
+
+      final response = await http.get(
+        Uri.parse(
+            '${Constants.apiUrl}/approved-translations/plant/${Uri.encodeComponent(scientificName)}'),
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['translation'] != null) {
+          return data['translation'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error fetching approved translation: $e');
+      return null;
+    }
+  }
 }
