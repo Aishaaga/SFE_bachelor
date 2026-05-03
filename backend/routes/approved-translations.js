@@ -67,30 +67,37 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/approved-translations/:scientificName - Get translation for specific plant
+// GET /api/approved-translations/:scientificName - Get ALL translations for specific plant
 router.get('/plant/:scientificName', async (req, res) => {
   try {
     const { scientificName } = req.params;
     
-    const translation = await ApprovedTranslation.getForPlant(scientificName.trim());
+    const translations = await ApprovedTranslation.find({ 
+      scientificName: scientificName.trim(),
+      status: 'active'
+    })
+    .populate('approvedBy', 'name email')
+    .populate('suggestedBy', 'name email')
+    .sort({ approvedAt: -1 }); // Most recent first
     
-    if (!translation) {
+    if (!translations || translations.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'No approved translation found for this plant'
+        message: 'No approved translations found for this plant'
       });
     }
     
     res.json({
       success: true,
-      translation: translation
+      translations: translations,
+      count: translations.length
     });
     
   } catch (error) {
-    console.error('Error fetching plant translation:', error);
+    console.error('Error fetching plant translations:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching plant translation'
+      message: 'Error fetching plant translations'
     });
   }
 });

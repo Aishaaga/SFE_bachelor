@@ -2,7 +2,7 @@ import '../services/api_service.dart';
 
 class PlantTranslations {
   static final ApiService _apiService = ApiService();
-  static final Map<String, Map<String, dynamic>?> _databaseCache = {};
+  static final Map<String, List<Map<String, dynamic>>> _databaseCache = {};
 
   static final Map<String, Map<String, dynamic>> _translations = {
     'Rosa rubiginosa': {
@@ -733,11 +733,12 @@ class PlantTranslations {
     }
 
     // Step 2: Check DATABASE (approved translations)
-    final dbTranslation = await _getFromDatabase(scientificName);
-    final dbValue = dbTranslation?['darijaTranslation'];
-
-    if (dbValue != null && dbValue.isNotEmpty) {
-      return dbValue;
+    final dbTranslations = await _getFromDatabase(scientificName);
+    if (dbTranslations.isNotEmpty) {
+      final dbValue = dbTranslations.first['darijaTranslation'];
+      if (dbValue != null && dbValue.isNotEmpty) {
+        return dbValue;
+      }
     }
 
     // Step 3: Fallback to simple name extraction
@@ -754,33 +755,61 @@ class PlantTranslations {
     }
 
     // Step 2: Check DATABASE (approved translations)
-    final dbTranslation = await _getFromDatabase(scientificName);
-    final dbValue = dbTranslation?['tamazightTranslation'];
-
-    if (dbValue != null && dbValue.isNotEmpty) {
-      return dbValue;
+    final dbTranslations = await _getFromDatabase(scientificName);
+    if (dbTranslations.isNotEmpty) {
+      final dbValue = dbTranslations.first['tamazightTranslation'];
+      if (dbValue != null && dbValue.isNotEmpty) {
+        return dbValue;
+      }
     }
 
     // Step 3: Fallback to Darija name
     return await getDarijaName(scientificName);
   }
 
-  // Helper method to fetch translation from database with caching
-  static Future<Map<String, dynamic>?> _getFromDatabase(
+  // NEW: Get ALL approved translations for a plant
+  static Future<List<Map<String, dynamic>>> getAllApprovedTranslations(
+      String scientificName) async {
+    return await _getFromDatabase(scientificName);
+  }
+
+  // NEW: Get ALL Darija translations for a plant
+  static Future<List<String>> getAllDarijaNames(String scientificName) async {
+    final dbTranslations = await _getFromDatabase(scientificName);
+    return dbTranslations
+        .map((translation) => translation['darijaTranslation'] as String?)
+        .where((name) => name != null && name.isNotEmpty)
+        .cast<String>()
+        .toList();
+  }
+
+  // NEW: Get ALL Tamazight translations for a plant
+  static Future<List<String>> getAllTamazightNames(
+      String scientificName) async {
+    final dbTranslations = await _getFromDatabase(scientificName);
+    return dbTranslations
+        .map((translation) => translation['tamazightTranslation'] as String?)
+        .where((name) => name != null && name.isNotEmpty)
+        .cast<String>()
+        .toList();
+  }
+
+  // Helper method to fetch ALL translations from database with caching
+  static Future<List<Map<String, dynamic>>> _getFromDatabase(
       String scientificName) async {
     // Check cache first
     if (_databaseCache.containsKey(scientificName)) {
-      return _databaseCache[scientificName];
+      return _databaseCache[scientificName]!;
     }
 
     // Fetch from API
-    final translation =
-        await _apiService.getApprovedTranslation(scientificName);
+    final translations =
+        await _apiService.getApprovedTranslations(scientificName);
 
-    // Cache the result (even if null to avoid repeated API calls)
-    _databaseCache[scientificName] = translation;
+    // Cache the result (even if empty to avoid repeated API calls)
+    _databaseCache[scientificName] = translations;
 
-    return translation;
+    return translations;
   }
 
   static Map<String, dynamic>? getFullData(String scientificName) {
@@ -830,13 +859,14 @@ class PlantTranslations {
     }
 
     // Check database
-    final dbTranslation = await _getFromDatabase(scientificName);
-    if (dbTranslation != null) {
-      final darijaValue = dbTranslation['darijaTranslation'];
-      final tamazightValue = dbTranslation['tamazightTranslation'];
-
-      return (darijaValue != null && darijaValue.isNotEmpty) ||
-          (tamazightValue != null && tamazightValue.isNotEmpty);
+    final dbTranslations = await _getFromDatabase(scientificName);
+    if (dbTranslations.isNotEmpty) {
+      return dbTranslations.any((translation) {
+        final darijaValue = translation['darijaTranslation'] as String?;
+        final tamazightValue = translation['tamazightTranslation'] as String?;
+        return (darijaValue != null && darijaValue.isNotEmpty) ||
+            (tamazightValue != null && tamazightValue.isNotEmpty);
+      });
     }
 
     return false;

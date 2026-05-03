@@ -277,12 +277,12 @@ class ApiService {
     }
   }
 
-  // Get approved translation for a specific plant from database
-  Future<Map<String, dynamic>?> getApprovedTranslation(
+  // Get ALL approved translations for a specific plant from database
+  Future<List<Map<String, dynamic>>> getApprovedTranslations(
       String scientificName) async {
     try {
       final token = await _authService.getToken();
-      if (token == null) return null;
+      if (token == null) return [];
 
       final response = await http.get(
         Uri.parse(
@@ -292,14 +292,21 @@ class ApiService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['translation'] != null) {
-          return data['translation'];
+        if (data['success'] == true && data['translations'] != null) {
+          return List<Map<String, dynamic>>.from(data['translations']);
         }
       }
-      return null;
+      return [];
     } catch (e) {
-      print('Error fetching approved translation: $e');
-      return null;
+      print('Error fetching approved translations: $e');
+      return [];
     }
+  }
+
+  // Get approved translation for a specific plant from database (backward compatibility)
+  Future<Map<String, dynamic>?> getApprovedTranslation(
+      String scientificName) async {
+    final translations = await getApprovedTranslations(scientificName);
+    return translations.isNotEmpty ? translations.first : null;
   }
 }

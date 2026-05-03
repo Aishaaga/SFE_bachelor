@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
+import '../data/plant_translations.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 import 'translation_proposal_screen.dart';
@@ -23,8 +24,8 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  String? _darijaName;
-  String? _tamazightName;
+  List<String> _darijaNames = [];
+  List<String> _tamazightNames = [];
   bool _isLoadingTranslations = true;
 
   @override
@@ -35,13 +36,20 @@ class _ResultScreenState extends State<ResultScreen> {
 
   Future<void> _loadTranslations() async {
     try {
-      final darijaName = await widget.plant.getDarijaNameAsync();
-      final tamazightName = await widget.plant.getTamazightNameAsync();
+      // Get all translations from database
+      final darijaNames = await PlantTranslations.getAllDarijaNames(
+          widget.plant.scientificName);
+      final tamazightNames = await PlantTranslations.getAllTamazightNames(
+          widget.plant.scientificName);
+
+      // Also get the primary translations (static + first database)
+      final primaryDarija = await widget.plant.getDarijaNameAsync();
+      final primaryTamazight = await widget.plant.getTamazightNameAsync();
 
       if (mounted) {
         setState(() {
-          _darijaName = darijaName;
-          _tamazightName = tamazightName;
+          _darijaNames = darijaNames;
+          _tamazightNames = tamazightNames;
           _isLoadingTranslations = false;
         });
       }
@@ -49,8 +57,8 @@ class _ResultScreenState extends State<ResultScreen> {
       print('Error loading translations: $e');
       if (mounted) {
         setState(() {
-          _darijaName = widget.plant.darijaName; // Fallback to sync
-          _tamazightName = widget.plant.tamazightName; // Fallback to sync
+          _darijaNames = [widget.plant.darijaName]; // Fallback to sync
+          _tamazightNames = [widget.plant.tamazightName]; // Fallback to sync
           _isLoadingTranslations = false;
         });
       }
@@ -108,43 +116,102 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
 
-            // DARIJA NAME (New)
+            // DARIJA NAMES (Multiple)
             Card(
-              child: ListTile(
-                leading: const Icon(Icons.translate),
-                title: const Text('بالدارجة',
-                    style: TextStyle(fontFamily: 'Arabic')),
-                subtitle: _isLoadingTranslations
-                    ? const CircularProgressIndicator()
-                    : Text(
-                        _darijaName ?? widget.plant.darijaName,
-                        style:
-                            const TextStyle(fontSize: 18, fontFamily: 'Arabic'),
-                      ),
-                trailing: (_darijaName ?? widget.plant.darijaName) !=
-                        widget.plant.scientificName
-                    ? null
-                    : const Icon(Icons.hourglass_empty, size: 16),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: const Text('بالدارجة',
+                        style: TextStyle(fontFamily: 'Arabic')),
+                    subtitle: _isLoadingTranslations
+                        ? const CircularProgressIndicator()
+                        : _darijaNames.isEmpty
+                            ? Text(widget.plant.darijaName,
+                                style: const TextStyle(
+                                    fontSize: 18, fontFamily: 'Arabic'))
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _darijaNames
+                                    .map((name) => Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 4),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.circle,
+                                                  size: 8,
+                                                  color: Colors.green[700]),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(name,
+                                                    style: const TextStyle(
+                                                        fontSize: 18,
+                                                        fontFamily: 'Arabic')),
+                                              ),
+                                            ],
+                                          ),
+                                        ))
+                                    .toList(),
+                              ),
+                  ),
+                  if (_darijaNames.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('${_darijaNames.length} noms disponibles',
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    ),
+                ],
               ),
             ),
 
-            // TAMAZIGHT NAME (New)
+            // TAMAZIGHT NAMES (Multiple)
             Card(
-              child: ListTile(
-                leading: const Icon(Icons.translate),
-                title: const Text('ⵜⴰⵎⴰⵣⵉⵖⵜ',
-                    style: TextStyle(fontFamily: 'Tifinagh')),
-                subtitle: _isLoadingTranslations
-                    ? const CircularProgressIndicator()
-                    : Text(
-                        _tamazightName ?? widget.plant.tamazightName,
-                        style: const TextStyle(
-                            fontSize: 18, fontFamily: 'Tifinagh'),
-                      ),
-                trailing: (_tamazightName ?? widget.plant.tamazightName) !=
-                        widget.plant.scientificName
-                    ? null
-                    : const Icon(Icons.hourglass_empty, size: 16),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: const Text('ⵜⴰⵎⴰⵣⵉⵖⵜ',
+                        style: TextStyle(fontFamily: 'Tifinagh')),
+                    subtitle: _isLoadingTranslations
+                        ? const CircularProgressIndicator()
+                        : _tamazightNames.isEmpty
+                            ? Text(widget.plant.tamazightName,
+                                style: const TextStyle(
+                                    fontSize: 18, fontFamily: 'Tifinagh'))
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: _tamazightNames
+                                    .map((name) => Padding(
+                                          padding:
+                                              const EdgeInsets.only(bottom: 4),
+                                          child: Row(
+                                            children: [
+                                              Icon(Icons.circle,
+                                                  size: 8,
+                                                  color: Colors.blue[700]),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(name,
+                                                    style: const TextStyle(
+                                                        fontSize: 18,
+                                                        fontFamily:
+                                                            'Tifinagh')),
+                                              ),
+                                            ],
+                                          ),
+                                        ))
+                                    .toList(),
+                              ),
+                  ),
+                  if (_tamazightNames.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text('${_tamazightNames.length} noms disponibles',
+                          style:
+                              TextStyle(fontSize: 12, color: Colors.grey[600])),
+                    ),
+                ],
               ),
             ),
 
