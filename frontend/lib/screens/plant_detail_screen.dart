@@ -26,6 +26,13 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     _loadAllTranslations();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh translations when returning to this screen (in case user just added a new translation)
+    _loadAllTranslations();
+  }
+
   Future<void> _loadAllTranslations() async {
     final plant = widget.identification['plant'];
     final scientificName = plant['scientificName'] ?? '';
@@ -408,6 +415,41 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               _buildInfoRow('Famille', family),
             ..._buildTranslationRows(scientificName),
             const SizedBox(height: 12),
+
+            // Refresh translations button
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  setState(() => _isLoadingTranslations = true);
+                  await PlantTranslations.refreshTranslations(scientificName);
+                  _loadAllTranslations();
+                },
+                icon: _isLoadingTranslations
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.blue,
+                        ),
+                      )
+                    : Icon(Icons.refresh, color: Colors.blue),
+                label: Text(
+                  _isLoadingTranslations
+                      ? 'Actualisation...'
+                      : 'Actualiser les traductions',
+                  style: TextStyle(color: Colors.blue),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  foregroundColor: Colors.blue,
+                  side: BorderSide(color: Colors.blue),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+              ),
+            ),
+
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(

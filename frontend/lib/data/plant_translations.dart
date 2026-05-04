@@ -844,6 +844,22 @@ class PlantTranslations {
     _databaseCache.remove(scientificName);
   }
 
+  // Force refresh translations from database (bypass cache)
+  static Future<List<Map<String, dynamic>>> refreshTranslations(
+      String scientificName) async {
+    // Clear cache for this specific plant
+    clearDatabaseCacheEntry(scientificName);
+
+    // Fetch fresh data from API
+    final translations =
+        await _apiService.getApprovedTranslations(scientificName);
+
+    // Cache the fresh result
+    _databaseCache[scientificName] = translations;
+
+    return translations;
+  }
+
   // Method to check if plant has any translation (static or database)
   static Future<bool> hasTranslation(String scientificName) async {
     // Check static file first

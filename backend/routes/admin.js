@@ -138,20 +138,13 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
     console.log('🔍 Vote counts:', votes);
     
     // Check if translation already exists for this plant
-    console.log('🔍 Checking existing translation...');
-    const existingTranslation = await ApprovedTranslation.getForPlant(suggestion.scientificName);
-    console.log('🔍 Existing translation:', existingTranslation ? 'YES' : 'NO');
+    console.log('🔍 Checking existing translations...');
+    const existingTranslations = await ApprovedTranslation.getAllForPlant(suggestion.scientificName);
+    console.log('🔍 Existing translations:', existingTranslations.length, 'found');
     
-    // Allow approval but warn admin about replacement
-    if (existingTranslation) {
-      console.log('⚠️ Translation already exists, will replace existing one');
-      // Mark existing translation as deprecated
-      existingTranslation.status = 'deprecated';
-      existingTranslation.updatedAt = new Date();
-      existingTranslation.notes = (existingTranslation.notes || '') + 
-        `\n\nDeprecated on ${new Date().toISOString()} - Replaced by new suggestion: ${suggestion._id}`;
-      await existingTranslation.save();
-      console.log('✅ Existing translation marked as deprecated');
+    // Allow multiple translations - don't replace existing ones
+    if (existingTranslations.length > 0) {
+      console.log('ℹ️ Adding new translation to existing', existingTranslations.length, 'translations');
     }
     
     // Get user info for contributor
@@ -271,19 +264,18 @@ router.post('/reject/:id', auth, adminAuth, async (req, res) => {
 // GET /api/admin/stats - Get dashboard statistics
 router.get('/stats', auth, adminAuth, async (req, res) => {
   try {
-    // Get all plants that already have approved translations
-    const approvedPlants = await ApprovedTranslation.find({ status: 'active' })
-      .distinct('scientificName');
-    
     // Get counts of suggestions by status from FeedPost
     const pendingCount = await FeedPost.countDocuments({ 
       type: 'translation_suggestion', 
-      status: 'active',
-      scientificName: { $nin: approvedPlants }
+      status: 'active'
     });
     const approvedCount = await ApprovedTranslation.countDocuments({ 
       status: 'active' 
     });
+    
+    // Get unique plants with approved translations
+    const approvedPlants = await ApprovedTranslation.find({ status: 'active' })
+      .distinct('scientificName');
     const rejectedCount = await FeedPost.countDocuments({ 
       type: 'translation_suggestion', 
       status: 'hidden' 

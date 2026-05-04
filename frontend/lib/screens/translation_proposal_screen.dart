@@ -5,6 +5,7 @@ import '../models/plant.dart';
 import '../models/translation_suggestion.dart';
 import '../services/proposal_service.dart';
 import '../services/auth_service.dart';
+import '../data/plant_translations.dart';
 
 class TranslationProposalScreen extends StatefulWidget {
   final Plant plant;
@@ -148,6 +149,10 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
         actions: [
           TextButton(
             onPressed: () {
+              // Clear cache for this plant to ensure fresh data on return
+              PlantTranslations.clearDatabaseCacheEntry(
+                  widget.plant.scientificName);
+
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },

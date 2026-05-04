@@ -288,12 +288,15 @@ class ApiService {
         Uri.parse(
             '${Constants.apiUrl}/approved-translations/plant/${Uri.encodeComponent(scientificName)}'),
         headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 5));
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         if (data['success'] == true && data['translations'] != null) {
-          return List<Map<String, dynamic>>.from(data['translations']);
+          final translations =
+              List<Map<String, dynamic>>.from(data['translations']);
+          return translations;
         }
       }
       return [];
