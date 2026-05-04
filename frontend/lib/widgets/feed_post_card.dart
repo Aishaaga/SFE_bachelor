@@ -91,43 +91,51 @@ class _FeedPostCardState extends State<FeedPostCard> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      widget.post.isAnonymous
-                          ? 'Anonymous'
-                          : (widget.post.user?.email ?? 'Unknown'),
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                    Expanded(
+                      child: Text(
+                        widget.post.isAnonymous
+                            ? 'Anonymous'
+                            : (widget.post.user?.email ?? 'Unknown'),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (widget.post.isApproved &&
                         widget.post.type == 'translation_suggestion') ...[
                       const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.purple.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.verified,
-                              size: 12,
-                              color: Colors.purple.shade700,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              'Approved by admin',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.verified,
+                                size: 12,
                                 color: Colors.purple.shade700,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 2),
+                              Flexible(
+                                child: Text(
+                                  'Approved by admin',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.purple.shade700,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
