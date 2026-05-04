@@ -16,6 +16,44 @@ class PlantDetailScreen extends StatefulWidget {
 
 class _PlantDetailScreenState extends State<PlantDetailScreen> {
   int _currentImageIndex = 0;
+  List<String> _allDarijaNames = [];
+  List<String> _allTamazightNames = [];
+  bool _isLoadingTranslations = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAllTranslations();
+  }
+
+  Future<void> _loadAllTranslations() async {
+    final plant = widget.identification['plant'];
+    final scientificName = plant['scientificName'] ?? '';
+
+    if (scientificName.isNotEmpty) {
+      try {
+        final darijaNames =
+            await PlantTranslations.getAllDarijaNames(scientificName);
+        final tamazightNames =
+            await PlantTranslations.getAllTamazightNames(scientificName);
+
+        setState(() {
+          _allDarijaNames = darijaNames;
+          _allTamazightNames = tamazightNames;
+          _isLoadingTranslations = false;
+        });
+      } catch (e) {
+        print('Error loading translations: $e');
+        setState(() {
+          _isLoadingTranslations = false;
+        });
+      }
+    } else {
+      setState(() {
+        _isLoadingTranslations = false;
+      });
+    }
+  }
 
   List<String> _getPlantImages() {
     final List<String> images = [];
@@ -134,9 +172,6 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       }
     }
     final images = _getPlantImages();
-    final darijaName = PlantTranslations.getDarijaNameSync(scientificName);
-    final tamazightName =
-        PlantTranslations.getTamazightNameSync(scientificName);
     final confidence = _getConfidence();
     final date = _getDate();
 
@@ -156,8 +191,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             if (images.isNotEmpty) _buildImageGallery(images),
 
             // Plant Information Card
-            _buildPlantInfoCard(plant, scientificName, darijaName,
-                tamazightName, confidence, family),
+            _buildPlantInfoCard(plant, scientificName, confidence, family),
 
             // Usage Information Card
             _buildUsageCard(scientificName),
@@ -332,13 +366,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildPlantInfoCard(
-      Map<String, dynamic> plant,
-      String scientificName,
-      String darijaName,
-      String tamazightName,
-      double confidence,
-      String family) {
+  Widget _buildPlantInfoCard(Map<String, dynamic> plant, String scientificName,
+      double confidence, String family) {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -377,10 +406,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               _buildInfoRow('Nom scientifique', scientificName, isItalic: true),
             if (family.isNotEmpty && family != 'Famille inconnue')
               _buildInfoRow('Famille', family),
-            if (darijaName.isNotEmpty && darijaName != scientificName)
-              _buildInfoRow('Nom (Darija)', darijaName),
-            if (tamazightName.isNotEmpty && tamazightName != darijaName)
-              _buildInfoRow('Nom (Tamazight)', tamazightName),
+            ..._buildTranslationRows(scientificName),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -640,6 +666,46 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildTranslationRows(String scientificName) {
+    List<Widget> rows = [];
+
+    // Display all Darija translations
+    if (_isLoadingTranslations) {
+      rows.add(_buildInfoRow('Nom (Darija)', 'Chargement...'));
+    } else if (_allDarijaNames.isNotEmpty) {
+      for (int i = 0; i < _allDarijaNames.length; i++) {
+        rows.add(_buildInfoRow(
+            i == 0 ? 'Nom (Darija)' : 'Nom (Darija) ${i + 1}',
+            _allDarijaNames[i]));
+      }
+    } else {
+      final fallbackDarija =
+          PlantTranslations.getDarijaNameSync(scientificName);
+      if (fallbackDarija.isNotEmpty && fallbackDarija != scientificName) {
+        rows.add(_buildInfoRow('Nom (Darija)', fallbackDarija));
+      }
+    }
+
+    // Display all Tamazight translations
+    if (_isLoadingTranslations) {
+      rows.add(_buildInfoRow('Nom (Tamazight)', 'Chargement...'));
+    } else if (_allTamazightNames.isNotEmpty) {
+      for (int i = 0; i < _allTamazightNames.length; i++) {
+        rows.add(_buildInfoRow(
+            i == 0 ? 'Nom (Tamazight)' : 'Nom (Tamazight) ${i + 1}',
+            _allTamazightNames[i]));
+      }
+    } else {
+      final fallbackTamazight =
+          PlantTranslations.getTamazightNameSync(scientificName);
+      if (fallbackTamazight.isNotEmpty && fallbackTamazight != scientificName) {
+        rows.add(_buildInfoRow('Nom (Tamazight)', fallbackTamazight));
+      }
+    }
+
+    return rows;
   }
 
   void _navigateToTranslationProposal() {

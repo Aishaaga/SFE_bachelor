@@ -304,6 +304,7 @@ class ApiService {
   }
 
   // Get approved translation for a specific plant from database (backward compatibility)
+  // Note: This now returns the first translation for compatibility, but you should use getApprovedTranslations to get all
   Future<Map<String, dynamic>?> getApprovedTranslation(
       String scientificName) async {
     final translations = await getApprovedTranslations(scientificName);

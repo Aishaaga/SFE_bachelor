@@ -124,13 +124,23 @@ approvedTranslationSchema.statics.existsForPlant = async function(scientificName
   return count > 0;
 };
 
-// Method to get approved translation for a plant
+// Method to get approved translation for a plant (backward compatibility)
 approvedTranslationSchema.statics.getForPlant = async function(scientificName) {
   return await this.findOne({ 
     scientificName: scientificName.trim(),
     status: 'active'
   }).populate('approvedBy', 'name email')
    .populate('suggestedBy', 'name email');
+};
+
+// Method to get ALL approved translations for a plant
+approvedTranslationSchema.statics.getAllForPlant = async function(scientificName) {
+  return await this.find({ 
+    scientificName: scientificName.trim(),
+    status: 'active'
+  }).populate('approvedBy', 'name email')
+   .populate('suggestedBy', 'name email')
+   .sort({ approvedAt: -1 });
 };
 
 // Method to get all approved translations

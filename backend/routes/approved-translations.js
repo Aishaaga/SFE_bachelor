@@ -72,13 +72,7 @@ router.get('/plant/:scientificName', async (req, res) => {
   try {
     const { scientificName } = req.params;
     
-    const translations = await ApprovedTranslation.find({ 
-      scientificName: scientificName.trim(),
-      status: 'active'
-    })
-    .populate('approvedBy', 'name email')
-    .populate('suggestedBy', 'name email')
-    .sort({ approvedAt: -1 }); // Most recent first
+    const translations = await ApprovedTranslation.getAllForPlant(scientificName.trim());
     
     if (!translations || translations.length === 0) {
       return res.status(404).json({
