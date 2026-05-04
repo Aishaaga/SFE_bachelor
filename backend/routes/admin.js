@@ -196,25 +196,9 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
     await suggestion.save();
     console.log('✅ FeedPost status updated to approved:', suggestion._id);
     
-    // Clean up: Hide other active suggestions for the same plant (but keep the approved one visible)
-    console.log('🔍 Cleaning up competing suggestions...');
-    await FeedPost.updateMany(
-      {
-        type: 'translation_suggestion',
-        scientificName: suggestion.scientificName,
-        status: 'active',
-        _id: { $ne: suggestion._id } // Exclude the one we just approved - it stays as 'approved'
-      },
-      {
-        status: 'hidden',
-        updatedAt: new Date(),
-        $push: {
-          notes: 'Automatically hidden due to approval of another suggestion for this plant'
-        }
-      }
-    );
-    console.log('✅ Cleaned up competing suggestions for:', suggestion.scientificName);
-    console.log('✅ Approved suggestion remains visible with status "approved"');
+    // Note: We NO LONGER hide competing suggestions - allow multiple suggestions to coexist
+    // This allows admin to approve multiple translations for the same plant
+    console.log('ℹ️ Other suggestions for this plant remain active for potential approval');
     
     res.json({
       success: true,
