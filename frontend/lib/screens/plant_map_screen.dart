@@ -77,12 +77,25 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     try {
       final result = await GBIFService.getOccurrences(
         widget.scientificName,
-        limit: 200,
+        limit: 100,
         country: _selectedCountry,
         year: _selectedYear,
       );
 
       if (result['success'] == true) {
+        // Check if using stale cache
+        if (result['usingStaleCache'] == true) {
+          setState(() {
+            _occurrences =
+                List<Map<String, dynamic>>.from(result['occurrences'] ?? []);
+            _totalCount = result['totalCount'] ?? 0;
+            _isLoadingData = false;
+            _isFirstLoad = false;
+            _error = result['message'] ?? 'Données mises en cache';
+          });
+          return;
+        }
+
         // Check for 503 error
         if (result['message']?.contains('503') == true) {
           setState(() => _isLoadingData = false);
@@ -140,7 +153,7 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
 
     final result = await GBIFService.getOccurrences(
       widget.scientificName,
-      limit: 200,
+      limit: 100,
       country: _selectedCountry,
       year: _selectedYear,
     );
@@ -475,6 +488,34 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                   ),
                 ],
               ),
+              if (_error.isNotEmpty && _occurrences.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning, size: 16, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _error,
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.orange),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _loadOccurrencesProgressively,
+                        child: const Text('Réessayer',
+                            style: TextStyle(fontSize: 10)),
+                      ),
+                    ],
+                  ),
+                ),
               if (_selectedCountry != null || _selectedYear != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),

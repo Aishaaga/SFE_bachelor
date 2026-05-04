@@ -15,15 +15,16 @@ class GBIFService {
 
   static Future<Map<String, dynamic>> getOccurrences(
     String scientificName, {
-    int limit = 200,
+    int limit = 100,
     String? country,
     int? year,
+    bool useCache = true,
   }) async {
     // Create cache key from parameters
     final cacheKey = '$scientificName|$limit|$country|$year';
 
-    // Check cache
-    if (_cache.containsKey(cacheKey)) {
+    // Check cache (if enabled)
+    if (useCache && _cache.containsKey(cacheKey)) {
       final cached = _cache[cacheKey]!;
       if (cached.isValid()) {
         print('📦 GBIF cache hit for: $scientificName');
@@ -35,13 +36,31 @@ class GBIFService {
     }
 
     print('🌍 GBIF cache miss for: $scientificName');
+    final startTime = DateTime.now();
+
+    // Quick connectivity test
+    try {
+      print('⏰ Testing connectivity...');
+      await http
+          .get(
+            Uri.parse('$baseUrl/health'),
+          )
+          .timeout(const Duration(seconds: 5));
+      print('⏰ Connectivity test OK');
+    } catch (e) {
+      print('⚠️ Connectivity test failed: $e');
+      return {'success': false, 'message': 'Problème de connexion au serveur'};
+    }
 
     try {
       final _authService = AuthService();
+      print('⏰ Getting auth token...');
       final token = await _authService.getToken();
       if (token == null) {
         return {'success': false, 'message': 'Non authentifié'};
       }
+      print(
+          '⏰ Auth token received in ${DateTime.now().difference(startTime).inMilliseconds}ms');
 
       var url =
           '$baseUrl/gbif/occurrences/${Uri.encodeComponent(scientificName)}?limit=$limit';
@@ -52,10 +71,14 @@ class GBIFService {
         url += '&year=$year';
       }
 
+      print('⏰ Making HTTP request to: $url');
+      final requestStart = DateTime.now();
       final response = await http.get(
         Uri.parse(url),
         headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 50));
+      ).timeout(const Duration(seconds: 10));
+      print(
+          '⏰ HTTP response received in ${DateTime.now().difference(requestStart).inMilliseconds}ms');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -72,6 +95,27 @@ class GBIFService {
       }
     } catch (e) {
       print('Error fetching occurrences: $e');
+
+      // Handle timeout specifically
+      if (e.toString().contains('TimeoutException')) {
+        // Try to return stale cache if available
+        if (_cache.containsKey(cacheKey)) {
+          final staleCache = _cache[cacheKey]!;
+          print('⚠️ Using stale cache for: $scientificName');
+          return {
+            ...staleCache.data,
+            'success': true,
+            'usingStaleCache': true,
+            'message': 'Données mises en cache (service GBIF lent)'
+          };
+        }
+        return {
+          'success': false,
+          'message':
+              'Le service GBIF est lent. Essayez de vous rapprocher du routeur WiFi ou utilisez un émulateur.'
+        };
+      }
+
       return {'success': false, 'message': 'Erreur: $e'};
     }
   }
@@ -134,7 +178,7 @@ class _CachedGBIFData {
   });
 
   bool isValid() {
-    // Cache valid for 1 hour
-    return DateTime.now().difference(timestamp).inHours < 1;
+    // Cache valid for 6 hours (extended for better fallback)
+    return DateTime.now().difference(timestamp).inHours < 6;
   }
 }

@@ -2,12 +2,12 @@ const express = require('express');
 const router = express.Router();
 const axios = require('axios');
 
-async function fetchWithRetry(url, params, maxRetries = 3) {
+async function fetchWithRetry(url, params, maxRetries = 2) {
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await axios.get(url, { 
                 params, 
-                timeout: 15000, // Increased timeout
+                timeout: 12000, // Reduced timeout to match frontend
                 maxContentLength: 50 * 1024 * 1024, // 50MB max
                 maxBodyLength: 50 * 1024 * 1024, // 50MB max
                 headers: {
@@ -23,6 +23,12 @@ async function fetchWithRetry(url, params, maxRetries = 3) {
             // Don't retry on certain errors
             if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
                 console.log('Timeout error, retrying...');
+                if (i === maxRetries - 1) {
+                    // Last attempt failed due to timeout
+                    const timeoutError = new Error('GBIF service timeout after multiple retries');
+                    timeoutError.isTimeout = true;
+                    throw timeoutError;
+                }
             } else if (error.response && error.response.status === 404) {
                 console.log('Not found error, not retrying...');
                 throw error;
@@ -36,8 +42,8 @@ async function fetchWithRetry(url, params, maxRetries = 3) {
                 throw error;
             }
             
-            // Exponential backoff: 1s, 2s, 4s
-            const delay = Math.min(1000 * Math.pow(2, i), 4000);
+            // Exponential backoff: 0.5s, 1s
+            const delay = Math.min(500 * Math.pow(2, i), 1000);
             console.log(`Waiting ${delay}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
@@ -50,7 +56,7 @@ router.get('/occurrences/:scientificName', async (req, res) => {
     try {
         const { scientificName } = req.params;
         const { 
-            limit = 200, 
+            limit = 100, 
             country,      // Filter by country code (FR, US, etc.)
             year,         // Filter by year
             month         // Filter by month
@@ -111,10 +117,18 @@ router.get('/occurrences/:scientificName', async (req, res) => {
     } catch (error) {
         console.error('❌ GBIF Error:', error.message);
         
-        // Send a friendly message to Flutter
+        // Send specific error messages based on error type
+        let message = 'Le service GBIF est temporairement indisponible. Veuillez réessayer plus tard.';
+        
+        if (error.isTimeout) {
+            message = 'Le service GBIF met du temps à répondre. Veuillez réessayer dans quelques instants.';
+        } else if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+            message = 'Le service GBIF met du temps à répondre. Veuillez réessayer dans quelques instants.';
+        }
+        
         res.status(503).json({
             success: false,
-            message: 'Le service GBIF est temporairement indisponible. Veuillez réessayer plus tard.',
+            message: message,
             error: error.message
         });
     }
