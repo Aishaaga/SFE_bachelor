@@ -1,8 +1,152 @@
+// lib/widgets/feed_post_card.dart
 import 'package:flutter/material.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../utils/constants.dart';
+import 'app_theme.dart';
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  REUSABLE ATOMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Pill-shaped badge for post type / approval status
+class _Pill extends StatelessWidget {
+  const _Pill({
+    required this.label,
+    required this.color,
+    required this.bg,
+    this.icon,
+  });
+
+  final String label;
+  final Color color;
+  final Color bg;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: color),
+            const SizedBox(width: 3),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Icon + count action button used in the action row
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.count,
+    required this.onTap,
+    this.activeColor,
+    this.isActive = false,
+  });
+
+  final IconData icon;
+  final String count;
+  final VoidCallback onTap;
+  final Color? activeColor;
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        isActive ? (activeColor ?? AppTheme.primary) : AppTheme.actionIcon;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (activeColor ?? AppTheme.primary).withOpacity(0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 5),
+            Text(
+              count,
+              style: AppTheme.actionCount.copyWith(color: color),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Language tag + suggestion text row
+class _SuggestionRow extends StatelessWidget {
+  const _SuggestionRow({required this.language, required this.text});
+  final String language;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppTheme.translationTagBg,
+            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+          ),
+          child: Text(
+            language,
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.translationText,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppTheme.textPrimary,
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FEED POST CARD
+// ─────────────────────────────────────────────────────────────────────────────
 class FeedPostCard extends StatefulWidget {
   final FeedPost post;
   final VoidCallback onLike;
@@ -24,486 +168,63 @@ class FeedPostCard extends StatefulWidget {
 class _FeedPostCardState extends State<FeedPostCard> {
   final _darijaController = TextEditingController();
   final _tamazightController = TextEditingController();
-  bool _isSubmitting = false;
+
   final FeedService _feedService = FeedService();
-  late int _currentUpvotes;
-  late int _currentDownvotes;
-  late int _currentLikes;
+
+  bool _isSubmitting = false;
+  late int _upvotes;
+  late int _downvotes;
+  late int _likes;
   bool _isLiked = false;
 
   @override
   void initState() {
     super.initState();
-    _currentUpvotes = widget.post.upvotes;
-    _currentDownvotes = widget.post.downvotes;
-    _currentLikes = widget.post.likes;
-    _checkLikeStatus();
+    _upvotes = widget.post.upvotes;
+    _downvotes = widget.post.downvotes;
+    _likes = widget.post.likes;
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Debug logging to verify isApproved
-    print(
-        'DEBUG FeedPostCard: ${widget.post.scientificName} - status: ${widget.post.status} - isApproved: ${widget.post.isApproved}');
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeader(),
-          if (widget.post.type == 'identification' &&
-              widget.post.imageUrl != null)
-            _buildImage(),
-          _buildContent(),
-          _buildActions(),
-        ],
-      ),
-    );
+  void dispose() {
+    _darijaController.dispose();
+    _tamazightController.dispose();
+    super.dispose();
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: Colors.green.shade100,
-            child: widget.post.isAnonymous
-                ? Icon(
-                    Icons.person_outline,
-                    color: Colors.green.shade700,
-                  )
-                : Icon(
-                    Icons.person,
-                    color: Colors.green.shade700,
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        widget.post.isAnonymous
-                            ? 'Anonymous'
-                            : (widget.post.user?.email ?? 'Unknown'),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (widget.post.isApproved &&
-                        widget.post.type == 'translation_suggestion') ...[
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.purple.shade100,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.verified,
-                                size: 12,
-                                color: Colors.purple.shade700,
-                              ),
-                              const SizedBox(width: 2),
-                              Flexible(
-                                child: Text(
-                                  'Approved by admin',
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.purple.shade700,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  widget.post.location.displayText,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: _getTypeColor().withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              _getTypeDisplayText(),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: _getTypeColor(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ── helpers ────────────────────────────────────────────────────────────────
+  Color get _typeColor => _resolveTypeColor(widget.post.type);
+  Color get _typeBg => _resolveTypeBg(widget.post.type);
+  String get _typeLabel => _resolveTypeLabel(widget.post.type);
 
-  Widget _buildImage() {
-    // Construct full URL from relative path
-    final imageUrl = widget.post.imageUrl;
-    if (imageUrl == null) {
-      return Container(
-        height: 200,
-        color: Colors.grey[200],
-        child: Center(
-          child: Icon(
-            Icons.image_not_supported,
-            size: 40,
-            color: Colors.grey[400],
-          ),
-        ),
-      );
-    }
-
-    String fullImageUrl = imageUrl;
-    if (!fullImageUrl.startsWith('http')) {
-      // Remove the /api part from Constants.apiUrl to get the base URL
-      final baseUrl = Constants.apiUrl.replaceFirst('/api', '');
-      fullImageUrl = '$baseUrl$imageUrl';
-    }
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
-      child: Image.network(
-        fullImageUrl,
-        height: 200,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            height: 200,
-            color: Colors.grey[200],
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          print('Image loading error: $error');
-          print('Image URL: $fullImageUrl');
-          return Container(
-            height: 200,
-            color: Colors.grey[200],
-            child: Center(
-              child: Icon(
-                Icons.image_not_supported,
-                size: 40,
-                color: Colors.grey[400],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildContent() {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.post.plantName,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            widget.post.scientificName,
-            style: TextStyle(
-              fontSize: 14,
-              fontStyle: FontStyle.italic,
-              color: Colors.grey[600],
-            ),
-          ),
-          if (widget.post.type == 'translation_suggestion') ...[
-            const SizedBox(height: 12),
-            _buildTranslationSuggestions(),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            _getTimeAgo(),
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTranslationSuggestions() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.blue.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Translation Suggestions',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.blue.shade700,
-            ),
-          ),
-          if (widget.post.suggestedDarija != null) ...[
-            const SizedBox(height: 8),
-            _buildSuggestion('Darija', widget.post.suggestedDarija!),
-          ],
-          if (widget.post.suggestedTamazight != null) ...[
-            const SizedBox(height: 8),
-            _buildSuggestion('Tamazight', widget.post.suggestedTamazight!),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestion(String language, String suggestion) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: Colors.blue.shade100,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            language,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: Colors.blue.shade700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            suggestion,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActions() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.grey.shade200),
-        ),
-      ),
-      child: Column(
-        children: [
-          // Translation suggestion button for identification posts
-          if (widget.post.type == 'identification')
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ElevatedButton.icon(
-                onPressed: () => _showTranslationDialog(context),
-                icon: Icon(
-                  Icons.translate,
-                  size: 18,
-                  color: Colors.blue[700],
-                ),
-                label: Text(
-                  'Proposer traduction',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[50],
-                  foregroundColor: Colors.blue[700],
-                  elevation: 0,
-                  side: BorderSide(color: Colors.blue[200]!),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                ),
-              ),
-            ),
-          // Regular action buttons
-          Row(
-            children: [
-              IconButton(
-                onPressed: _handleLike,
-                icon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isLiked ? Icons.favorite : Icons.favorite_border,
-                      size: 20,
-                      color: _isLiked ? Colors.pink : Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _currentLikes.toString(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _isLiked ? Colors.pink : Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () {
-                  // TODO: Implement comments
-                },
-                icon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.comment_outlined,
-                      size: 20,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      widget.post.commentCount.toString(),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              if (widget.post.type == 'translation_suggestion' &&
-                  !widget.post.isApproved) ...[
-                IconButton(
-                  onPressed: () => _handleVote('upvote'),
-                  icon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.thumb_up_outlined,
-                        size: 16,
-                        color: Colors.green[600],
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        _currentUpvotes.toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.green[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  onPressed: () => _handleVote('downvote'),
-                  icon: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.thumb_down_outlined,
-                        size: 16,
-                        color: Colors.red[600],
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        _currentDownvotes.toString(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.red[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-              ],
-              IconButton(
-                onPressed: widget.onFlag,
-                icon: Icon(
-                  Icons.flag_outlined,
-                  size: 20,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getTypeColor() {
-    switch (widget.post.type) {
+  static Color _resolveTypeColor(String type) {
+    switch (type) {
       case 'identification':
-        return Colors.green;
+        return AppTheme.badgeIdentification;
       case 'translation_suggestion':
-        return Colors.blue;
+        return AppTheme.badgeTranslation;
       case 'plant_of_day':
-        return Colors.orange;
+        return AppTheme.badgePlantOfDay;
       default:
-        return Colors.grey;
+        return AppTheme.textSecondary;
     }
   }
 
-  String _getTypeDisplayText() {
-    switch (widget.post.type) {
+  static Color _resolveTypeBg(String type) {
+    switch (type) {
+      case 'identification':
+        return AppTheme.badgeIdentificationBg;
+      case 'translation_suggestion':
+        return AppTheme.badgeTranslationBg;
+      case 'plant_of_day':
+        return AppTheme.badgePlantOfDayBg;
+      default:
+        return AppTheme.divider;
+    }
+  }
+
+  static String _resolveTypeLabel(String type) {
+    switch (type) {
       case 'identification':
         return 'Identification';
       case 'translation_suggestion':
@@ -515,102 +236,403 @@ class _FeedPostCardState extends State<FeedPostCard> {
     }
   }
 
-  String _getTimeAgo() {
-    final now = DateTime.now();
-    final difference = now.difference(widget.post.createdAt);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
-    } else {
-      return 'Just now';
-    }
+  String _timeAgo() {
+    final diff = DateTime.now().difference(widget.post.createdAt);
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
+    return 'Just now';
   }
 
+  // ── build ──────────────────────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            if (widget.post.type == 'identification' &&
+                widget.post.imageUrl != null)
+              _buildImage(),
+            _buildContent(),
+            _buildDivider(),
+            _buildActions(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── header ─────────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySurface,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              widget.post.isAnonymous
+                  ? Icons.person_outline_rounded
+                  : Icons.person_rounded,
+              color: AppTheme.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Name + location
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        widget.post.isAnonymous
+                            ? 'Anonymous'
+                            : (widget.post.user?.email ?? 'Unknown'),
+                        style: AppTheme.userHandle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (widget.post.isApproved &&
+                        widget.post.type == 'translation_suggestion') ...[
+                      const SizedBox(width: 6),
+                      _Pill(
+                        label: 'Approved by admin',
+                        color: AppTheme.approvedText,
+                        bg: AppTheme.approvedBg,
+                        icon: Icons.verified_rounded,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(Icons.location_on_outlined,
+                        size: 11, color: AppTheme.textSecondary),
+                    const SizedBox(width: 2),
+                    Text(widget.post.location.displayText,
+                        style: AppTheme.locationText),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Type badge
+          _Pill(label: _typeLabel, color: _typeColor, bg: _typeBg),
+        ],
+      ),
+    );
+  }
+
+  // ── image ──────────────────────────────────────────────────────────────────
+  Widget _buildImage() {
+    final raw = widget.post.imageUrl!;
+    final url = raw.startsWith('http')
+        ? raw
+        : '${Constants.apiUrl.replaceFirst('/api', '')}$raw';
+
+    return Image.network(
+      url,
+      height: 210,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      loadingBuilder: (_, child, progress) => progress == null
+          ? child
+          : Container(
+              height: 210,
+              color: AppTheme.primarySurface,
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: AppTheme.primary,
+                  value: progress.expectedTotalBytes != null
+                      ? progress.cumulativeBytesLoaded /
+                          progress.expectedTotalBytes!
+                      : null,
+                ),
+              ),
+            ),
+      errorBuilder: (_, __, ___) => Container(
+        height: 210,
+        color: AppTheme.primarySurface,
+        child: const Icon(Icons.image_not_supported_rounded,
+            size: 40, color: AppTheme.primary),
+      ),
+    );
+  }
+
+  // ── content ────────────────────────────────────────────────────────────────
+  Widget _buildContent() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.post.plantName, style: AppTheme.plantName),
+          const SizedBox(height: 3),
+          Text(widget.post.scientificName, style: AppTheme.scientificName),
+          if (widget.post.type == 'translation_suggestion') ...[
+            const SizedBox(height: 12),
+            _buildTranslationBox(),
+          ],
+          const SizedBox(height: 10),
+          Text(_timeAgo(), style: AppTheme.timeAgo),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTranslationBox() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.translationBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        border: Border.all(color: AppTheme.translationBorder, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.translate_rounded,
+                  size: 14, color: AppTheme.translationText),
+              const SizedBox(width: 5),
+              Text(
+                'Translation Suggestions',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.translationText,
+                ),
+              ),
+            ],
+          ),
+          if (widget.post.suggestedDarija != null) ...[
+            const SizedBox(height: 10),
+            _SuggestionRow(
+                language: 'Darija', text: widget.post.suggestedDarija!),
+          ],
+          if (widget.post.suggestedTamazight != null) ...[
+            const SizedBox(height: 8),
+            _SuggestionRow(
+                language: 'Tamazight', text: widget.post.suggestedTamazight!),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDivider() => Divider(
+        height: 1,
+        thickness: 1,
+        color: AppTheme.divider,
+        indent: 14,
+        endIndent: 14,
+      );
+
+  // ── actions ────────────────────────────────────────────────────────────────
+  Widget _buildActions() {
+    final isTranslation = widget.post.type == 'translation_suggestion';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(6, 4, 6, 8),
+      child: Column(
+        children: [
+          // "Propose translation" button for identification posts
+          if (widget.post.type == 'identification') ...[
+            _buildProposeButton(),
+            const SizedBox(height: 4),
+          ],
+          Row(
+            children: [
+              // Like
+              _ActionButton(
+                icon: _isLiked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                count: _likes.toString(),
+                onTap: _handleLike,
+                activeColor: AppTheme.likeActive,
+                isActive: _isLiked,
+              ),
+              const SizedBox(width: 2),
+              // Comments
+              _ActionButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                count: widget.post.commentCount.toString(),
+                onTap: () {},
+              ),
+              const Spacer(),
+              // Upvote / Downvote (translation only, not approved)
+              if (isTranslation && !widget.post.isApproved) ...[
+                _ActionButton(
+                  icon: Icons.thumb_up_rounded,
+                  count: _upvotes.toString(),
+                  onTap: () => _handleVote('upvote'),
+                  activeColor: AppTheme.upvoteColor,
+                ),
+                const SizedBox(width: 2),
+                _ActionButton(
+                  icon: Icons.thumb_down_rounded,
+                  count: _downvotes.toString(),
+                  onTap: () => _handleVote('downvote'),
+                  activeColor: AppTheme.downvoteColor,
+                ),
+                const SizedBox(width: 4),
+              ],
+              // Flag
+              GestureDetector(
+                onTap: widget.onFlag,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(Icons.flag_outlined,
+                      size: 20, color: AppTheme.actionIcon),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProposeButton() {
+    return GestureDetector(
+      onTap: () => _showTranslationDialog(context),
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          color: AppTheme.badgeTranslationBg,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(color: AppTheme.translationBorder),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.translate_rounded,
+                size: 16, color: AppTheme.badgeTranslation),
+            SizedBox(width: 7),
+            Text(
+              'Proposer traduction',
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.badgeTranslation,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── translation dialog ─────────────────────────────────────────────────────
   void _showTranslationDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Proposer traduction pour ${widget.post.plantName}',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 4),
+        contentPadding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Proposer traduction',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(widget.post.plantName,
+                style: AppTheme.plantName
+                    .copyWith(fontSize: 14, color: AppTheme.primary)),
+            Text(widget.post.scientificName, style: AppTheme.scientificName),
+          ],
         ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.post.scientificName,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.grey[600],
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               TextField(
                 controller: _darijaController,
                 decoration: InputDecoration(
-                  labelText: 'Traduction Darija',
-                  hintText: 'Entrez la traduction en darija...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.translate, color: Colors.blue),
+                  labelText: 'Darija',
+                  hintText: 'Entrez la traduction en darija…',
+                  prefixIcon: const Icon(Icons.translate_rounded,
+                      color: AppTheme.badgeTranslation),
                 ),
                 maxLines: 2,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               TextField(
                 controller: _tamazightController,
                 decoration: InputDecoration(
-                  labelText: 'Traduction Tamazight',
-                  hintText: 'Entrez la traduction en tamazight...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  prefixIcon: const Icon(Icons.translate, color: Colors.green),
+                  labelText: 'Tamazight',
+                  hintText: 'Entrez la traduction en tamazight…',
+                  prefixIcon: const Icon(Icons.translate_rounded,
+                      color: AppTheme.primary),
                 ),
                 maxLines: 2,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
-                'Au moins une traduction est requise',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
-                ),
+                'Au moins une traduction est requise.',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
+              const SizedBox(height: 4),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               _darijaController.clear();
               _tamazightController.clear();
             },
             child: const Text('Annuler'),
           ),
-          ElevatedButton(
-            onPressed: _isSubmitting ? null : () => _submitTranslation(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
+          FilledButton(
+            onPressed: _isSubmitting ? null : () => _submitTranslation(ctx),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
             ),
             child: _isSubmitting
                 ? const SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: 18,
+                    height: 18,
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
+                        strokeWidth: 2, color: Colors.white),
                   )
                 : const Text('Proposer'),
           ),
@@ -619,45 +641,26 @@ class _FeedPostCardState extends State<FeedPostCard> {
     );
   }
 
-  Future<void> _submitTranslation(BuildContext context) async {
+  // ── async actions ──────────────────────────────────────────────────────────
+  Future<void> _submitTranslation(BuildContext ctx) async {
     final darija = _darijaController.text.trim();
     final tamazight = _tamazightController.text.trim();
 
     if (darija.isEmpty && tamazight.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez fournir au moins une traduction'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _showSnack('Veuillez fournir au moins une traduction',
+          backgroundColor: Colors.orange);
       return;
     }
 
-    setState(() {
-      _isSubmitting = true;
-    });
+    setState(() => _isSubmitting = true);
 
     try {
-      // Debug the plant information
-      print('DEBUG: FeedPostCard - Creating translation suggestion:');
-      print('  post.plantId: ${widget.post.plantId}');
-      print('  post.identificationId: ${widget.post.identificationId}');
-      print('  post.plantName: ${widget.post.plantName}');
-      print('  post.scientificName: ${widget.post.scientificName}');
-
-      // Ensure we have a valid plantId
       String plantId = widget.post.plantId;
       if (plantId.isEmpty && widget.post.identificationId != null) {
-        // Use identificationId as fallback for plantId
         plantId = widget.post.identificationId!;
-        print('  Using identificationId as plantId: $plantId');
       }
+      if (plantId.isEmpty) throw Exception('Plant ID is required');
 
-      if (plantId.isEmpty) {
-        throw Exception('Plant ID is required for translation suggestions');
-      }
-
-      // Create a translation suggestion feed post
       final result = await _feedService.shareToFeed(
         type: 'translation_suggestion',
         plantId: plantId,
@@ -666,49 +669,25 @@ class _FeedPostCardState extends State<FeedPostCard> {
         suggestedDarija: darija.isNotEmpty ? darija : null,
         suggestedTamazight: tamazight.isNotEmpty ? tamazight : null,
         isAnonymous: false,
-        location: {
-          'level': 'country',
-          'country': 'Morocco',
-        },
+        location: {'level': 'country', 'country': 'Morocco'},
       );
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(ctx);
         _darijaController.clear();
         _tamazightController.clear();
-
-        if (result['success']) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Traduction proposée avec succès!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content:
-                  Text(result['message'] ?? 'Erreur lors de la proposition'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: $e'),
-            backgroundColor: Colors.red,
-          ),
+        _showSnack(
+          result['success']
+              ? 'Traduction proposée avec succès!'
+              : (result['message'] ?? 'Erreur'),
+          backgroundColor:
+              result['success'] ? AppTheme.primary : Colors.redAccent,
         );
       }
+    } catch (e) {
+      if (mounted) _showSnack('Erreur: $e', backgroundColor: Colors.redAccent);
     } finally {
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-        });
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -718,108 +697,63 @@ class _FeedPostCardState extends State<FeedPostCard> {
         postId: widget.post.id!,
         voteType: voteType,
       );
-
       if (result['success']) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Vote recorded successfully'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 1),
-          ),
-        );
-
-        // Update the vote counts in the UI immediately
+        _showSnack(result['message'] ?? 'Vote recorded',
+            backgroundColor: AppTheme.primary, duration: 1);
         if (result['voteCounts'] != null) {
           setState(() {
-            final voteCounts = result['voteCounts'];
-            _currentUpvotes = voteCounts['upvotes'] ?? _currentUpvotes;
-            _currentDownvotes = voteCounts['downvotes'] ?? _currentDownvotes;
+            _upvotes = result['voteCounts']['upvotes'] ?? _upvotes;
+            _downvotes = result['voteCounts']['downvotes'] ?? _downvotes;
           });
-
-          // Notify parent widget if callback is provided
-          if (widget.onVoteUpdate != null) {
-            final updatedPost = widget.post.copyWith(
-              upvotes: _currentUpvotes,
-              downvotes: _currentDownvotes,
-            );
-            widget.onVoteUpdate!(updatedPost);
-          }
+          widget.onVoteUpdate?.call(
+            widget.post.copyWith(upvotes: _upvotes, downvotes: _downvotes),
+          );
         }
       } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Error voting'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showSnack(result['message'] ?? 'Error voting',
+            backgroundColor: Colors.redAccent);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error voting: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      if (mounted) _showSnack('Error: $e', backgroundColor: Colors.redAccent);
     }
-  }
-
-  Future<void> _checkLikeStatus() async {
-    // This would require getting the current user ID
-    // For now, we'll skip this and rely on the toggle response
-    // TODO: Implement user authentication check
   }
 
   Future<void> _handleLike() async {
     try {
       final result = await _feedService.likePost(widget.post.id!);
-
       if (result['success']) {
-        // Update the like count and status
         setState(() {
-          _currentLikes = result['likes'] ?? _currentLikes;
+          _likes = result['likes'] ?? _likes;
           _isLiked = result['liked'] ?? !_isLiked;
         });
-
-        // Show feedback
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content:
-                Text(result['message'] ?? (_isLiked ? 'Liked!' : 'Unliked!')),
-            backgroundColor: _isLiked ? Colors.pink : Colors.grey,
-            duration: const Duration(seconds: 1),
-          ),
-        );
-
-        // Notify parent widget
-        if (widget.onLike != null) {
-          widget.onLike!();
-        }
+        widget.onLike();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Error liking post'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showSnack(result['message'] ?? 'Error liking post',
+            backgroundColor: Colors.redAccent);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) _showSnack('Error: $e', backgroundColor: Colors.redAccent);
     }
   }
 
-  @override
-  void dispose() {
-    _darijaController.dispose();
-    _tamazightController.dispose();
-    super.dispose();
+  void _showSnack(
+    String message, {
+    Color backgroundColor = AppTheme.primary,
+    int duration = 2,
+  }) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(color: Colors.white, fontSize: 13)),
+        backgroundColor: backgroundColor,
+        duration: Duration(seconds: duration),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
+      ),
+    );
   }
 }
