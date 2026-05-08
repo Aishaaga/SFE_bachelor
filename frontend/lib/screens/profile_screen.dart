@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/user.dart';
 import '../services/profile_service.dart';
 import '../services/auth_service.dart';
+import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -57,7 +58,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (result['success'] != true) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result['message'] ?? 'Erreur lors du chargement du profil'),
+            content: Text(
+                result['message'] ?? 'Erreur lors du chargement du profil'),
             backgroundColor: Colors.red,
           ),
         );
@@ -90,7 +92,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message'] ?? 'Profil mis à jour'),
-          backgroundColor: result['success'] == true ? Colors.green : Colors.red,
+          backgroundColor:
+              result['success'] == true ? Colors.green : Colors.red,
         ),
       );
     }
@@ -179,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     : null,
                                 child: _user!.profileImage.isEmpty
                                     ? Text(
-                                        _user!.name.isNotEmpty 
+                                        _user!.name.isNotEmpty
                                             ? _user!.name[0].toUpperCase()
                                             : _user!.email[0].toUpperCase(),
                                         style: TextStyle(
@@ -193,7 +196,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               const SizedBox(height: 16),
                               if (!_isEditing)
                                 Text(
-                                  _user!.name.isNotEmpty ? _user!.name : _user!.email,
+                                  _user!.name.isNotEmpty
+                                      ? _user!.name
+                                      : _user!.email,
                                   style: const TextStyle(
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
@@ -246,7 +251,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                
                                 if (_isEditing)
                                   TextFormField(
                                     controller: _nameController,
@@ -256,17 +260,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       prefixIcon: Icon(Icons.person),
                                     ),
                                     validator: (value) {
-                                      if (value != null && value.trim().length > 50) {
+                                      if (value != null &&
+                                          value.trim().length > 50) {
                                         return 'Le nom ne peut pas dépasser 50 caractères';
                                       }
                                       return null;
                                     },
                                   )
                                 else if (_user!.name.isNotEmpty)
-                                  _buildInfoRow('Nom', _user!.name, Icons.person),
-                                
+                                  _buildInfoRow(
+                                      'Nom', _user!.name, Icons.person),
                                 const SizedBox(height: 12),
-                                
                                 if (_isEditing)
                                   TextFormField(
                                     controller: _locationController,
@@ -276,17 +280,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       prefixIcon: Icon(Icons.location_on),
                                     ),
                                     validator: (value) {
-                                      if (value != null && value.trim().length > 100) {
+                                      if (value != null &&
+                                          value.trim().length > 100) {
                                         return 'La localisation ne peut pas dépasser 100 caractères';
                                       }
                                       return null;
                                     },
                                   )
                                 else if (_user!.location.isNotEmpty)
-                                  _buildInfoRow('Localisation', _user!.location, Icons.location_on),
-                                
+                                  _buildInfoRow('Localisation', _user!.location,
+                                      Icons.location_on),
                                 const SizedBox(height: 12),
-                                
                                 if (_isEditing)
                                   TextFormField(
                                     controller: _bioController,
@@ -297,7 +301,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                     maxLines: 3,
                                     validator: (value) {
-                                      if (value != null && value.trim().length > 500) {
+                                      if (value != null &&
+                                          value.trim().length > 500) {
                                         return 'La bio ne peut pas dépasser 500 caractères';
                                       }
                                       return null;
@@ -305,9 +310,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   )
                                 else if (_user!.bio.isNotEmpty)
                                   _buildInfoRow('Bio', _user!.bio, Icons.info),
-                                
-                                if (!_isEditing && _user!.name.isEmpty && 
-                                    _user!.location.isEmpty && _user!.bio.isEmpty)
+                                if (!_isEditing &&
+                                    _user!.name.isEmpty &&
+                                    _user!.location.isEmpty &&
+                                    _user!.bio.isEmpty)
                                   const Text(
                                     'Aucune information personnelle ajoutée',
                                     style: TextStyle(
@@ -319,7 +325,84 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        
+
+                        const SizedBox(height: 24),
+
+                        // History Section
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: Colors.grey.shade300,
+                              width: 1,
+                            ),
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const HistoryScreen(),
+                                  ),
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.history,
+                                      size: 24,
+                                      color: Colors.green.shade700,
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'MY HISTORY',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black87,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Tap to see all your identifications',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey.shade400,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
                         const SizedBox(height: 24),
 
                         // Statistics
@@ -337,13 +420,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 16),
-                                _buildStatRow('Contributions', _user!.contributionsCount, Icons.post_add),
+                                _buildStatRow('Contributions',
+                                    _user!.contributionsCount, Icons.post_add),
                                 const SizedBox(height: 12),
-                                _buildStatRow('Identifications', _user!.identificationsCount, Icons.search),
+                                _buildStatRow('Identifications',
+                                    _user!.identificationsCount, Icons.search),
                                 const SizedBox(height: 12),
-                                _buildStatRow('Suggestions de traduction', _user!.translationSuggestionsCount, Icons.translate),
+                                _buildStatRow(
+                                    'Suggestions de traduction',
+                                    _user!.translationSuggestionsCount,
+                                    Icons.translate),
                                 const SizedBox(height: 12),
-                                _buildStatRow('Membre depuis', DateFormat('dd MMMM yyyy').format(_user!.createdAt), Icons.calendar_today),
+                                _buildStatRow(
+                                    'Membre depuis',
+                                    DateFormat('dd MMMM yyyy')
+                                        .format(_user!.createdAt),
+                                    Icons.calendar_today),
                               ],
                             ),
                           ),

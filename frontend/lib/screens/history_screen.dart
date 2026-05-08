@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
-import '../services/auth_service.dart';
 import '../utils/constants.dart';
 import '../models/plant.dart';
 import 'plant_detail_screen.dart';
@@ -15,7 +14,6 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   final ApiService _apiService = ApiService();
-  final AuthService _authService = AuthService();
   List<dynamic> _plants = [];
   bool _isLoading = true;
   String? _error;
@@ -203,13 +201,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Future<void> _logout() async {
-    await _authService.logout();
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -222,12 +213,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

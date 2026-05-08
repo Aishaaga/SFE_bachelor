@@ -6,9 +6,7 @@ import 'package:sfe_mobile/widgets/loading_widget.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import 'result_screen.dart';
-import 'history_screen.dart';
 import '../services/image_compression_service.dart';
-import '../widgets/notification_bell.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -109,52 +107,9 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    await _authService.logout();
-    if (mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Identifier une plante'),
-        centerTitle: true,
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        actions: [
-          const NotificationBell(),
-          IconButton(
-            icon: const Icon(Icons.person),
-            tooltip: 'Profile',
-            onPressed: () {
-              Navigator.pushNamed(context, '/profile');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.feed),
-            tooltip: 'Community Feed',
-            onPressed: () {
-              Navigator.pushNamed(context, '/feed');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const HistoryScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
-      ),
       body: _isLoading
           ? const Center(
               child: Column(
