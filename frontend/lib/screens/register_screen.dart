@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
-import 'camera_screen.dart';
+import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -43,7 +43,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (result['success']) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const CameraScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
