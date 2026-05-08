@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import 'result_screen.dart';
 import 'history_screen.dart';
 import '../services/image_compression_service.dart';
+import '../widgets/notification_bell.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -124,6 +125,7 @@ class _CameraScreenState extends State<CameraScreen> {
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
+          const NotificationBell(),
           IconButton(
             icon: const Icon(Icons.person),
             tooltip: 'Profile',

@@ -11,6 +11,7 @@ const TranslationVote = require('../models/TranslationVote');
 const User = require('../models/User');
 const Identification = require('../models/Identification');
 const ApprovedTranslation = require('../models/ApprovedTranslation');
+const NotificationService = require('../services/notificationService');
 
 // All admin routes require: first regular auth (user logged in), then admin check
 // Apply both middlewares in order
@@ -113,6 +114,7 @@ router.get('/test', auth, adminAuth, async (req, res) => {
 // POST /api/admin/approve/:id - Approve a suggestion
 router.post('/approve/:id', auth, adminAuth, async (req, res) => {
   try {
+    
     console.log('🔥 APPROVAL REQUEST RECEIVED');
     console.log('- Suggestion ID:', req.params.id);
     console.log('- Admin ID:', req.userId);
@@ -187,6 +189,7 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
     
     console.log('🔍 Saving ApprovedTranslation...');
     await approvedTranslation.save();
+    await NotificationService.translationApproved(suggestion.userId, suggestion);
     console.log('✅ ApprovedTranslation saved:', approvedTranslation._id);
     
     // Update suggestion status to indicate it's been approved
@@ -205,6 +208,8 @@ router.post('/approve/:id', auth, adminAuth, async (req, res) => {
       message: 'Translation approved and saved successfully',
       approvedTranslation: approvedTranslation
     });
+
+
     
   } catch (error) {
     console.error('Error approving:', error);
@@ -233,6 +238,9 @@ router.post('/reject/:id', auth, adminAuth, async (req, res) => {
     }
     
     await suggestion.save();
+    await NotificationService.translationRejected(suggestion.userId, suggestion, reason);
+    
+
     
     res.json({
       success: true,

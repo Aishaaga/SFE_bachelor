@@ -19,6 +19,7 @@ const feedCommentsRoutes = require('./routes/feed-comments');
 const translationVotesRoutes = require('./routes/translation-votes');
 const approvedTranslationsRoutes = require('./routes/approved-translations');
 const profileRoutes = require('./routes/profile');
+const notificationRoutes = require('./routes/notifications');
 console.log('✅ Profile routes loaded:', typeof profileRoutes);
 console.log('✅ Profile routes methods:', Object.getOwnPropertyNames(profileRoutes));
 console.log('✅ Admin routes imported');
@@ -63,8 +64,10 @@ app.use('/api/translation-votes', translationVotesRoutes);  // Translation votes
 app.use('/api/approved-translations', approvedTranslationsRoutes);  // Approved translations endpoints
 app.use('/api/admin', adminRoutes);  // Admin endpoints
 app.use('/api/profile', profileRoutes);  // Profile endpoints
+app.use('/api/notifications', notificationRoutes);
 console.log('✅ Admin routes mounted at /api/admin');
 console.log('✅ Profile routes mounted at /api/profile');
+console.log('✅ Notification routes mounted at /api/notifications');
 
 // Test route - add this BEFORE your 404 handler
 app.get('/test', (req, res) => {
