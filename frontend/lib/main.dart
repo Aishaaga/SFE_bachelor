@@ -5,6 +5,7 @@ import 'screens/register_screen.dart';
 import 'screens/camera_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/social_feed_screen.dart';
+import 'screens/profile_screen.dart';
 import 'services/auth_service.dart';
 import 'data/plant_translations.dart';
 
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
         '/camera': (context) => const CameraScreen(),
         '/history': (context) => const HistoryScreen(),
         '/feed': (context) => const SocialFeedScreen(),
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }

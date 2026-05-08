@@ -125,6 +125,13 @@ class _CameraScreenState extends State<CameraScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.pushNamed(context, '/profile');
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.feed),
             tooltip: 'Community Feed',
             onPressed: () {

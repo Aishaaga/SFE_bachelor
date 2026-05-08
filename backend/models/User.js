@@ -18,6 +18,43 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  // Profile fields
+  name: {
+    type: String,
+    required: false,
+    trim: true,
+    default: ''
+  },
+  bio: {
+    type: String,
+    required: false,
+    trim: true,
+    default: ''
+  },
+  location: {
+    type: String,
+    required: false,
+    trim: true,
+    default: ''
+  },
+  profileImage: {
+    type: String,
+    required: false,
+    default: ''
+  },
+  // Statistics
+  contributionsCount: {
+    type: Number,
+    default: 0
+  },
+  identificationsCount: {
+    type: Number,
+    default: 0
+  },
+  translationSuggestionsCount: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now

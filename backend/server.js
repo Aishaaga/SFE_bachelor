@@ -18,6 +18,9 @@ const feedLikesRoutes = require('./routes/feed-likes');
 const feedCommentsRoutes = require('./routes/feed-comments');
 const translationVotesRoutes = require('./routes/translation-votes');
 const approvedTranslationsRoutes = require('./routes/approved-translations');
+const profileRoutes = require('./routes/profile');
+console.log('✅ Profile routes loaded:', typeof profileRoutes);
+console.log('✅ Profile routes methods:', Object.getOwnPropertyNames(profileRoutes));
 console.log('✅ Admin routes imported');
 
 const app = express();
@@ -27,6 +30,12 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Debug logging middleware
+app.use((req, res, next) => {
+  console.log(`🔍 ${req.method} ${req.url} - IP: ${req.ip}`);
+  next();
+});
 
 // Servir les fichiers statiques (uploads)
 app.use('/uploads', express.static('uploads'));
@@ -53,10 +62,18 @@ app.use('/api/feed-comments', feedCommentsRoutes);  // Feed comments endpoints
 app.use('/api/translation-votes', translationVotesRoutes);  // Translation votes endpoints
 app.use('/api/approved-translations', approvedTranslationsRoutes);  // Approved translations endpoints
 app.use('/api/admin', adminRoutes);  // Admin endpoints
+app.use('/api/profile', profileRoutes);  // Profile endpoints
 console.log('✅ Admin routes mounted at /api/admin');
+console.log('✅ Profile routes mounted at /api/profile');
 
+// Test route - add this BEFORE your 404 handler
+app.get('/test', (req, res) => {
+  res.json({ message: 'Test route works!' });
+});
 // Route 404
 app.use((req, res) => {
+  console.log('❌ 404 - Route non trouvée:', req.method, req.url);
+  console.log('❌ Headers:', req.headers);
   res.status(404).json({ message: 'Route non trouvée' });
 });
 
