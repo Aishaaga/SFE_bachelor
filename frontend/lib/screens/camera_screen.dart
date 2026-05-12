@@ -1,3 +1,4 @@
+// lib/screens/camera_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,8 +6,9 @@ import 'package:sfe_mobile/services/gbif_service.dart';
 import 'package:sfe_mobile/widgets/loading_widget.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
-import 'result_screen.dart';
 import '../services/image_compression_service.dart';
+import '../widgets/app_theme.dart';
+import 'result_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -15,163 +17,608 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> {
+class _CameraScreenState extends State<CameraScreen>
+    with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   final AuthService _authService = AuthService();
+
   File? _selectedImage;
   bool _isLoading = false;
 
+  late final AnimationController _fadeCtrl;
+  late final Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _fadeCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── image picking ──────────────────────────────────────────────────────────
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);
+    if (pickedFile == null) return;
 
-    if (pickedFile != null) {
-      // DEBUG: Inspect the file
-      final file = File(pickedFile.path);
-      print('=== CAMERA FILE DEBUG ===');
-      print('Path: ${pickedFile.path}');
-      print('Name: ${pickedFile.name}');
-      print('Exists: ${await file.exists()}');
-      print('Size: ${await file.length()} bytes');
-      print('=========================');
+    setState(() => _selectedImage = File(pickedFile.path));
 
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-      await _identifyPlant();
-    }
+    // Replay the fade-in so the preview animates in
+    _fadeCtrl
+      ..reset()
+      ..forward();
+
+    await _identifyPlant();
   }
 
   Future<void> _identifyPlant() async {
     if (_selectedImage == null) return;
 
-    LoadingDialog.show(
-      context,
-      message: '📸 Compression de l\'image...',
-    );
-    // Before creating the request
+    LoadingDialog.show(context, message: '📸 Compression de l\'image...');
 
     try {
-      // COMPRESS THE IMAGE BEFORE SENDING
-      final compressedImage =
+      final compressed =
           await ImageCompressionService.compressImage(_selectedImage!);
 
-      print('=== SENDING FILE ===');
-      print('Path: ${compressedImage.path}');
-      print('Exists: ${await compressedImage.exists()}');
-      print('Size: ${await compressedImage.length()}');
-
       LoadingDialog.update(context, '🌿 Envoi à PlantNet...');
-
-      final result = await _apiService.identifyPlant(compressedImage);
+      final result = await _apiService.identifyPlant(compressed);
 
       LoadingDialog.update(context, '🗺️ Récupération de la distribution...');
 
       if (result['success'] && result['plant'] != null) {
-        final distributionFuture =
-            GBIFService.getOccurrenceCount(result['plant'].scientificName);
-
-        // Wait for both (or timeout after 5 seconds)
-        final distributionCount = await distributionFuture.timeout(
-          Duration(seconds: 5),
-          onTimeout: () => 0,
-        );
+        await GBIFService.getOccurrenceCount(result['plant'].scientificName)
+            .timeout(const Duration(seconds: 5), onTimeout: () => 0);
 
         LoadingDialog.hide(context);
-
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => ResultScreen(
               plant: result['plant'],
-              photo: compressedImage,
+              photo: compressed,
               identificationId: result['identificationId'],
             ),
           ),
-        ).then((_) {
-          // Revenir à l'écran caméra, réinitialiser
-          LoadingDialog.hide(context);
-        });
+        ).then((_) => LoadingDialog.hide(context));
       } else {
         LoadingDialog.hide(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(result['message']), backgroundColor: Colors.red),
-        );
+        _showSnack(result['message'], isError: true);
       }
     } catch (e) {
       LoadingDialog.hide(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
-      );
+      _showSnack('Erreur: $e', isError: true);
     }
   }
 
+  void _clearImage() {
+    setState(() => _selectedImage = null);
+    _fadeCtrl
+      ..reset()
+      ..forward();
+  }
+
+  void _showSnack(String msg, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg,
+            style: const TextStyle(color: Colors.white, fontSize: 13)),
+        backgroundColor: isError ? Colors.redAccent : AppTheme.primary,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
+      ),
+    );
+  }
+
+  // ── build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('Identification en cours...'),
-                ],
+      backgroundColor: AppTheme.scaffoldBg,
+      appBar: _buildAppBar(),
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: _selectedImage == null ? _buildIdle() : _buildPreview(),
+      ),
+    );
+  }
+
+  // ── app bar ────────────────────────────────────────────────────────────────
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: AppTheme.primary,
+      elevation: 0,
+      toolbarHeight: 60,
+      automaticallyImplyLeading: false,
+      title: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            ),
+            child: const Center(
+              child: Text('🌿', style: TextStyle(fontSize: 18)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Text(
+            'Identifier une plante',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── idle state (no image selected) ────────────────────────────────────────
+  Widget _buildIdle() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: 36),
+
+              // Hero illustration card
+              _HeroCard(),
+
+              const SizedBox(height: 36),
+
+              // Instructions
+              _SectionLabel(label: 'Comment ça marche'),
+              const SizedBox(height: 14),
+              const _StepRow(
+                step: '1',
+                icon: Icons.camera_alt_rounded,
+                title: 'Prenez une photo',
+                subtitle: 'Utilisez la caméra ou votre galerie',
               ),
-            )
-          : Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (_selectedImage != null)
-                    Container(
-                      margin: const EdgeInsets.all(20),
-                      child: Image.file(
+              const SizedBox(height: 10),
+              const _StepRow(
+                step: '2',
+                icon: Icons.auto_awesome_rounded,
+                title: 'Identification IA',
+                subtitle: 'PlantNet analyse la plante',
+              ),
+              const SizedBox(height: 10),
+              const _StepRow(
+                step: '3',
+                icon: Icons.eco_rounded,
+                title: 'Résultats détaillés',
+                subtitle: 'Nom, distribution, traductions',
+              ),
+
+              const SizedBox(height: 40),
+
+              // Action buttons
+              _buildActionButtons(),
+
+              const SizedBox(height: 28),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Row(
+      children: [
+        Expanded(
+          child: _PrimaryActionButton(
+            icon: Icons.camera_alt_rounded,
+            label: 'Appareil photo',
+            onTap: () => _pickImage(ImageSource.camera),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _SecondaryActionButton(
+            icon: Icons.photo_library_rounded,
+            label: 'Galerie',
+            onTap: () => _pickImage(ImageSource.gallery),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── preview state (image selected) ────────────────────────────────────────
+  Widget _buildPreview() {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+
+            // Preview card
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  boxShadow: AppTheme.cardShadow,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.file(
                         _selectedImage!,
-                        height: 300,
                         fit: BoxFit.cover,
                       ),
-                    ),
-                  const SizedBox(height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () => _pickImage(ImageSource.camera),
-                        icon: const Icon(Icons.camera_alt),
-                        label: const Text('Appareil photo'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                      // Gradient overlay at bottom
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black.withOpacity(0.55),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 20),
-                      ElevatedButton.icon(
-                        onPressed: () => _pickImage(ImageSource.gallery),
-                        icon: const Icon(Icons.photo_library),
-                        label: const Text('Galerie'),
-                        style: ElevatedButton.styleFrom(
+                      // Status badge
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                              horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primary.withOpacity(0.9),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusPill),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle_rounded,
+                                  size: 13, color: Colors.white),
+                              SizedBox(width: 5),
+                              Text(
+                                'Photo sélectionnée',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  if (_selectedImage != null && !_isLoading)
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _selectedImage = null;
-                        });
-                      },
-                      child: const Text('Changer de photo'),
-                    ),
-                ],
+                ),
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // Retry / re-pick buttons
+            Row(
+              children: [
+                Expanded(
+                  child: _PrimaryActionButton(
+                    icon: Icons.camera_alt_rounded,
+                    label: 'Reprendre',
+                    onTap: () => _pickImage(ImageSource.camera),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _SecondaryActionButton(
+                    icon: Icons.photo_library_rounded,
+                    label: 'Galerie',
+                    onTap: () => _pickImage(ImageSource.gallery),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 10),
+
+            // Clear button
+            GestureDetector(
+              onTap: _clearImage,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  'Effacer la photo',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  REUSABLE ATOMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// The large illustration card shown in the idle state
+class _HeroCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        children: [
+          // Icon circle
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySurface,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.yard_rounded,
+              size: 44,
+              color: AppTheme.primary,
+            ),
+          ),
+          const SizedBox(height: 18),
+          const Text(
+            'Identifiez une plante',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textPrimary,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Prenez une photo ou importez depuis\nvotre galerie pour commencer',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13.5,
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.textSecondary,
+          letterSpacing: 0.6,
+        ),
+      ),
+    );
+  }
+}
+
+class _StepRow extends StatelessWidget {
+  const _StepRow({
+    required this.step,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String step;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Row(
+        children: [
+          // Step number circle
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppTheme.primarySurface,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                step,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.primary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(icon, size: 20, color: AppTheme.primary),
+        ],
+      ),
+    );
+  }
+}
+
+/// Solid green primary button
+class _PrimaryActionButton extends StatelessWidget {
+  const _PrimaryActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: AppTheme.primary,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          boxShadow: [
+            BoxShadow(
+              color: AppTheme.primary.withOpacity(0.30),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 19, color: Colors.white),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ghost/outlined secondary button
+class _SecondaryActionButton extends StatelessWidget {
+  const _SecondaryActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: AppTheme.cardBg,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(color: AppTheme.primary.withOpacity(0.35)),
+          boxShadow: AppTheme.cardShadow,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 19, color: AppTheme.primary),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.primary,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
