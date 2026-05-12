@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../utils/constants.dart';
-import 'app_theme.dart';
+import '../widgets/app_theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  REUSABLE ATOMS
@@ -596,8 +596,8 @@ class _FeedPostCardState extends State<FeedPostCard> {
                 decoration: InputDecoration(
                   labelText: 'Tamazight',
                   hintText: 'Entrez la traduction en tamazight…',
-                  prefixIcon: const Icon(Icons.translate_rounded,
-                      color: AppTheme.primary),
+                  prefixIcon:
+                      Icon(Icons.translate_rounded, color: AppTheme.primary),
                 ),
                 maxLines: 2,
               ),
