@@ -1,7 +1,9 @@
+// lib/screens/result_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
 import '../data/plant_translations.dart';
+import '../widgets/app_theme.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 import 'translation_proposal_screen.dart';
@@ -23,308 +25,243 @@ class ResultScreen extends StatefulWidget {
   State<ResultScreen> createState() => _ResultScreenState();
 }
 
-class _ResultScreenState extends State<ResultScreen> {
+class _ResultScreenState extends State<ResultScreen>
+    with SingleTickerProviderStateMixin {
   List<String> _darijaNames = [];
   List<String> _tamazightNames = [];
   bool _isLoadingTranslations = true;
 
+  late final AnimationController _fadeCtrl;
+  late final Animation<double> _fadeAnim;
+
   @override
   void initState() {
     super.initState();
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _loadTranslations();
   }
 
+  @override
+  void dispose() {
+    _fadeCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadTranslations() async {
+    setState(() => _isLoadingTranslations = true);
     try {
-      // Clear cache for this plant to get fresh data
       PlantTranslations.clearDatabaseCacheEntry(widget.plant.scientificName);
-
-      // Get all translations from database
-      final darijaNames = await PlantTranslations.getAllDarijaNames(
+      final darija = await PlantTranslations.getAllDarijaNames(
           widget.plant.scientificName);
-      final tamazightNames = await PlantTranslations.getAllTamazightNames(
+      final tamazight = await PlantTranslations.getAllTamazightNames(
           widget.plant.scientificName);
-
       if (mounted) {
         setState(() {
-          _darijaNames = darijaNames;
-          _tamazightNames = tamazightNames;
+          _darijaNames = darija;
+          _tamazightNames = tamazight;
           _isLoadingTranslations = false;
         });
+        _fadeCtrl
+          ..reset()
+          ..forward();
       }
     } catch (e) {
-      print('Error loading translations: $e');
       if (mounted) {
         setState(() {
-          _darijaNames = [widget.plant.darijaName]; // Fallback to sync
-          _tamazightNames = [widget.plant.tamazightName]; // Fallback to sync
+          _darijaNames = [widget.plant.darijaName];
+          _tamazightNames = [widget.plant.tamazightName];
           _isLoadingTranslations = false;
         });
       }
     }
   }
 
+  void _showSnack(String msg, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content:
+          Text(msg, style: const TextStyle(color: Colors.white, fontSize: 13)),
+      backgroundColor: isError ? Colors.redAccent : AppTheme.primary,
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+    ));
+  }
+
+  // ── build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: const Text('Résultat'),
-          centerTitle: true,
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          // Add this button where you display the plant info
-          actions: [
-            ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => PlantMapScreen(
-                        plantName: widget.plant.name,
-                        scientificName: widget.plant.scientificName,
-                      ),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.map),
-                label: const Text('Voir la distribution mondiale'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                )),
-          ]),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      backgroundColor: AppTheme.scaffoldBg,
+      appBar: _buildAppBar(),
+      body: FadeTransition(
+        opacity: _fadeAnim,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildPhotoCard(),
+              const SizedBox(height: 20),
+              _buildConfidenceBanner(),
+              const SizedBox(height: 16),
+              _buildInfoGrid(),
+              const SizedBox(height: 16),
+              _buildTranslationCard(
+                language: 'Darija',
+                script: 'بالدارجة',
+                fontFamily: 'Arabic',
+                names: _darijaNames,
+                fallback: widget.plant.darijaName,
+                accentColor: AppTheme.primary,
+                accentBg: AppTheme.primarySurface,
+              ),
+              const SizedBox(height: 12),
+              _buildTranslationCard(
+                language: 'Tamazight',
+                script: 'ⵜⴰⵎⴰⵣⵉⵖⵜ',
+                fontFamily: 'Tifinagh',
+                names: _tamazightNames,
+                fallback: widget.plant.tamazightName,
+                accentColor: AppTheme.badgeTranslation,
+                accentBg: AppTheme.badgeTranslationBg,
+              ),
+              const SizedBox(height: 20),
+              _buildActionButtons(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── app bar ────────────────────────────────────────────────────────────────
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: AppTheme.primary,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      toolbarHeight: 60,
+      title: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            ),
+            child:
+                const Center(child: Text('🌿', style: TextStyle(fontSize: 18))),
+          ),
+          const SizedBox(width: 10),
+          const Text('Résultat',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.1)),
+        ],
+      ),
+      actions: [
+        Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PlantMapScreen(
+                  plantName: widget.plant.name,
+                  scientificName: widget.plant.scientificName,
+                ),
+              ),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.map_rounded, size: 15, color: Colors.white),
+                  SizedBox(width: 5),
+                  Text('Distribution',
+                      style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── photo card ─────────────────────────────────────────────────────────────
+  Widget _buildPhotoCard() {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        child: Stack(
           children: [
-            Card(
-              elevation: 4,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.file(widget.photo,
-                    height: 250, width: double.infinity, fit: BoxFit.cover),
-              ),
-            ),
-            const SizedBox(height: 24),
-            // Scientific name
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.science),
-                title: const Text('Nom scientifique'),
-                subtitle: Text(widget.plant.scientificName),
-              ),
-            ),
-
-            // DARIJA NAMES (Multiple)
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.translate),
-                    title: Row(
-                      children: [
-                        const Text('بالدارجة',
-                            style: TextStyle(fontFamily: 'Arabic')),
-                        const Spacer(),
-                        if (!_isLoadingTranslations)
-                          IconButton(
-                            icon: const Icon(Icons.refresh, size: 20),
-                            onPressed: () {
-                              setState(() {
-                                _isLoadingTranslations = true;
-                              });
-                              _loadTranslations();
-                            },
-                            tooltip: 'Actualiser les traductions',
-                          ),
-                      ],
-                    ),
-                    subtitle: _isLoadingTranslations
-                        ? const CircularProgressIndicator()
-                        : _darijaNames.isEmpty
-                            ? Text(widget.plant.darijaName,
-                                style: const TextStyle(
-                                    fontSize: 18, fontFamily: 'Arabic'))
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _darijaNames
-                                    .map((name) => Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 4),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.circle,
-                                                  size: 8,
-                                                  color: Colors.green[700]),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(name,
-                                                    style: const TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily: 'Arabic')),
-                                              ),
-                                            ],
-                                          ),
-                                        ))
-                                    .toList(),
-                              ),
+            Image.file(widget.photo,
+                height: 240, width: double.infinity, fit: BoxFit.cover),
+            // gradient overlay
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 90,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.6),
+                      Colors.transparent,
+                    ],
                   ),
-                  if (_darijaNames.length > 1)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text('${_darijaNames.length} noms disponibles',
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.grey[600])),
+                ),
+              ),
+            ),
+            // plant name overlay
+            Positioned(
+              bottom: 14,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.plant.name,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.2,
                     ),
+                  ),
+                  Text(
+                    widget.plant.scientificName,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.white.withOpacity(0.82),
+                    ),
+                  ),
                 ],
               ),
-            ),
-
-            // TAMAZIGHT NAMES (Multiple)
-            Card(
-              child: Column(
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.translate),
-                    title: const Text('ⵜⴰⵎⴰⵣⵉⵖⵜ',
-                        style: TextStyle(fontFamily: 'Tifinagh')),
-                    subtitle: _isLoadingTranslations
-                        ? const CircularProgressIndicator()
-                        : _tamazightNames.isEmpty
-                            ? Text(widget.plant.tamazightName,
-                                style: const TextStyle(
-                                    fontSize: 18, fontFamily: 'Tifinagh'))
-                            : Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: _tamazightNames
-                                    .map((name) => Padding(
-                                          padding:
-                                              const EdgeInsets.only(bottom: 4),
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.circle,
-                                                  size: 8,
-                                                  color: Colors.blue[700]),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(name,
-                                                    style: const TextStyle(
-                                                        fontSize: 18,
-                                                        fontFamily:
-                                                            'Tifinagh')),
-                                              ),
-                                            ],
-                                          ),
-                                        ))
-                                    .toList(),
-                              ),
-                  ),
-                  if (_tamazightNames.length > 1)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text('${_tamazightNames.length} noms disponibles',
-                          style:
-                              TextStyle(fontSize: 12, color: Colors.grey[600])),
-                    ),
-                ],
-              ),
-            ),
-
-            // Family
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.family_restroom),
-                title: const Text('Famille'),
-                subtitle: Text(widget.plant.family),
-              ),
-            ),
-
-            // Confidence
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.percent),
-                title: const Text('Confiance'),
-                subtitle: Text('${widget.plant.confidencePercentage}%'),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Contribute translation (optional)
-            if (_shouldShowTranslationButton())
-              Center(
-                child: TextButton.icon(
-                  onPressed: () => _suggestTranslation(context),
-                  icon: const Icon(Icons.contact_support, size: 16),
-                  label:
-                      const Text('Proposer une traduction en Darija/Tamazight'),
-                ),
-              ),
-
-            const SizedBox(height: 24),
-
-            // Bottom buttons
-            Column(
-              children: [
-                // Share with community button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ShareScreen(
-                            plant: widget.plant,
-                            photo: widget.photo,
-                            identificationId: widget.identificationId,
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.share),
-                    label: const Text('Share with community'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Existing buttons row
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.camera_alt),
-                        label: const Text('Nouvelle photo'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const HistoryScreen()),
-                          );
-                        },
-                        icon: const Icon(Icons.history),
-                        label: const Text('Voir historique'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
             ),
           ],
         ),
@@ -332,36 +269,448 @@ class _ResultScreenState extends State<ResultScreen> {
     );
   }
 
-  bool _shouldShowTranslationButton() {
-    // Always show the translation proposal button
-    return true;
-  }
+  // ── confidence banner ──────────────────────────────────────────────────────
+  Widget _buildConfidenceBanner() {
+    final pct = widget.plant.confidencePercentage;
+    final color = pct >= 80
+        ? AppTheme.primary
+        : pct >= 50
+            ? AppTheme.badgePlantOfDay
+            : Colors.redAccent;
 
-  void _suggestTranslation(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TranslationProposalScreen(plant: widget.plant),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.verified_rounded, size: 15, color: color),
+              const SizedBox(width: 6),
+              Text(
+                'Confiance de l\'identification',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textSecondary,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '$pct%',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+            child: LinearProgressIndicator(
+              value: pct / 100,
+              minHeight: 7,
+              backgroundColor: AppTheme.divider,
+              valueColor: AlwaysStoppedAnimation(color),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+  // ── info grid ──────────────────────────────────────────────────────────────
+  Widget _buildInfoGrid() {
+    return Row(
+      children: [
+        Expanded(
+          child: _InfoTile(
+            icon: Icons.science_rounded,
+            label: 'Famille',
+            value: widget.plant.family,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _InfoTile(
+            icon: Icons.eco_rounded,
+            label: 'Nom scientifique',
+            value: widget.plant.scientificName,
+            italic: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── translation card ───────────────────────────────────────────────────────
+  Widget _buildTranslationCard({
+    required String language,
+    required String script,
+    required String fontFamily,
+    required List<String> names,
+    required String fallback,
+    required Color accentColor,
+    required Color accentBg,
+  }) {
+    final displayNames =
+        names.isNotEmpty ? names : (fallback.isNotEmpty ? [fallback] : []);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: Colors.green),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 80,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w500),
+          // Header row
+          Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accentBg,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                ),
+                child:
+                    Icon(Icons.translate_rounded, size: 17, color: accentColor),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(language,
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: accentColor,
+                          letterSpacing: 0.3)),
+                  Text(script,
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: fontFamily,
+                          color: AppTheme.textSecondary)),
+                ],
+              ),
+              const Spacer(),
+              // Refresh button
+              GestureDetector(
+                onTap: () {
+                  setState(() => _isLoadingTranslations = true);
+                  _loadTranslations();
+                },
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: AppTheme.scaffoldBg,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                  ),
+                  child: Icon(Icons.refresh_rounded,
+                      size: 16, color: AppTheme.textSecondary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: AppTheme.divider),
+          const SizedBox(height: 12),
+          // Names list
+          if (_isLoadingTranslations)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: accentColor),
+                ),
+              ),
+            )
+          else if (displayNames.isEmpty)
+            Text('Aucune traduction disponible',
+                style: TextStyle(
+                    fontSize: 13.5,
+                    fontStyle: FontStyle.italic,
+                    color: AppTheme.textSecondary))
+          else
+            Column(
+              children: displayNames.asMap().entries.map((entry) {
+                final isLast = entry.key == displayNames.length - 1;
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              entry.value,
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontFamily: fontFamily,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!isLast)
+                      const Divider(height: 1, color: AppTheme.divider),
+                  ],
+                );
+              }).toList(),
+            ),
+          if (displayNames.length > 1) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: accentBg,
+                borderRadius: BorderRadius.circular(AppTheme.radiusPill),
+              ),
+              child: Text(
+                '${displayNames.length} noms disponibles',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: accentColor),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── action buttons ─────────────────────────────────────────────────────────
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        // Propose translation
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => TranslationProposalScreen(plant: widget.plant)),
+          ),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 13),
+            decoration: BoxDecoration(
+              color: AppTheme.translationBg,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(color: AppTheme.translationBorder),
+              boxShadow: AppTheme.cardShadow,
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.contact_support_rounded,
+                    size: 17, color: AppTheme.badgeTranslation),
+                SizedBox(width: 8),
+                Text(
+                  'Proposer une traduction Darija / Tamazight',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.badgeTranslation,
+                  ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: Text(value),
+        ),
+        const SizedBox(height: 10),
+        // Share with community — primary
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ShareScreen(
+                plant: widget.plant,
+                photo: widget.photo,
+                identificationId: widget.identificationId,
+              ),
+            ),
+          ),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              color: AppTheme.primary,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primary.withOpacity(0.30),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.people_rounded, size: 18, color: Colors.white),
+                SizedBox(width: 8),
+                Text(
+                  'Partager avec la communauté',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            // New photo — secondary solid
+            Expanded(
+              child: GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBg,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border:
+                        Border.all(color: AppTheme.primary.withOpacity(0.35)),
+                    boxShadow: AppTheme.cardShadow,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.camera_alt_rounded,
+                          size: 17, color: AppTheme.primary),
+                      SizedBox(width: 7),
+                      Text('Nouvelle photo',
+                          style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.primary)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // History — ghost
+            Expanded(
+              child: GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardBg,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.divider),
+                    boxShadow: AppTheme.cardShadow,
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history_rounded,
+                          size: 17, color: AppTheme.textSecondary),
+                      SizedBox(width: 7),
+                      Text('Historique',
+                          style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  REUSABLE ATOMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Small info tile used in the 2-column grid
+class _InfoTile extends StatelessWidget {
+  const _InfoTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.italic = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool italic;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: AppTheme.primary),
+              const SizedBox(width: 5),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary,
+                      letterSpacing: 0.3)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+              fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+              color: AppTheme.textPrimary,
+            ),
           ),
         ],
       ),
