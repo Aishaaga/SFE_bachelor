@@ -187,7 +187,7 @@ class ApiService {
         Uri.parse(
             '${Constants.apiUrl}/gbif/occurrences/${Uri.encodeComponent(scientificName)}?limit=200'),
         headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 8));
+      ).timeout(const Duration(seconds: 15));
       if (response.statusCode == 401) {
         await _authService.logout();
         AppNavigator.goToLogin(); // <-- UNE LIGNE
