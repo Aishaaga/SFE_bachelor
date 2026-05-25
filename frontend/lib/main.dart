@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sfe_mobile/utils/navigation.dart' show AppNavigator;
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/camera_screen.dart';
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: AppNavigator.navigatorKey,
       title: 'SFE Biodiversité',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

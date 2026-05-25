@@ -7,6 +7,7 @@ import '../models/plant.dart';
 import 'auth_service.dart';
 import 'cache_service.dart'; // ← ADD THIS IMPORT
 import 'package:http_parser/http_parser.dart';
+import '../utils/navigation.dart';
 
 class ApiService {
   final AuthService _authService = AuthService();
@@ -67,6 +68,11 @@ class ApiService {
           throw Exception('PlantNet timeout after 50 seconds');
         },
       );
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        return {'success': false, 'message': 'Session expirée'};
+      }
       print(
           '✅ Response received (${DateTime.now().difference(startTime).inMilliseconds}ms)');
       print('🔍 STEP 4: Reading response...');
@@ -153,6 +159,12 @@ class ApiService {
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 5));
 
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        return 0;
+      }
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return data['occurrenceCount'] ?? 0;
@@ -176,7 +188,11 @@ class ApiService {
             '${Constants.apiUrl}/gbif/occurrences/${Uri.encodeComponent(scientificName)}?limit=200'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 8));
-
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        return [];
+      }
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         return List<Map<String, dynamic>>.from(data['occurrences'] ?? []);
@@ -200,6 +216,12 @@ class ApiService {
         Uri.parse('${Constants.apiUrl}/my-identifications'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        return {'success': false, 'message': 'Session expirée'};
+      }
 
       final data = jsonDecode(response.body);
 
@@ -236,6 +258,12 @@ class ApiService {
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
 
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin();
+        return {'success': false, 'message': 'Session expirée'};
+      }
+
       final data = jsonDecode(response.body);
 
       return {
@@ -262,6 +290,12 @@ class ApiService {
         Uri.parse('${Constants.apiUrl}/plants/$id'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        return {'success': false, 'message': 'Session expirée'};
+      }
 
       final data = jsonDecode(response.body);
 
@@ -290,6 +324,11 @@ class ApiService {
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 15));
 
+      if (response.statusCode == 401) {
+        await _authService.logout();
+        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        return [];
+      }
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
