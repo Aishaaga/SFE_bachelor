@@ -557,10 +557,19 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
                   initialZoom: 3,
                 ),
                 children: [
+                  //TileLayer(
+                  //urlTemplate:
+                  //'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  //userAgentPackageName: 'com.example.sfe_mobile',
+                  //),
+
                   TileLayer(
                     urlTemplate:
-                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                    subdomains: const ['a', 'b', 'c'],
                     userAgentPackageName: 'com.example.sfe_mobile',
+                    // 👇 Ajoutez cette ligne pour gérer le placeholder {r} pour les écrans Retina
+                    retinaMode: RetinaMode.isHighDensity(context),
                   ),
 
                   // Only show data when not loading or if we have data
