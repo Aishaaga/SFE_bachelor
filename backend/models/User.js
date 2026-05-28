@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -18,7 +18,6 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
-  // Profile fields
   name: {
     type: String,
     required: false,
@@ -42,7 +41,6 @@ const userSchema = new mongoose.Schema({
     required: false,
     default: ''
   },
-  // Statistics
   contributionsCount: {
     type: Number,
     default: 0
@@ -61,24 +59,31 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Version avec async/await - PAS de paramètre 'next'
-userSchema.pre('save', async function() {
-  console.log(' pre save - hachage');
+// ✅ UN SEUL pre('save') - version corrigée
+userSchema.pre('save', async function(next) {
+  console.log('🔐 pre save - hachage');
   
   if (!this.isModified('password')) {
     console.log('Mot de passe non modifié');
-    return;
+    return next();
   }
   
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  console.log('Mot de passe haché');
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    console.log('✅ Mot de passe haché');
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-// Méthode pour comparer les mots de passe
-userSchema.methods.comparePassword = async function(candidatePassword) {
-  console.log(' Comparaison...');
-  return await bcrypt.compare(candidatePassword, this.password);
+// ✅ Méthode comparePassword
+userSchema.methods.comparePassword = async function(password) {
+  console.log('🔍 Comparaison bcrypt...');
+  const isValid = await bcrypt.compare(password, this.password);
+  console.log('📊 Résultat comparaison:', isValid);
+  return isValid;
 };
 
 module.exports = mongoose.model('User', userSchema);
