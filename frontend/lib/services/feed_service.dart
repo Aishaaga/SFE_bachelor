@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
+import 'auth_service.dart';
 
 class FeedService {
   // Share a discovery to the community feed
@@ -37,6 +38,14 @@ class FeedService {
           'location': location,
         }),
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
 
       final data = jsonDecode(response.body);
 
@@ -89,6 +98,14 @@ class FeedService {
         },
       );
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
+
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
@@ -121,6 +138,14 @@ class FeedService {
         },
       );
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
+
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
@@ -151,6 +176,14 @@ class FeedService {
           'Authorization': 'Bearer ${await _getToken()}',
         },
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
 
       final data = jsonDecode(response.body);
 
@@ -185,6 +218,14 @@ class FeedService {
           'Authorization': 'Bearer ${await _getToken()}',
         },
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
 
       final data = jsonDecode(response.body);
 
@@ -226,6 +267,14 @@ class FeedService {
         }),
       );
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
+
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
@@ -258,6 +307,14 @@ class FeedService {
           'Authorization': 'Bearer ${await _getToken()}',
         },
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
 
       final data = jsonDecode(response.body);
 

@@ -25,6 +25,11 @@ class ProposalService {
         headers: headers,
       );
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return [];
+      }
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success']) {
@@ -61,6 +66,11 @@ class ProposalService {
       print('DEBUG: Status code: ${response.statusCode}');
       print('DEBUG: Response body: ${response.body}');
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        throw Exception('Session expirée');
+      }
+
       if (response.statusCode != 201) {
         final errorData = json.decode(response.body);
         throw Exception(errorData['message'] ?? 'Erreur lors de la sauvegarde');
@@ -82,6 +92,11 @@ class ProposalService {
         Uri.parse('$_baseUrl?status=$statusString&page=$page&limit=$limit'),
         headers: headers,
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return [];
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -108,6 +123,11 @@ class ProposalService {
             '$_baseUrl/scientific/${Uri.encodeComponent(scientificName)}'),
         headers: headers,
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return [];
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -140,6 +160,11 @@ class ProposalService {
         }),
       );
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        throw Exception('Session expirée');
+      }
+
       if (response.statusCode != 200) {
         final errorData = json.decode(response.body);
         throw Exception(
@@ -159,6 +184,11 @@ class ProposalService {
         headers: headers,
       );
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        throw Exception('Session expirée');
+      }
+
       if (response.statusCode != 200) {
         final errorData = json.decode(response.body);
         throw Exception(
@@ -177,6 +207,17 @@ class ProposalService {
         Uri.parse('$_baseUrl/stats'),
         headers: headers,
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'total': 0,
+          'pending': 0,
+          'approved': 0,
+          'rejected': 0,
+          'needs_review': 0,
+        };
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -241,6 +282,11 @@ class ProposalService {
         uri,
         headers: headers,
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return [];
+      }
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

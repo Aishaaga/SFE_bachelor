@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/constants.dart';
 import '../models/user.dart';
+import '../utils/navigation.dart';
 
 class AuthService {
   final storage = FlutterSecureStorage();
@@ -95,5 +96,13 @@ class AuthService {
   // Récupérer l'email de l'utilisateur actuel
   Future<String?> getCurrentUserEmail() async {
     return await storage.read(key: Constants.userEmailKey);
+  }
+
+  // Gérer l'erreur 401 (token expiré) - déconnexion et redirection vers login
+  static Future<void> handle401Error() async {
+    final storage = FlutterSecureStorage();
+    await storage.delete(key: Constants.tokenKey);
+    await storage.delete(key: Constants.userEmailKey);
+    AppNavigator.goToLogin();
   }
 }

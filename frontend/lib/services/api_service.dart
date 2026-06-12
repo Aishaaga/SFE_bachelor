@@ -69,8 +69,7 @@ class ApiService {
         },
       );
       if (response.statusCode == 401) {
-        await _authService.logout();
-        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        await AuthService.handle401Error();
         return {'success': false, 'message': 'Session expirée'};
       }
       print(
@@ -160,8 +159,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 401) {
-        await _authService.logout();
-        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        await AuthService.handle401Error();
         return 0;
       }
 
@@ -189,8 +187,7 @@ class ApiService {
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 15));
       if (response.statusCode == 401) {
-        await _authService.logout();
-        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        await AuthService.handle401Error();
         return [];
       }
       if (response.statusCode == 200) {
@@ -218,8 +215,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 401) {
-        await _authService.logout();
-        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        await AuthService.handle401Error();
         return {'success': false, 'message': 'Session expirée'};
       }
 
@@ -292,8 +288,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 401) {
-        await _authService.logout();
-        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        await AuthService.handle401Error();
         return {'success': false, 'message': 'Session expirée'};
       }
 
@@ -325,8 +320,7 @@ class ApiService {
       ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 401) {
-        await _authService.logout();
-        AppNavigator.goToLogin(); // <-- UNE LIGNE
+        await AuthService.handle401Error();
         return [];
       }
       if (response.statusCode == 200) {

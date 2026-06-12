@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/constants.dart';
 import '../models/user.dart';
+import 'auth_service.dart';
 
 class ProfileService {
   final storage = FlutterSecureStorage();
@@ -33,6 +34,11 @@ class ProfileService {
 
       print('DEBUG: Response status: ${response.statusCode}');
       print('DEBUG: Response body: ${response.body}');
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {'success': false, 'message': 'Session expirée'};
+      }
 
       final data = jsonDecode(response.body);
 
@@ -83,6 +89,11 @@ class ProfileService {
         },
         body: jsonEncode(body),
       );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {'success': false, 'message': 'Session expirée'};
+      }
 
       final data = jsonDecode(response.body);
 

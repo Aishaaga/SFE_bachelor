@@ -15,6 +15,11 @@ class NotificationService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
+    if (response.statusCode == 401) {
+      await AuthService.handle401Error();
+      return [];
+    }
+
     final data = jsonDecode(response.body);
 
     if (data['success']) {
@@ -33,6 +38,11 @@ class NotificationService {
       headers: {'Authorization': 'Bearer $token'},
     );
 
+    if (response.statusCode == 401) {
+      await AuthService.handle401Error();
+      return 0;
+    }
+
     final data = jsonDecode(response.body);
     return data['unreadCount'] ?? 0;
   }
@@ -40,27 +50,39 @@ class NotificationService {
   Future<void> markAsRead(String notificationId) async {
     final token = await _authService.getToken();
 
-    await http.put(
+    final response = await http.put(
       Uri.parse('${Constants.apiUrl}/notifications/$notificationId/read'),
       headers: {'Authorization': 'Bearer $token'},
     );
+
+    if (response.statusCode == 401) {
+      await AuthService.handle401Error();
+    }
   }
 
   Future<void> markAllAsRead() async {
     final token = await _authService.getToken();
 
-    await http.put(
+    final response = await http.put(
       Uri.parse('${Constants.apiUrl}/notifications/read-all'),
       headers: {'Authorization': 'Bearer $token'},
     );
+
+    if (response.statusCode == 401) {
+      await AuthService.handle401Error();
+    }
   }
 
   Future<void> deleteNotification(String notificationId) async {
     final token = await _authService.getToken();
 
-    await http.delete(
+    final response = await http.delete(
       Uri.parse('${Constants.apiUrl}/notifications/$notificationId'),
       headers: {'Authorization': 'Bearer $token'},
     );
+
+    if (response.statusCode == 401) {
+      await AuthService.handle401Error();
+    }
   }
 }

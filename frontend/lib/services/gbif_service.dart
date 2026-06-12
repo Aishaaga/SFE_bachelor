@@ -80,6 +80,11 @@ class GBIFService {
       print(
           '⏰ HTTP response received in ${DateTime.now().difference(requestStart).inMilliseconds}ms');
 
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {'success': false, 'message': 'Session expirée'};
+      }
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
@@ -142,6 +147,11 @@ class GBIFService {
             '$baseUrl/gbif/summary/${Uri.encodeComponent(scientificName)}'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return 0;
+      }
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
