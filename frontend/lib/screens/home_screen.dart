@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../widgets/feed_post_card.dart';
@@ -197,24 +198,35 @@ class SfeAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: const Center(
-              child: Text('🌿', style: TextStyle(fontSize: 18)),
+            child: Center(
+              child: Image.asset(
+                'assets/images/logo_sfe.png',
+                width: 24,
+                height: 24,
+              ),
             ),
           ),
-          const SizedBox(width: 10),
-          const Text(
-            'SFE',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
+          const SizedBox(width: 12),
+          Text(
+            'FLORAI',
+            style: GoogleFonts.piazzolla(
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
               color: Colors.white,
-              letterSpacing: 1.2,
+              letterSpacing: 2.0,
             ),
           ),
         ],
