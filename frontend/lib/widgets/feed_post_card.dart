@@ -4,6 +4,7 @@ import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../utils/constants.dart';
 import '../widgets/app_theme.dart';
+import '../screens/comments_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  REUSABLE ATOMS
@@ -152,6 +153,7 @@ class FeedPostCard extends StatefulWidget {
   final VoidCallback onLike;
   final VoidCallback onFlag;
   final Function(FeedPost)? onVoteUpdate;
+  final Function(FeedPost)? onCommentUpdate;
 
   const FeedPostCard({
     super.key,
@@ -159,6 +161,7 @@ class FeedPostCard extends StatefulWidget {
     required this.onLike,
     required this.onFlag,
     this.onVoteUpdate,
+    this.onCommentUpdate,
   });
 
   @override
@@ -479,7 +482,17 @@ class _FeedPostCardState extends State<FeedPostCard> {
               _ActionButton(
                 icon: Icons.chat_bubble_outline_rounded,
                 count: widget.post.commentCount.toString(),
-                onTap: () {},
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CommentsScreen(post: widget.post),
+                    ),
+                  );
+                  if (result != null && result is FeedPost) {
+                    widget.onCommentUpdate?.call(result);
+                  }
+                },
               ),
               const Spacer(),
               // Upvote / Downvote (translation only, not approved)

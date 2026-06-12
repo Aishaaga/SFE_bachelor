@@ -7,14 +7,14 @@ const feedCommentSchema = new mongoose.Schema({
     ref: 'FeedPost',
     required: true
   },
-  
+
   // The user who wrote the comment
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  
+
   // Comment content
   content: {
     type: String,
@@ -22,21 +22,33 @@ const feedCommentSchema = new mongoose.Schema({
     trim: true,
     maxlength: 1000 // Reasonable limit for comments
   },
-  
+
+  // Anonymous comment flag
+  isAnonymous: {
+    type: Boolean,
+    default: false
+  },
+
+  // Anonymous ID (random number to differentiate anonymous users)
+  anonymousId: {
+    type: Number,
+    default: null
+  },
+
   // For threaded comments (replies)
   parentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'FeedComment',
     default: null
   },
-  
+
   // Comment status
   status: {
     type: String,
     enum: ['active', 'flagged', 'hidden', 'deleted'],
     default: 'active'
   },
-  
+
   // Edit tracking
   isEdited: {
     type: Boolean,
@@ -46,7 +58,7 @@ const feedCommentSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
-  
+
   // Timestamp
   createdAt: {
     type: Date,
@@ -75,17 +87,26 @@ feedCommentSchema.statics.getPostComments = async function(feedPostId, options =
     sortBy = 'createdAt',
     sortOrder = 'asc'
   } = options;
-  
+
   const skip = (page - 1) * limit;
   const sort = {};
   sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-  
-  return await this.find({ feedPostId, status })
+
+  const comments = await this.find({ feedPostId, status })
     .populate('userId', 'username profileImage')
     .populate('parentId', 'content userId')
     .sort(sort)
     .skip(skip)
     .limit(limit);
+
+  // Remove user data for anonymous comments but keep isAnonymous and anonymousId
+  return comments.map(comment => {
+    const commentObj = comment.toObject();
+    if (commentObj.isAnonymous) {
+      commentObj.userId = undefined;
+    }
+    return commentObj;
+  });
 };
 
 // Method to get comment count for a post
@@ -95,9 +116,18 @@ feedCommentSchema.statics.getCommentCount = async function(feedPostId, status = 
 
 // Method to get replies for a comment
 feedCommentSchema.statics.getReplies = async function(parentId, status = 'active') {
-  return await this.find({ parentId, status })
+  const replies = await this.find({ parentId, status })
     .populate('userId', 'username profileImage')
     .sort({ createdAt: 1 });
+
+  // Remove user data for anonymous comments but keep isAnonymous and anonymousId
+  return replies.map(reply => {
+    const replyObj = reply.toObject();
+    if (replyObj.isAnonymous) {
+      replyObj.userId = undefined;
+    }
+    return replyObj;
+  });
 };
 
 // Method to edit a comment

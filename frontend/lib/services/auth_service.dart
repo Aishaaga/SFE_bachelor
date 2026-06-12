@@ -23,6 +23,10 @@ class AuthService {
         // Sauvegarder le token
         await storage.write(key: Constants.tokenKey, value: data['token']);
         await storage.write(key: Constants.userEmailKey, value: email);
+        if (data['user'] != null && data['user']['id'] != null) {
+          await storage.write(
+              key: Constants.userIdKey, value: data['user']['id']);
+        }
 
         return {
           'success': true,
@@ -57,6 +61,10 @@ class AuthService {
         // Sauvegarder le token
         await storage.write(key: Constants.tokenKey, value: data['token']);
         await storage.write(key: Constants.userEmailKey, value: email);
+        if (data['user'] != null && data['user']['id'] != null) {
+          await storage.write(
+              key: Constants.userIdKey, value: data['user']['id']);
+        }
 
         return {
           'success': true,
@@ -80,6 +88,7 @@ class AuthService {
   Future<void> logout() async {
     await storage.delete(key: Constants.tokenKey);
     await storage.delete(key: Constants.userEmailKey);
+    await storage.delete(key: Constants.userIdKey);
   }
 
   // Vérifier si l'utilisateur est connecté
@@ -98,11 +107,17 @@ class AuthService {
     return await storage.read(key: Constants.userEmailKey);
   }
 
+  // Récupérer l'ID de l'utilisateur actuel
+  Future<String?> getCurrentUserId() async {
+    return await storage.read(key: Constants.userIdKey);
+  }
+
   // Gérer l'erreur 401 (token expiré) - déconnexion et redirection vers login
   static Future<void> handle401Error() async {
     final storage = FlutterSecureStorage();
     await storage.delete(key: Constants.tokenKey);
     await storage.delete(key: Constants.userEmailKey);
+    await storage.delete(key: Constants.userIdKey);
     AppNavigator.goToLogin();
   }
 }

@@ -403,6 +403,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _updateCommentCount(FeedPost updatedPost) {
+    setState(() {
+      final idx = _posts.indexWhere((p) => p.id == updatedPost.id);
+      if (idx != -1) {
+        _posts[idx] = updatedPost;
+      }
+    });
+  }
+
   // ── screens ────────────────────────────────
   List<Widget> _getScreens() => [
         _buildFeedScreen(),
@@ -515,6 +524,7 @@ class _HomeScreenState extends State<HomeScreen> {
             post: post,
             onLike: () => _likePost(post.id!),
             onFlag: () => _flagPost(post.id!),
+            onCommentUpdate: _updateCommentCount,
           );
         },
       ),

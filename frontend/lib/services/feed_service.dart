@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import '../utils/constants.dart';
 import 'auth_service.dart';
+import '../models/comment.dart';
 
 class FeedService {
   // Share a discovery to the community feed
@@ -343,5 +344,147 @@ class FeedService {
     // For now, returning empty string - you'll need to integrate with your auth system
     const flutterSecureStorage = FlutterSecureStorage();
     return await flutterSecureStorage.read(key: Constants.tokenKey) ?? '';
+  }
+
+  // Get comments for a post
+  Future<Map<String, dynamic>> getComments(String postId,
+      {int page = 1, int limit = 20}) async {
+    try {
+      final queryParams = <String, String>{
+        'page': page.toString(),
+        'limit': limit.toString(),
+      };
+
+      final uri =
+          Uri.parse('${Constants.apiUrl}/feed-comments/posts/$postId/comments')
+              .replace(queryParameters: queryParams);
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        final commentsData = data['comments'] as List;
+        final comments = commentsData
+            .map((commentJson) => Comment.fromJson(commentJson))
+            .toList();
+
+        return {
+          'success': true,
+          'comments': comments,
+          'pagination': data['pagination'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error fetching comments',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Add a comment to a post
+  Future<Map<String, dynamic>> addComment(String postId, String content,
+      {bool isAnonymous = false}) async {
+    try {
+      final response = await http.post(
+        Uri.parse('${Constants.apiUrl}/feed-comments/posts/$postId/comments'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+        body: jsonEncode({
+          'content': content,
+          'isAnonymous': isAnonymous,
+        }),
+      );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        final comment = Comment.fromJson(data['comment']);
+        return {
+          'success': true,
+          'comment': comment,
+          'commentCount': data['commentCount'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error adding comment',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
+  }
+
+  // Delete a comment
+  Future<Map<String, dynamic>> deleteComment(String commentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('${Constants.apiUrl}/feed-comments/comments/$commentId'),
+        headers: {
+          'Authorization': 'Bearer ${await _getToken()}',
+        },
+      );
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {
+          'success': false,
+          'message': 'Session expirée',
+        };
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'message': data['message'],
+          'commentCount': data['commentCount'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Error deleting comment',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Network error: $e',
+      };
+    }
   }
 }

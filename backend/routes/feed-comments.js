@@ -64,24 +64,24 @@ router.get('/posts/:postId/comments/count', async (req, res) => {
 router.post('/posts/:postId/comments', auth, async (req, res) => {
   try {
     const { postId } = req.params;
-    const { content, parentId = null } = req.body;
+    const { content, parentId = null, isAnonymous = false } = req.body;
     const userId = req.userId;
-    
+
     // Validate content
     if (!content || content.trim().length === 0) {
       return res.status(400).json({ message: 'Comment content is required' });
     }
-    
+
     if (content.length > 1000) {
       return res.status(400).json({ message: 'Comment too long (max 1000 characters)' });
     }
-    
+
     // Check if post exists
     const post = await FeedPost.findById(postId);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // If parentId is provided, check if parent comment exists
     if (parentId) {
       const parentComment = await FeedComment.findById(parentId);
@@ -89,23 +89,39 @@ router.post('/posts/:postId/comments', auth, async (req, res) => {
         return res.status(404).json({ message: 'Parent comment not found' });
       }
     }
-    
+
     // Create comment
-    const comment = await FeedComment.create({
+    const commentData = {
       feedPostId: postId,
       userId,
       content: content.trim(),
-      parentId
-    });
-    
-    // Populate user data
-    await comment.populate('userId', 'username profileImage');
-    
+      parentId,
+      isAnonymous: isAnonymous === true
+    };
+
+    // Generate random anonymous ID if anonymous
+    if (isAnonymous === true) {
+      commentData.anonymousId = Math.floor(Math.random() * 9000) + 1000; // 4-digit random number
+    }
+
+    const comment = await FeedComment.create(commentData);
+
+    // Populate user data (only if not anonymous)
+    if (!isAnonymous) {
+      await comment.populate('userId', 'username profileImage');
+    }
+
     // Update post's comment count
     const commentCount = await FeedComment.getCommentCount(postId);
-    
+
+    // Convert to plain object to ensure all fields are included
+    const commentObj = comment.toObject();
+    if (isAnonymous) {
+      commentObj.userId = undefined;
+    }
+
     res.status(201).json({
-      comment,
+      comment: commentObj,
       commentCount
     });
   } catch (error) {
@@ -143,8 +159,14 @@ router.put('/comments/:commentId', auth, async (req, res) => {
     // Edit comment
     await comment.editContent(content.trim());
     await comment.populate('userId', 'username profileImage');
-    
-    res.json(comment);
+
+    // Convert to plain object and handle anonymous comments
+    const commentObj = comment.toObject();
+    if (commentObj.isAnonymous) {
+      commentObj.userId = undefined;
+    }
+
+    res.json(commentObj);
   } catch (error) {
     console.error('Error editing comment:', error);
     res.status(500).json({ message: 'Server error' });
@@ -156,24 +178,29 @@ router.delete('/comments/:commentId', auth, async (req, res) => {
   try {
     const { commentId } = req.params;
     const userId = req.userId;
-    
+
     // Find comment and check ownership
     const comment = await FeedComment.findById(commentId);
     if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
     }
-    
+
+    // Prevent deletion of anonymous comments
+    if (comment.isAnonymous) {
+      return res.status(403).json({ message: 'Cannot delete anonymous comments' });
+    }
+
     if (comment.userId.toString() !== userId) {
       return res.status(403).json({ message: 'Not authorized to delete this comment' });
     }
-    
+
     // Soft delete comment
     await comment.softDelete();
-    
+
     // Update post's comment count
     const commentCount = await FeedComment.getCommentCount(comment.feedPostId);
-    
-    res.json({ 
+
+    res.json({
       message: 'Comment deleted successfully',
       commentCount
     });
@@ -207,16 +234,22 @@ router.get('/comments/:commentId/replies', async (req, res) => {
 router.get('/comments/:commentId', async (req, res) => {
   try {
     const { commentId } = req.params;
-    
+
     const comment = await FeedComment.findById(commentId)
       .populate('userId', 'username profileImage')
       .populate('parentId', 'content userId');
-    
+
     if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
     }
-    
-    res.json(comment);
+
+    // Convert to plain object and handle anonymous comments
+    const commentObj = comment.toObject();
+    if (commentObj.isAnonymous) {
+      commentObj.userId = undefined;
+    }
+
+    res.json(commentObj);
   } catch (error) {
     console.error('Error getting comment:', error);
     res.status(500).json({ message: 'Server error' });
