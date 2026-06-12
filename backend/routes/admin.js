@@ -307,4 +307,150 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/users - Get all users with pagination and filtering
+router.get('/users', auth, adminAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search || '';
+    const role = req.query.role || '';
+    
+    const skip = (page - 1) * limit;
+    
+    const query = {};
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (role) {
+      query.role = role;
+    }
+    
+    const users = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+    
+    const total = await User.countDocuments(query);
+    
+    res.json({
+      success: true,
+      users: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ success: false, message: 'Error fetching users' });
+  }
+});
+
+// GET /api/admin/users/:id - Get a specific user
+router.get('/users/:id', auth, adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    res.json({
+      success: true,
+      user: user
+    });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ success: false, message: 'Error fetching user' });
+  }
+});
+
+// PUT /api/admin/users/:id - Update user
+router.put('/users/:id', auth, adminAuth, async (req, res) => {
+  try {
+    const { name, role, bio, location } = req.body;
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    if (name !== undefined) user.name = name;
+    if (role !== undefined) user.role = role;
+    if (bio !== undefined) user.bio = bio;
+    if (location !== undefined) user.location = location;
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      user: user
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ success: false, message: 'Error updating user' });
+  }
+});
+
+// DELETE /api/admin/users/:id - Delete a user
+router.delete('/users/:id', auth, adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    if (user._id.toString() === req.userId) {
+      return res.status(400).json({ success: false, message: 'Cannot delete yourself' });
+    }
+    
+    await User.findByIdAndDelete(req.params.id);
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ success: false, message: 'Error deleting user' });
+  }
+});
+
+// POST /api/admin/users/:id/reset-password - Reset user password
+router.post('/users/:id/reset-password', auth, adminAuth, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    user.password = newPassword;
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ success: false, message: 'Error resetting password' });
+  }
+});
+
 module.exports = router;
