@@ -53,11 +53,37 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.eco, size: 80, color: Colors.green),
-                const SizedBox(height: 20),
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      'assets/images/logo_sfe.png',
+                      width: 50,
+                      height: 50,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
                 const Text(
-                  'SFE Biodiversité',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  'FLORAI',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF2E7D32),
+                    letterSpacing: 1.5,
+                  ),
                 ),
                 const SizedBox(height: 40),
                 TextFormField(

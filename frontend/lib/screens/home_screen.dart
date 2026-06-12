@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../widgets/feed_post_card.dart';
@@ -195,6 +194,7 @@ class SfeAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: AppTheme.primary,
       elevation: 0,
       toolbarHeight: 60,
+      automaticallyImplyLeading: false,
       title: Row(
         children: [
           Container(
@@ -220,13 +220,13 @@ class SfeAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
+          const Text(
             'FLORAI',
-            style: GoogleFonts.piazzolla(
+            style: TextStyle(
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: Colors.white,
-              letterSpacing: 2.0,
+              letterSpacing: 1.2,
             ),
           ),
         ],

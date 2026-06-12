@@ -180,8 +180,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
-            child: const Center(
-              child: Text('🌿', style: TextStyle(fontSize: 18)),
+            child: Image.asset(
+              'assets/images/logo_sfe.png',
+              width: 24,
+              height: 24,
             ),
           ),
           const SizedBox(width: 10),
