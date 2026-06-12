@@ -107,8 +107,8 @@ router.post('/posts/:postId/comments', auth, async (req, res) => {
     const comment = await FeedComment.create(commentData);
 
     // Populate user data (only if not anonymous)
-    if (!isAnonymous) {
-      await comment.populate('userId', 'username profileImage');
+    if (isAnonymous !== true) {
+      await comment.populate('userId', 'name email profileImage');
     }
 
     // Update post's comment count
@@ -116,7 +116,7 @@ router.post('/posts/:postId/comments', auth, async (req, res) => {
 
     // Convert to plain object to ensure all fields are included
     const commentObj = comment.toObject();
-    if (isAnonymous) {
+    if (isAnonymous === true) {
       commentObj.userId = undefined;
     }
 
@@ -158,11 +158,11 @@ router.put('/comments/:commentId', auth, async (req, res) => {
     
     // Edit comment
     await comment.editContent(content.trim());
-    await comment.populate('userId', 'username profileImage');
+    await comment.populate('userId', 'name email profileImage');
 
     // Convert to plain object and handle anonymous comments
     const commentObj = comment.toObject();
-    if (commentObj.isAnonymous) {
+    if (commentObj.isAnonymous === true) {
       commentObj.userId = undefined;
     }
 
@@ -186,7 +186,7 @@ router.delete('/comments/:commentId', auth, async (req, res) => {
     }
 
     // Prevent deletion of anonymous comments
-    if (comment.isAnonymous) {
+    if (comment.isAnonymous === true) {
       return res.status(403).json({ message: 'Cannot delete anonymous comments' });
     }
 
@@ -236,7 +236,7 @@ router.get('/comments/:commentId', async (req, res) => {
     const { commentId } = req.params;
 
     const comment = await FeedComment.findById(commentId)
-      .populate('userId', 'username profileImage')
+      .populate('userId', 'name email profileImage')
       .populate('parentId', 'content userId');
 
     if (!comment) {
@@ -245,7 +245,7 @@ router.get('/comments/:commentId', async (req, res) => {
 
     // Convert to plain object and handle anonymous comments
     const commentObj = comment.toObject();
-    if (commentObj.isAnonymous) {
+    if (commentObj.isAnonymous === true) {
       commentObj.userId = undefined;
     }
 

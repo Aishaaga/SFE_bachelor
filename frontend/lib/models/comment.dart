@@ -112,19 +112,22 @@ class Comment {
 
 class CommentUser {
   final String? id;
-  final String? username;
+  final String? name;
+  final String? email;
   final String? profileImage;
 
   CommentUser({
     this.id,
-    this.username,
+    this.name,
+    this.email,
     this.profileImage,
   });
 
   factory CommentUser.fromJson(Map<String, dynamic> json) {
     return CommentUser(
       id: json['_id']?.toString() ?? json['id']?.toString(),
-      username: json['username']?.toString(),
+      name: json['name']?.toString(),
+      email: json['email']?.toString(),
       profileImage: json['profileImage']?.toString(),
     );
   }
@@ -132,8 +135,19 @@ class CommentUser {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'username': username,
+      'name': name,
+      'email': email,
       'profileImage': profileImage,
     };
+  }
+
+  String get displayName {
+    if (name != null && name!.isNotEmpty) {
+      return name!;
+    }
+    if (email != null && email!.isNotEmpty) {
+      return email!;
+    }
+    return 'Unknown';
   }
 }

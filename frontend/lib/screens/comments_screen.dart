@@ -500,7 +500,7 @@ class _CommentTile extends StatelessWidget {
                     Text(
                       comment.isAnonymous
                           ? 'Anonymous #${comment.anonymousId ?? '??'}'
-                          : (comment.user?.username ?? 'Unknown'),
+                          : (comment.user?.displayName ?? 'Unknown'),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

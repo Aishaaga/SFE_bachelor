@@ -93,16 +93,18 @@ feedCommentSchema.statics.getPostComments = async function(feedPostId, options =
   sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
   const comments = await this.find({ feedPostId, status })
-    .populate('userId', 'username profileImage')
+    .populate('userId', 'name email profileImage')
     .populate('parentId', 'content userId')
     .sort(sort)
     .skip(skip)
     .limit(limit);
 
-  // Remove user data for anonymous comments but keep isAnonymous and anonymousId
+  // Convert to plain objects and handle anonymous comments
   return comments.map(comment => {
     const commentObj = comment.toObject();
-    if (commentObj.isAnonymous) {
+    // Handle missing isAnonymous field (default to false for existing documents)
+    const isAnon = commentObj.isAnonymous === true;
+    if (isAnon) {
       commentObj.userId = undefined;
     }
     return commentObj;
@@ -117,13 +119,14 @@ feedCommentSchema.statics.getCommentCount = async function(feedPostId, status = 
 // Method to get replies for a comment
 feedCommentSchema.statics.getReplies = async function(parentId, status = 'active') {
   const replies = await this.find({ parentId, status })
-    .populate('userId', 'username profileImage')
+    .populate('userId', 'name email profileImage')
     .sort({ createdAt: 1 });
 
   // Remove user data for anonymous comments but keep isAnonymous and anonymousId
   return replies.map(reply => {
     const replyObj = reply.toObject();
-    if (replyObj.isAnonymous) {
+    // Handle missing isAnonymous field (default to false for existing documents)
+    if (replyObj.isAnonymous === true) {
       replyObj.userId = undefined;
     }
     return replyObj;
