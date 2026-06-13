@@ -148,6 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           _pad(_buildStatsCard()),
                           const SizedBox(height: 24),
                           _pad(_buildLogoutButton()),
+                          const SizedBox(height: 80),
                         ],
                       ),
                     ),
