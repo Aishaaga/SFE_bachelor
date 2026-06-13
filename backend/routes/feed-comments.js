@@ -114,6 +114,10 @@ router.post('/posts/:postId/comments', auth, async (req, res) => {
     // Update post's comment count
     const commentCount = await FeedComment.getCommentCount(postId);
 
+    // Update the post's commentCount field
+    post.commentCount = commentCount;
+    await post.save();
+
     // Convert to plain object to ensure all fields are included
     const commentObj = comment.toObject();
     if (isAnonymous === true) {
@@ -199,6 +203,13 @@ router.delete('/comments/:commentId', auth, async (req, res) => {
 
     // Update post's comment count
     const commentCount = await FeedComment.getCommentCount(comment.feedPostId);
+
+    // Update the post's commentCount field
+    const post = await FeedPost.findById(comment.feedPostId);
+    if (post) {
+      post.commentCount = commentCount;
+      await post.save();
+    }
 
     res.json({
       message: 'Comment deleted successfully',

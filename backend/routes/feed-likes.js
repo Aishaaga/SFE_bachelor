@@ -97,11 +97,12 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
     
     // Get accurate like count
     const likeCount = await FeedLike.getLikeCount(postId);
-    
-    // Update the post's likes field for consistency (for all post types)
+
+    // Update the post's likes and likeCount fields for consistency (for all post types)
     post.likes = likeCount;
+    post.likeCount = likeCount;
     await post.save();
-    
+
     console.log('DEBUG: Updated like count:', likeCount);
     
     res.json({ 

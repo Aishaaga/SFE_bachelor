@@ -94,6 +94,16 @@ const feedPostSchema = new mongoose.Schema({
       return this.type === 'identification';
     }
   },
+
+  // Counters for likes and comments
+  likeCount: {
+    type: Number,
+    default: 0
+  },
+  commentCount: {
+    type: Number,
+    default: 0
+  },
   
   // Status
   status: {
@@ -120,21 +130,6 @@ feedPostSchema.index({ type: 1, status: 1, createdAt: -1 });
 feedPostSchema.index({ plantId: 1 });
 feedPostSchema.index({ userId: 1 });
 feedPostSchema.index({ 'location.level': 1, 'location.city': 1 });
-
-// Virtual methods for getting counts from relationships
-feedPostSchema.virtual('likeCount', {
-  ref: 'FeedLike',
-  localField: '_id',
-  foreignField: 'feedPostId',
-  count: true
-});
-
-feedPostSchema.virtual('commentCount', {
-  ref: 'FeedComment', 
-  localField: '_id',
-  foreignField: 'feedPostId',
-  count: true
-});
 
 // Method to get full post data with counts
 feedPostSchema.methods.getWithCounts = async function() {

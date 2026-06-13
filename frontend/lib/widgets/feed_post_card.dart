@@ -185,7 +185,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
     super.initState();
     _upvotes = widget.post.upvotes;
     _downvotes = widget.post.downvotes;
-    _likes = widget.post.likes;
+    _likes = widget.post.likeCount;
   }
 
   @override

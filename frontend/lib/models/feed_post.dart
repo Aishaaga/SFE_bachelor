@@ -15,6 +15,7 @@ class FeedPost {
   final int downvotes;
   final Location location;
   final int likes;
+  final int likeCount;
   final int commentCount;
   final String status;
   final bool isApproved;
@@ -38,6 +39,7 @@ class FeedPost {
     this.downvotes = 0,
     required this.location,
     this.likes = 0,
+    this.likeCount = 0,
     this.commentCount = 0,
     this.status = 'active',
     this.isApproved = false,
@@ -96,6 +98,7 @@ class FeedPost {
         downvotes: int.tryParse(json['downvotes']?.toString() ?? '0') ?? 0,
         location: Location.fromJson(json['location'] ?? {}),
         likes: int.tryParse(json['likes']?.toString() ?? '0') ?? 0,
+        likeCount: int.tryParse(json['likeCount']?.toString() ?? '0') ?? 0,
         commentCount:
             int.tryParse(json['commentCount']?.toString() ?? '0') ?? 0,
         status: json['status']?.toString() ?? 'active',
@@ -131,6 +134,7 @@ class FeedPost {
       'downvotes': downvotes,
       'location': location.toJson(),
       'likes': likes,
+      'likeCount': likeCount,
       'commentCount': commentCount,
       'status': status,
     };
@@ -152,6 +156,7 @@ class FeedPost {
     int? downvotes,
     Location? location,
     int? likes,
+    int? likeCount,
     int? commentCount,
     String? status,
     bool? isApproved,
@@ -175,6 +180,7 @@ class FeedPost {
       downvotes: downvotes ?? this.downvotes,
       location: location ?? this.location,
       likes: likes ?? this.likes,
+      likeCount: likeCount ?? this.likeCount,
       commentCount: commentCount ?? this.commentCount,
       status: status ?? this.status,
       isApproved: isApproved ?? this.isApproved,
