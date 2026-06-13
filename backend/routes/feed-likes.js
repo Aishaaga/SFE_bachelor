@@ -63,16 +63,15 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.userId; // Get from auth middleware
-    
+
     // Check if post exists
     const post = await FeedPost.findById(postId);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
+
     // Use FeedLike model for all post types to prevent multiple likes per user
-    console.log('DEBUG: Toggling like - postId:', postId, 'userId:', userId, 'postType:', post.type);
-    
+
     // Check if user already liked this post
     const existingLike = await FeedLike.findOne({
       feedPostId: postId,
@@ -84,7 +83,6 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
       // Unlike the post
       await FeedLike.deleteOne({ _id: existingLike._id });
       result = { liked: false, action: 'unliked' };
-      console.log('DEBUG: Post unliked');
     } else {
       // Like the post
       await FeedLike.create({
@@ -92,7 +90,6 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
         userId: userId
       });
       result = { liked: true, action: 'liked' };
-      console.log('DEBUG: Post liked');
     }
     
     // Get accurate like count
@@ -103,10 +100,9 @@ router.post('/posts/:postId/likes', auth, async (req, res) => {
     post.likeCount = likeCount;
     await post.save();
 
-    console.log('DEBUG: Updated like count:', likeCount);
-    
-    res.json({ 
-      ...result,
+    res.json({
+      success: true,
+      liked: result.liked,
       likes: likeCount
     });
   } catch (error) {

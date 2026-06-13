@@ -355,19 +355,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _likePost(String postId) async {
-    try {
-      final result = await _feedService.likePost(postId);
-      if (result['success']) {
-        setState(() {
-          final idx = _posts.indexWhere((p) => p.id == postId);
-          if (idx != -1) {
-            _posts[idx] = _posts[idx].copyWith(likes: result['likes']);
-          }
-        });
-      }
-    } catch (e) {
-      debugPrint('Error liking post: $e');
-    }
+    // This method is now just a placeholder - the actual like operation
+    // is handled in FeedPostCard to avoid double API calls
+    // No action needed here since FeedPostCard handles everything
   }
 
   Future<void> _flagPost(String postId) async {

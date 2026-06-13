@@ -731,20 +731,35 @@ class _FeedPostCardState extends State<FeedPostCard> {
     }
   }
 
+  bool _isLiking = false;
+
   Future<void> _handleLike() async {
+    if (_isLiking) return; // Prevent double-tap
+
+    setState(() {
+      _isLiking = true;
+    });
+
     try {
       final result = await _feedService.likePost(widget.post.id!);
       if (result['success']) {
         setState(() {
           _likes = result['likes'] ?? _likes;
           _isLiked = result['liked'] ?? !_isLiked;
+          _isLiking = false;
         });
         widget.onLike();
       } else {
+        setState(() {
+          _isLiking = false;
+        });
         _showSnack(result['message'] ?? 'Error liking post',
             backgroundColor: Colors.redAccent);
       }
     } catch (e) {
+      setState(() {
+        _isLiking = false;
+      });
       if (mounted) _showSnack('Error: $e', backgroundColor: Colors.redAccent);
     }
   }
