@@ -64,16 +64,16 @@ class _CameraScreenState extends State<CameraScreen>
   Future<void> _identifyPlant() async {
     if (_selectedImage == null) return;
 
-    LoadingDialog.show(context, message: '📸 Compression de l\'image...');
+    LoadingDialog.show(context, message: '📸 Compressing image...');
 
     try {
       final compressed =
           await ImageCompressionService.compressImage(_selectedImage!);
 
-      LoadingDialog.update(context, '🌿 Envoi à PlantNet...');
+      LoadingDialog.update(context, '🌿 Sending to PlantNet...');
       final result = await _apiService.identifyPlant(compressed);
 
-      LoadingDialog.update(context, '🗺️ Récupération de la distribution...');
+      LoadingDialog.update(context, '🗺️ Fetching distribution...');
 
       if (result['success'] && result['plant'] != null) {
         await GBIFService.getOccurrenceCount(result['plant'].scientificName)
@@ -169,7 +169,7 @@ class _CameraScreenState extends State<CameraScreen>
           ),
           const SizedBox(width: 10),
           const Text(
-            'Identifier une plante',
+            'Identify a Plant',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -190,35 +190,35 @@ class _CameraScreenState extends State<CameraScreen>
         child: SingleChildScrollView(
           child: Column(
             children: [
-              const SizedBox(height: 36),
+              const SizedBox(height: 20),
 
               // Hero illustration card
               _HeroCard(),
 
-              const SizedBox(height: 36),
+              const SizedBox(height: 20),
 
               // Instructions
-              _SectionLabel(label: 'Comment ça marche'),
+              _SectionLabel(label: 'How it works'),
               const SizedBox(height: 14),
               const _StepRow(
                 step: '1',
                 icon: Icons.camera_alt_rounded,
-                title: 'Prenez une photo',
-                subtitle: 'Utilisez la caméra ou votre galerie',
+                title: 'Take a photo',
+                subtitle: 'Use camera or gallery',
               ),
               const SizedBox(height: 10),
               const _StepRow(
                 step: '2',
                 icon: Icons.auto_awesome_rounded,
-                title: 'Identification IA',
-                subtitle: 'PlantNet analyse la plante',
+                title: 'AI Identification',
+                subtitle: 'PlantNet analyzes the plant',
               ),
               const SizedBox(height: 10),
               const _StepRow(
                 step: '3',
                 icon: Icons.eco_rounded,
-                title: 'Résultats détaillés',
-                subtitle: 'Nom, distribution, traductions',
+                title: 'Detailed results',
+                subtitle: 'Name, distribution, translations',
               ),
 
               const SizedBox(height: 40),
@@ -240,7 +240,7 @@ class _CameraScreenState extends State<CameraScreen>
         Expanded(
           child: _PrimaryActionButton(
             icon: Icons.camera_alt_rounded,
-            label: 'Appareil photo',
+            label: 'Camera',
             onTap: () => _pickImage(ImageSource.camera),
           ),
         ),
@@ -248,7 +248,7 @@ class _CameraScreenState extends State<CameraScreen>
         Expanded(
           child: _SecondaryActionButton(
             icon: Icons.photo_library_rounded,
-            label: 'Galerie',
+            label: 'Gallery',
             onTap: () => _pickImage(ImageSource.gallery),
           ),
         ),
@@ -320,7 +320,7 @@ class _CameraScreenState extends State<CameraScreen>
                                   size: 13, color: Colors.white),
                               SizedBox(width: 5),
                               Text(
-                                'Photo sélectionnée',
+                                'Photo selected',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -345,7 +345,7 @@ class _CameraScreenState extends State<CameraScreen>
                 Expanded(
                   child: _PrimaryActionButton(
                     icon: Icons.camera_alt_rounded,
-                    label: 'Reprendre',
+                    label: 'Retake',
                     onTap: () => _pickImage(ImageSource.camera),
                   ),
                 ),
@@ -353,7 +353,7 @@ class _CameraScreenState extends State<CameraScreen>
                 Expanded(
                   child: _SecondaryActionButton(
                     icon: Icons.photo_library_rounded,
-                    label: 'Galerie',
+                    label: 'Gallery',
                     onTap: () => _pickImage(ImageSource.gallery),
                   ),
                 ),
@@ -368,7 +368,7 @@ class _CameraScreenState extends State<CameraScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Text(
-                  'Effacer la photo',
+                  'Clear photo',
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w500,
@@ -396,7 +396,7 @@ class _HeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 24),
       decoration: BoxDecoration(
         color: AppTheme.cardBg,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -420,7 +420,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           const Text(
-            'Identifiez une plante',
+            'Identify a plant',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -430,7 +430,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Prenez une photo ou importez depuis\nvotre galerie pour commencer',
+            'Take a photo or import from\nyour gallery to start',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.5,
