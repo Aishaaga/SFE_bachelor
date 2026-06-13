@@ -46,97 +46,109 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).viewInsets.bottom -
+                  MediaQuery.of(context).padding.top,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Image.asset(
-                      'assets/images/logo_sfe.png',
-                      width: 50,
+                      child: Center(
+                        child: Image.asset(
+                          'assets/images/logo_sfe.png',
+                          width: 50,
+                          height: 50,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'FLORAI',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2E7D32),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) =>
+                          v!.contains('@') ? null : 'Email invalide',
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Mot de passe',
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off),
+                          onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword),
+                        ),
+                        border: const OutlineInputBorder(),
+                      ),
+                      validator: (v) =>
+                          v!.length >= 6 ? null : '6 caractères min',
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
                       height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        child: _isLoading
+                            ? const CircularProgressIndicator()
+                            : const Text('Se connecter',
+                                style: TextStyle(fontSize: 16)),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'FLORAI',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF2E7D32),
-                    letterSpacing: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) => v!.contains('@') ? null : 'Email invalide',
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const RegisterScreen()),
+                        );
+                      },
+                      child: const Text('Pas de compte ? S\'inscrire'),
                     ),
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (v) => v!.length >= 6 ? null : '6 caractères min',
+                  ],
                 ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _login,
-                    child: _isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text('Se connecter',
-                            style: TextStyle(fontSize: 16)),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
-                    );
-                  },
-                  child: const Text('Pas de compte ? S\'inscrire'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
