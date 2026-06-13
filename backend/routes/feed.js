@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const FeedPost = require('../models/FeedPost');
+const FeedLike = require('../models/FeedLike');
 const Plant = require('../models/Plant');
 const Identification = require('../models/Identification');
 const auth = require('../middleware/auth');
@@ -121,20 +122,34 @@ router.post('/share', auth, async (req, res) => {
 // GET /api/feed - Get all feed posts
 router.get('/', async (req, res) => {
   try {
-    const { 
-      type, 
-      page = 1, 
-      limit = 20, 
+    const {
+      type,
+      page = 1,
+      limit = 20,
       locationLevel,
-      city 
+      city
     } = req.query;
+
+    // Get user ID from auth header if available
+    const authHeader = req.headers.authorization;
+    let userId = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        userId = decoded.userId;
+      } catch (e) {
+        // Token invalid, continue without user ID
+      }
+    }
 
     // Build query
     // Show both active and approved posts (approved translations should appear in feed)
     let query;
     if (type === 'translation_suggestion') {
       // For translation suggestions, show both active and approved
-      query = { 
+      query = {
         type: 'translation_suggestion',
         status: { $in: ['active', 'approved'] }
       };
@@ -143,14 +158,14 @@ router.get('/', async (req, res) => {
       query = { status: 'active', type: type };
     } else {
       // When no type specified, show all active posts plus approved translation suggestions
-      query = { 
+      query = {
         $or: [
           { status: 'active' },
           { type: 'translation_suggestion', status: 'approved' }
         ]
       };
     }
-    
+
     if (locationLevel) {
       query['location.level'] = locationLevel;
       if (locationLevel === 'city' && city) {
@@ -164,6 +179,22 @@ router.get('/', async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
+
+    // If user is authenticated, check liked status for each post
+    if (userId) {
+      const postIds = posts.map(post => post._id);
+      const userLikes = await FeedLike.find({
+        feedPostId: { $in: postIds },
+        userId: userId
+      });
+
+      const likedPostIds = new Set(userLikes.map(like => like.feedPostId.toString()));
+
+      // Add liked status to each post
+      posts.forEach(post => {
+        post._doc.isLiked = likedPostIds.has(post._id.toString());
+      });
+    }
 
     const total = await FeedPost.countDocuments(query);
 

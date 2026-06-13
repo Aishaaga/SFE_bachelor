@@ -37,20 +37,15 @@ router.get('/posts/:postId/likes/count', async (req, res) => {
 router.get('/posts/:postId/likes/user/:userId', auth, async (req, res) => {
   try {
     const { postId, userId } = req.params;
-    
+
     // Check if post exists
     const post = await FeedPost.findById(postId);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
-    
-    // Use FeedLike model for all post types
-    console.log('DEBUG: Checking if user liked - postId:', postId, 'userId:', userId);
-    
+
     const isLiked = await FeedLike.isUserLiked(postId, userId);
-    
-    console.log('DEBUG: User liked status:', isLiked);
-    
+
     res.json({ liked: isLiked });
   } catch (error) {
     console.error('Error checking user like:', error);
