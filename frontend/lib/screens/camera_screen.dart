@@ -146,16 +146,25 @@ class _CameraScreenState extends State<CameraScreen>
       title: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-            child: Image.asset(
-              'assets/images/logo_sfe.png',
-              width: 24,
-              height: 24,
+            child: Center(
+              child: Image.asset(
+                'assets/images/logo_sfe.png',
+                width: 24,
+                height: 24,
+              ),
             ),
           ),
           const SizedBox(width: 10),
