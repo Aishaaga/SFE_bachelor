@@ -431,7 +431,7 @@ abstract class AppLocalizations {
   /// No description provided for @location.
   ///
   /// In en, this message translates to:
-  /// **'Location'**
+  /// **'Location:'**
   String get location;
 
   /// No description provided for @bio.
@@ -721,6 +721,156 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error liking post'**
   String get errorLikingPost;
+
+  /// No description provided for @shareDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Discovery'**
+  String get shareDiscovery;
+
+  /// No description provided for @shareYourDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your discovery?'**
+  String get shareYourDiscovery;
+
+  /// No description provided for @postAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Post as:'**
+  String get postAs;
+
+  /// No description provided for @moroccoOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Morocco only'**
+  String get moroccoOnly;
+
+  /// No description provided for @cityLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'City level'**
+  String get cityLevel;
+
+  /// No description provided for @noLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'No location'**
+  String get noLocation;
+
+  /// No description provided for @showOnlyCountryLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show only country level'**
+  String get showOnlyCountryLevel;
+
+  /// No description provided for @showYourSpecificCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Show your specific city'**
+  String get showYourSpecificCity;
+
+  /// No description provided for @hideLocationCompletely.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide location completely'**
+  String get hideLocationCompletely;
+
+  /// No description provided for @selectCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Select City'**
+  String get selectCity;
+
+  /// No description provided for @detectingYourCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Detecting your city...'**
+  String get detectingYourCity;
+
+  /// No description provided for @locationPermissionDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location permission denied'**
+  String get locationPermissionDenied;
+
+  /// No description provided for @openSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Settings'**
+  String get openSettings;
+
+  /// No description provided for @detectedCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected city:'**
+  String get detectedCity;
+
+  /// No description provided for @change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get change;
+
+  /// No description provided for @yourCountryIsAlwaysShownForContext.
+  ///
+  /// In en, this message translates to:
+  /// **'Your country is always shown for context'**
+  String get yourCountryIsAlwaysShownForContext;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @sharingToCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharing to community...'**
+  String get sharingToCommunity;
+
+  /// No description provided for @discoveryPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Discovery Posted!'**
+  String get discoveryPosted;
+
+  /// No description provided for @yourDiscoveryHasBeenPosted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your discovery has been posted'**
+  String get yourDiscoveryHasBeenPosted;
+
+  /// No description provided for @anonymously.
+  ///
+  /// In en, this message translates to:
+  /// **'anonymously'**
+  String get anonymously;
+
+  /// No description provided for @as.
+  ///
+  /// In en, this message translates to:
+  /// **'as'**
+  String get as;
+
+  /// No description provided for @andWillBeVisibleToTheCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'and will be visible to the community.'**
+  String get andWillBeVisibleToTheCommunity;
+
+  /// No description provided for @failedToShareDiscovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share discovery'**
+  String get failedToShareDiscovery;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
 }
 
 class _AppLocalizationsDelegate

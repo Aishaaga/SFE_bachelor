@@ -174,7 +174,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get name => 'Nom';
 
   @override
-  String get location => 'Localisation';
+  String get location => 'Localisation :';
 
   @override
   String get bio => 'Bio';
@@ -321,4 +321,81 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get errorLikingPost => 'Erreur lors du like';
+
+  @override
+  String get shareDiscovery => 'Partager la découverte';
+
+  @override
+  String get shareYourDiscovery => 'Partager votre découverte ?';
+
+  @override
+  String get postAs => 'Publier en tant que :';
+
+  @override
+  String get moroccoOnly => 'Maroc uniquement';
+
+  @override
+  String get cityLevel => 'Niveau ville';
+
+  @override
+  String get noLocation => 'Aucune localisation';
+
+  @override
+  String get showOnlyCountryLevel => 'Afficher uniquement au niveau pays';
+
+  @override
+  String get showYourSpecificCity => 'Afficher votre ville spécifique';
+
+  @override
+  String get hideLocationCompletely => 'Masquer complètement la localisation';
+
+  @override
+  String get selectCity => 'Sélectionner une ville';
+
+  @override
+  String get detectingYourCity => 'Détection de votre ville...';
+
+  @override
+  String get locationPermissionDenied => 'Autorisation de localisation refusée';
+
+  @override
+  String get openSettings => 'Ouvrir les paramètres';
+
+  @override
+  String get detectedCity => 'Ville détectée :';
+
+  @override
+  String get change => 'Changer';
+
+  @override
+  String get yourCountryIsAlwaysShownForContext =>
+      'Votre pays est toujours affiché pour le contexte';
+
+  @override
+  String get share => 'Partager';
+
+  @override
+  String get sharingToCommunity => 'Partage avec la communauté...';
+
+  @override
+  String get discoveryPosted => 'Découverte publiée !';
+
+  @override
+  String get yourDiscoveryHasBeenPosted => 'Votre découverte a été publiée';
+
+  @override
+  String get anonymously => 'anonymement';
+
+  @override
+  String get as => 'en tant que';
+
+  @override
+  String get andWillBeVisibleToTheCommunity =>
+      'et sera visible par la communauté.';
+
+  @override
+  String get failedToShareDiscovery => 'Échec du partage de la découverte';
+
+  @override
+  String get ok => 'OK';
 }

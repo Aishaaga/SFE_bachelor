@@ -4,6 +4,7 @@ import '../models/plant.dart';
 import '../services/location_service.dart';
 import '../services/feed_service.dart';
 import '../services/profile_service.dart';
+import '../l10n/app_localizations.dart';
 
 class ShareScreen extends StatefulWidget {
   final Plant plant;
@@ -24,14 +25,14 @@ class ShareScreen extends StatefulWidget {
 class _ShareScreenState extends State<ShareScreen> {
   final ProfileService _profileService = ProfileService();
   String _postAs = 'Ahmed';
-  String _location = 'Morocco only';
+  String _location = '';
   String? _username;
   String? _detectedCity;
   bool _isLoadingLocation = false;
   bool _locationPermissionDenied = false;
 
   // Location levels
-  final List<String> _locationLevels = ['Morocco only', 'City', 'None'];
+  late List<String> _locationLevels;
   final List<String> _moroccanCities = [
     'Casablanca',
     'Rabat',
@@ -46,6 +47,20 @@ class _ShareScreenState extends State<ShareScreen> {
   void initState() {
     super.initState();
     _loadUserInfo();
+    _locationLevels = ['Morocco only', 'City', 'None'];
+    _location = _locationLevels[0];
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context)!;
+    _locationLevels = [l10n.moroccoOnly, l10n.cityLevel, l10n.noLocation];
+    if (_location == 'Morocco only' ||
+        _location == 'City' ||
+        _location == 'None') {
+      _location = _locationLevels[0];
+    }
   }
 
   Future<void> _loadUserInfo() async {
@@ -95,36 +110,27 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   String _getLocationTitle(String level) {
-    switch (level) {
-      case 'Morocco only':
-        return 'Morocco only';
-      case 'City':
-        return 'City level';
-      case 'None':
-        return 'No location';
-      default:
-        return level;
-    }
+    final l10n = AppLocalizations.of(context)!;
+    if (level == l10n.moroccoOnly) return l10n.moroccoOnly;
+    if (level == l10n.cityLevel) return l10n.cityLevel;
+    if (level == l10n.noLocation) return l10n.noLocation;
+    return level;
   }
 
   String _getLocationSubtitle(String level) {
-    switch (level) {
-      case 'Morocco only':
-        return 'Show only country level';
-      case 'City':
-        return 'Show your specific city';
-      case 'None':
-        return 'Hide location completely';
-      default:
-        return '';
-    }
+    final l10n = AppLocalizations.of(context)!;
+    if (level == l10n.moroccoOnly) return l10n.showOnlyCountryLevel;
+    if (level == l10n.cityLevel) return l10n.showYourSpecificCity;
+    if (level == l10n.noLocation) return l10n.hideLocationCompletely;
+    return '';
   }
 
   void _showCitySelectionDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select City'),
+        title: Text(l10n.selectCity),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -150,7 +156,7 @@ class _ShareScreenState extends State<ShareScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
         ],
       ),
@@ -159,9 +165,10 @@ class _ShareScreenState extends State<ShareScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Share Discovery'),
+        title: Text(l10n.shareDiscovery),
         centerTitle: true,
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
@@ -184,7 +191,7 @@ class _ShareScreenState extends State<ShareScreen> {
                       Icon(Icons.eco, color: Colors.green, size: 28),
                       const SizedBox(width: 8),
                       Text(
-                        'Share your discovery?',
+                        l10n.shareYourDiscovery,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -214,7 +221,7 @@ class _ShareScreenState extends State<ShareScreen> {
 
                   // Post as section
                   Text(
-                    'Post as:',
+                    l10n.postAs,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -234,8 +241,8 @@ class _ShareScreenState extends State<ShareScreen> {
                     activeColor: Colors.green,
                   ),
                   RadioListTile<String>(
-                    title: const Text('Anonymous'),
-                    value: 'Anonymous',
+                    title: Text(l10n.anonymous),
+                    value: l10n.anonymous,
                     groupValue: _postAs,
                     onChanged: (value) {
                       setState(() {
@@ -248,7 +255,7 @@ class _ShareScreenState extends State<ShareScreen> {
 
                   // Location section
                   Text(
-                    'Location:',
+                    l10n.location,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -265,7 +272,8 @@ class _ShareScreenState extends State<ShareScreen> {
                         onChanged: (value) {
                           setState(() {
                             _location = value!;
-                            if (value == 'City' && _detectedCity == null) {
+                            if (value == l10n.cityLevel &&
+                                _detectedCity == null) {
                               _detectLocation();
                             }
                           });
@@ -273,15 +281,16 @@ class _ShareScreenState extends State<ShareScreen> {
                         activeColor: Colors.green,
                       )),
                   // City selection and detection
-                  if (_location == 'City') ...[
+                  if (_location == l10n.cityLevel) ...[
                     if (_isLoadingLocation)
-                      const Padding(
-                        padding: EdgeInsets.all(16),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            CircularProgressIndicator(color: Colors.green),
-                            SizedBox(width: 16),
-                            Text('Detecting your city...'),
+                            const CircularProgressIndicator(
+                                color: Colors.green),
+                            const SizedBox(width: 16),
+                            Text(l10n.detectingYourCity),
                           ],
                         ),
                       )
@@ -292,7 +301,7 @@ class _ShareScreenState extends State<ShareScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Location permission denied',
+                              l10n.locationPermissionDenied,
                               style: TextStyle(
                                 color: Colors.red[700],
                                 fontWeight: FontWeight.w500,
@@ -301,7 +310,7 @@ class _ShareScreenState extends State<ShareScreen> {
                             const SizedBox(height: 8),
                             ElevatedButton(
                               onPressed: _openSettings,
-                              child: const Text('Open Settings'),
+                              child: Text(l10n.openSettings),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
@@ -325,7 +334,7 @@ class _ShareScreenState extends State<ShareScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Detected city: $_detectedCity',
+                                '${l10n.detectedCity} $_detectedCity',
                                 style: TextStyle(
                                   color: Colors.green[800],
                                   fontWeight: FontWeight.w500,
@@ -334,7 +343,7 @@ class _ShareScreenState extends State<ShareScreen> {
                             ),
                             TextButton(
                               onPressed: () => _showCitySelectionDialog(),
-                              child: const Text('Change'),
+                              child: Text(l10n.change),
                             ),
                           ],
                         ),
@@ -357,7 +366,7 @@ class _ShareScreenState extends State<ShareScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Your country is always shown for context',
+                            l10n.yourCountryIsAlwaysShownForContext,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -375,7 +384,7 @@ class _ShareScreenState extends State<ShareScreen> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
+                          child: Text(l10n.cancel),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
@@ -385,7 +394,7 @@ class _ShareScreenState extends State<ShareScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _shareDiscovery,
-                          child: const Text('Share'),
+                          child: Text(l10n.share),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
@@ -405,6 +414,7 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   void _shareDiscovery() async {
+    final l10n = AppLocalizations.of(context)!;
     final locationText = _getLocationDisplayText();
     final feedService = FeedService();
 
@@ -412,12 +422,12 @@ class _ShareScreenState extends State<ShareScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (context) => AlertDialog(
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Sharing to community...'),
+            const CircularProgressIndicator(),
+            const SizedBox(width: 16),
+            Text(l10n.sharingToCommunity),
           ],
         ),
       ),
@@ -426,22 +436,18 @@ class _ShareScreenState extends State<ShareScreen> {
     try {
       // Prepare location data
       Map<String, dynamic> locationData;
-      switch (_location) {
-        case 'Morocco only':
-          locationData = {'level': 'country', 'country': 'Morocco'};
-          break;
-        case 'None':
-          locationData = {'level': 'none', 'country': 'Morocco'};
-          break;
-        default:
-          // City level - use detected city if available, otherwise use selected city
-          final cityName = _detectedCity ?? _location;
-          locationData = {
-            'level': 'city',
-            'country': 'Morocco',
-            'city': cityName,
-          };
-          break;
+      if (_location == l10n.moroccoOnly) {
+        locationData = {'level': 'country', 'country': 'Morocco'};
+      } else if (_location == l10n.noLocation) {
+        locationData = {'level': 'none', 'country': 'Morocco'};
+      } else {
+        // City level - use detected city if available, otherwise use selected city
+        final cityName = _detectedCity ?? _location;
+        locationData = {
+          'level': 'city',
+          'country': 'Morocco',
+          'city': cityName,
+        };
       }
 
       // Debug logging - check all available plant fields
@@ -469,7 +475,7 @@ class _ShareScreenState extends State<ShareScreen> {
             ? widget.plant.scientificName
             : 'Unknown',
         identificationId: widget.identificationId,
-        isAnonymous: _postAs == 'Anonymous',
+        isAnonymous: _postAs == l10n.anonymous,
         location: locationData,
       );
 
@@ -486,7 +492,7 @@ class _ShareScreenState extends State<ShareScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.green),
                 const SizedBox(width: 8),
-                const Text('Discovery Posted!'),
+                Text(l10n.discoveryPosted),
               ],
             ),
             content: Column(
@@ -494,11 +500,11 @@ class _ShareScreenState extends State<ShareScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your discovery has been posted ${_postAs == 'Anonymous' ? 'anonymously' : 'as $_postAs'} and will be visible to the community.',
+                  '${l10n.yourDiscoveryHasBeenPosted} ${_postAs == l10n.anonymous ? l10n.anonymously : '${l10n.as} $_postAs'} ${l10n.andWillBeVisibleToTheCommunity}',
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Location: $locationText',
+                  '${l10n.location}: $locationText',
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
                     color: Colors.grey[700],
@@ -512,7 +518,7 @@ class _ShareScreenState extends State<ShareScreen> {
                   Navigator.pop(context); // Close dialog
                   Navigator.pop(context); // Go back to result screen
                 },
-                child: const Text('OK'),
+                child: Text(l10n.ok),
               ),
             ],
           ),
@@ -526,14 +532,14 @@ class _ShareScreenState extends State<ShareScreen> {
               children: [
                 Icon(Icons.error, color: Colors.red),
                 const SizedBox(width: 8),
-                const Text('Error'),
+                Text(l10n.error),
               ],
             ),
-            content: Text(result['message'] ?? 'Failed to share discovery'),
+            content: Text(result['message'] ?? l10n.failedToShareDiscovery),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                child: Text(l10n.ok),
               ),
             ],
           ),
@@ -551,14 +557,14 @@ class _ShareScreenState extends State<ShareScreen> {
             children: [
               Icon(Icons.error, color: Colors.red),
               const SizedBox(width: 8),
-              const Text('Error'),
+              Text(l10n.error),
             ],
           ),
-          content: Text('Failed to share discovery: $e'),
+          content: Text('${l10n.failedToShareDiscovery}: $e'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ],
         ),
@@ -567,22 +573,18 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   String _getLocationDisplayText() {
-    switch (_location) {
-      case 'Morocco only':
-        return 'Morocco only';
-      case 'None':
-        return 'No location';
-      default:
-        // If it's a detected city (not in predefined list)
-        if (!_moroccanCities.contains(_location) && _detectedCity != null) {
-          return '$_detectedCity (detected)';
-        }
-        // If it's a manually selected city
-        if (_moroccanCities.contains(_location)) {
-          return _location;
-        }
-        // Fallback
-        return _location;
+    final l10n = AppLocalizations.of(context)!;
+    if (_location == l10n.moroccoOnly) return l10n.moroccoOnly;
+    if (_location == l10n.noLocation) return l10n.noLocation;
+    // If it's a detected city (not in predefined list)
+    if (!_moroccanCities.contains(_location) && _detectedCity != null) {
+      return '$_detectedCity (detected)';
     }
+    // If it's a manually selected city
+    if (_moroccanCities.contains(_location)) {
+      return _location;
+    }
+    // Fallback
+    return _location;
   }
 }

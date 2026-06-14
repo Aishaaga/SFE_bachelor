@@ -174,7 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get name => 'Name';
 
   @override
-  String get location => 'Location';
+  String get location => 'Location:';
 
   @override
   String get bio => 'Bio';
@@ -319,4 +319,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorLikingPost => 'Error liking post';
+
+  @override
+  String get shareDiscovery => 'Share Discovery';
+
+  @override
+  String get shareYourDiscovery => 'Share your discovery?';
+
+  @override
+  String get postAs => 'Post as:';
+
+  @override
+  String get moroccoOnly => 'Morocco only';
+
+  @override
+  String get cityLevel => 'City level';
+
+  @override
+  String get noLocation => 'No location';
+
+  @override
+  String get showOnlyCountryLevel => 'Show only country level';
+
+  @override
+  String get showYourSpecificCity => 'Show your specific city';
+
+  @override
+  String get hideLocationCompletely => 'Hide location completely';
+
+  @override
+  String get selectCity => 'Select City';
+
+  @override
+  String get detectingYourCity => 'Detecting your city...';
+
+  @override
+  String get locationPermissionDenied => 'Location permission denied';
+
+  @override
+  String get openSettings => 'Open Settings';
+
+  @override
+  String get detectedCity => 'Detected city:';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get yourCountryIsAlwaysShownForContext =>
+      'Your country is always shown for context';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get sharingToCommunity => 'Sharing to community...';
+
+  @override
+  String get discoveryPosted => 'Discovery Posted!';
+
+  @override
+  String get yourDiscoveryHasBeenPosted => 'Your discovery has been posted';
+
+  @override
+  String get anonymously => 'anonymously';
+
+  @override
+  String get as => 'as';
+
+  @override
+  String get andWillBeVisibleToTheCommunity =>
+      'and will be visible to the community.';
+
+  @override
+  String get failedToShareDiscovery => 'Failed to share discovery';
+
+  @override
+  String get ok => 'OK';
 }
