@@ -57,9 +57,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     {'code': 'MA', 'name': 'Maroc'},
   ];
 
-  final List<int> _availableYearsList =
-      List.generate(11, (i) => DateTime.now().year - i);
-
   @override
   void initState() {
     super.initState();
@@ -181,152 +178,6 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
     _applyFilters();
   }
 
-  void _showFilterDialog() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Center(
-                    child: Text(
-                      'Filtrer les observations',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('🌍 Pays',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedCountry,
-                        hint: const Text('Tous les pays'),
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem(
-                              value: null, child: Text('🌍 Tous les pays')),
-                          ..._commonCountries.map((country) => DropdownMenuItem(
-                                value: country['code'],
-                                child: Text(
-                                    '${country['name']} (${country['code']})'),
-                              )),
-                        ],
-                        onChanged: (value) {
-                          setStateDialog(() {
-                            _selectedCountry = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('📅 Année',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: _selectedYear,
-                        hint: const Text('Toutes les années'),
-                        isExpanded: true,
-                        items: [
-                          const DropdownMenuItem(
-                              value: null, child: Text('📅 Toutes les années')),
-                          ..._availableYearsList.map((year) => DropdownMenuItem(
-                                value: year,
-                                child: Text(year.toString()),
-                              )),
-                        ],
-                        onChanged: (value) {
-                          setStateDialog(() {
-                            _selectedYear = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _resetFilters();
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text('Réinitialiser'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _applyFilters();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: const Text('Appliquer'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_selectedCountry != null || _selectedYear != null)
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.filter_alt,
-                              size: 16, color: Colors.orange),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Filtres actifs: ${_selectedCountry != null ? "Pays: $_selectedCountry" : ""}${_selectedCountry != null && _selectedYear != null ? " • " : ""}${_selectedYear != null ? "Année: $_selectedYear" : ""}',
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   String _getViewTypeName() {
     switch (_currentViewType) {
       case MapViewType.heatmap:
@@ -381,26 +232,9 @@ class _PlantMapScreenState extends State<PlantMapScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_alt),
-            onPressed: _showFilterDialog,
-            tooltip: 'Filtrer',
-          ),
-          IconButton(
             icon: Icon(_getViewTypeIcon()),
             onPressed: _changeViewType,
             tooltip: 'Changer le type de vue',
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              _getViewTypeName(),
-              style: const TextStyle(fontSize: 12, color: Colors.white),
-            ),
           ),
         ],
       ),
