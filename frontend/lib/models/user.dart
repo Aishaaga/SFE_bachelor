@@ -1,6 +1,7 @@
 class User {
   final String id;
   final String email;
+  final String username;
   final String role;
   final String name;
   final String bio;
@@ -14,6 +15,7 @@ class User {
   User({
     required this.id,
     required this.email,
+    required this.username,
     required this.role,
     this.name = '',
     this.bio = '',
@@ -29,6 +31,7 @@ class User {
     return User(
       id: json['id'],
       email: json['email'],
+      username: json['username'] ?? json['email']?.split('@')[0] ?? '',
       role: json['role'],
       name: json['name'] ?? '',
       bio: json['bio'] ?? '',

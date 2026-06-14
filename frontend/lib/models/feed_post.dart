@@ -247,10 +247,12 @@ class Location {
 class User {
   final String? id;
   final String? email;
+  final String? username;
 
   User({
     this.id,
     this.email,
+    this.username,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -258,6 +260,7 @@ class User {
       return User(
         id: json['_id']?.toString() ?? json['id']?.toString(),
         email: json['email']?.toString(),
+        username: json['username']?.toString(),
       );
     } catch (e) {
       print('Error in User.fromJson: $e');
@@ -270,6 +273,7 @@ class User {
     return {
       'id': id,
       'email': email,
+      'username': username,
     };
   }
 }

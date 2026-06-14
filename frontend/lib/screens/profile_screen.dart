@@ -231,9 +231,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   // ── hero header ────────────────────────────────────────────────────────────
   Widget _buildHeroHeader() {
-    final initial = (_user!.name.isNotEmpty ? _user!.name : _user!.email)
-        .substring(0, 1)
-        .toUpperCase();
+    final displayName = _user!.username.isNotEmpty
+        ? _user!.username
+        : (_user!.name.isNotEmpty ? _user!.name : _user!.email);
+    final initial = displayName.substring(0, 1).toUpperCase();
 
     return Container(
       width: double.infinity,
@@ -266,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
           const SizedBox(height: 14),
           Text(
-            _user!.name.isNotEmpty ? _user!.name : _user!.email,
+            displayName,
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -353,20 +354,18 @@ class _ProfileScreenState extends State<ProfileScreen>
               validator: (v) =>
                   (v?.trim().length ?? 0) > 500 ? 'Max 500 caractères' : null,
             ),
-          ] else if (isEmpty)
-            Text(
-              'Aucune information personnelle ajoutée.',
-              style: const TextStyle(
-                  fontSize: 13.5,
-                  fontStyle: FontStyle.italic,
-                  color: AppTheme.textSecondary),
-            )
-          else ...[
-            if (_user!.name.isNotEmpty)
+          ] else ...[
+            _InfoRow(
+                icon: Icons.alternate_email_rounded,
+                label: 'Username',
+                value: _user!.username),
+            if (_user!.name.isNotEmpty) ...[
+              const SizedBox(height: 12),
               _InfoRow(
                   icon: Icons.person_outline_rounded,
                   label: 'Nom',
                   value: _user!.name),
+            ],
             if (_user!.location.isNotEmpty) ...[
               const SizedBox(height: 12),
               _InfoRow(
@@ -381,6 +380,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                   label: 'Bio',
                   value: _user!.bio),
             ],
+            if (isEmpty)
+              Text(
+                'Aucune information personnelle ajoutée.',
+                style: const TextStyle(
+                    fontSize: 13.5,
+                    fontStyle: FontStyle.italic,
+                    color: AppTheme.textSecondary),
+              ),
           ],
         ],
       ),

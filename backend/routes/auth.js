@@ -7,13 +7,21 @@ const router = express.Router();
 // POST /api/register - Créer un compte
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
     
     // Vérifier que les champs sont présents
-    if (!email || !password) {
+    if (!email || !username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email et mot de passe requis'
+        message: "Email, nom d'utilisateur et mot de passe requis"
+      });
+    }
+    
+    // Validate username length
+    if (username.length < 3 || username.length > 30) {
+      return res.status(400).json({
+        success: false,
+        message: "Le nom d'utilisateur doit contenir entre 3 et 30 caractères"
       });
     }
     
@@ -26,8 +34,17 @@ router.post('/register', async (req, res) => {
       });
     }
     
+    // Check if username already exists
+    const existingUsername = await User.findOne({ username });
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message: "Ce nom d'utilisateur est déjà utilisé"
+      });
+    }
+    
     // Créer le nouvel utilisateur
-    const user = new User({ email, password });
+    const user = new User({ email, username, password });
     await user.save();
     
     // Créer un token JWT
@@ -44,6 +61,7 @@ router.post('/register', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
+        username: user.username,
         role: user.role
       }
     });
@@ -102,6 +120,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
+        username: user.username,
         role: user.role
       }
     });

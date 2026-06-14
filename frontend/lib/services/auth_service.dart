@@ -9,12 +9,14 @@ class AuthService {
   final storage = FlutterSecureStorage();
 
   // Inscription
-  Future<Map<String, dynamic>> register(String email, String password) async {
+  Future<Map<String, dynamic>> register(
+      String email, String username, String password) async {
     try {
       final response = await http.post(
         Uri.parse('${Constants.apiUrl}/register'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+        body: jsonEncode(
+            {'email': email, 'username': username, 'password': password}),
       );
 
       final data = jsonDecode(response.body);

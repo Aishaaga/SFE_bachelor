@@ -174,7 +174,7 @@ router.get('/', async (req, res) => {
     }
 
     const posts = await FeedPost.find(query)
-      .populate('userId', 'email')
+      .populate('userId', 'email username')
       .populate('plantId', 'name scientificName family')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
@@ -222,7 +222,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const post = await FeedPost.findById(req.params.id)
-      .populate('userId', 'email')
+      .populate('userId', 'email username')
       .populate('plantId', 'name scientificName family')
       .populate('identificationId');
 

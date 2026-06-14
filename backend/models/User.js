@@ -9,6 +9,14 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    minlength: 3,
+    maxlength: 30
+  },
   password: {
     type: String,
     required: true
@@ -60,21 +68,20 @@ const userSchema = new mongoose.Schema({
 });
 
 // ✅ UN SEUL pre('save') - version corrigée
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function() {
   console.log('🔐 pre save - hachage');
-  
+
   if (!this.isModified('password')) {
     console.log('Mot de passe non modifié');
-    return next();
+    return;
   }
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     console.log('✅ Mot de passe haché');
-    next();
   } catch (error) {
-    next(error);
+    throw error;
   }
 });
 

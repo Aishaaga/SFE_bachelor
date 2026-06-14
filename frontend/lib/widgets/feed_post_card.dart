@@ -315,7 +315,9 @@ class _FeedPostCardState extends State<FeedPostCard> {
                       child: Text(
                         widget.post.isAnonymous
                             ? AppLocalizations.of(context)!.anonymous
-                            : (widget.post.user?.email ?? 'Unknown'),
+                            : (widget.post.user?.username ??
+                                widget.post.user?.email ??
+                                'Unknown'),
                         style: AppTheme.userHandle,
                         overflow: TextOverflow.ellipsis,
                       ),
