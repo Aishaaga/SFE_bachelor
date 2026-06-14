@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../l10n/app_localizations.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
 
@@ -24,8 +25,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (_passwordController.text != _confirmController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Les mots de passe ne correspondent pas'),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.passwordsDoNotMatch),
             backgroundColor: Colors.red),
       );
       return;
@@ -93,9 +94,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'Créer un compte',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.register,
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF2E7D32),
@@ -105,20 +106,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.email,
+                        prefixIcon: const Icon(Icons.email),
+                        border: const OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          v!.contains('@') ? null : 'Email invalide',
+                      validator: (v) => v!.contains('@')
+                          ? null
+                          : AppLocalizations.of(context)!.invalidEmail,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Mot de passe',
+                        labelText: AppLocalizations.of(context)!.password,
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(_obscurePassword
@@ -129,20 +131,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         border: const OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          v!.length >= 6 ? null : '6 caractères min',
+                      validator: (v) => v!.length >= 6
+                          ? null
+                          : AppLocalizations.of(context)!.passwordTooShort,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _confirmController,
                       obscureText: _obscurePassword,
-                      decoration: const InputDecoration(
-                        labelText: 'Confirmer mot de passe',
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText:
+                            AppLocalizations.of(context)!.confirmPassword,
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          v!.length >= 6 ? null : '6 caractères min',
+                      validator: (v) => v!.length >= 6
+                          ? null
+                          : AppLocalizations.of(context)!.passwordTooShort,
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
@@ -152,8 +157,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: _isLoading ? null : _register,
                         child: _isLoading
                             ? const CircularProgressIndicator()
-                            : const Text('S\'inscrire',
-                                style: TextStyle(fontSize: 16)),
+                            : Text(AppLocalizations.of(context)!.signUp,
+                                style: const TextStyle(fontSize: 16)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -165,7 +170,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               builder: (_) => const LoginScreen()),
                         );
                       },
-                      child: const Text('Déjà un compte ? Se connecter'),
+                      child: Text(AppLocalizations.of(context)!.hasAccount),
                     ),
                   ],
                 ),

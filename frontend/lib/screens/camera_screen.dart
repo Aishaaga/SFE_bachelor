@@ -8,6 +8,7 @@ import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/image_compression_service.dart';
 import '../widgets/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'result_screen.dart';
 
 class CameraScreen extends StatefulWidget {
@@ -64,16 +65,19 @@ class _CameraScreenState extends State<CameraScreen>
   Future<void> _identifyPlant() async {
     if (_selectedImage == null) return;
 
-    LoadingDialog.show(context, message: '📸 Compressing image...');
+    LoadingDialog.show(context,
+        message: AppLocalizations.of(context)!.compressingImage);
 
     try {
       final compressed =
           await ImageCompressionService.compressImage(_selectedImage!);
 
-      LoadingDialog.update(context, '🌿 Sending to PlantNet...');
+      LoadingDialog.update(
+          context, AppLocalizations.of(context)!.sendingToPlantNet);
       final result = await _apiService.identifyPlant(compressed);
 
-      LoadingDialog.update(context, '🗺️ Fetching distribution...');
+      LoadingDialog.update(
+          context, AppLocalizations.of(context)!.fetchingDistribution);
 
       if (result['success'] && result['plant'] != null) {
         await GBIFService.getOccurrenceCount(result['plant'].scientificName)
@@ -168,9 +172,9 @@ class _CameraScreenState extends State<CameraScreen>
             ),
           ),
           const SizedBox(width: 10),
-          const Text(
-            'Identify a Plant',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.identifyPlant,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -198,27 +202,28 @@ class _CameraScreenState extends State<CameraScreen>
               const SizedBox(height: 20),
 
               // Instructions
-              _SectionLabel(label: 'How it works'),
+              _SectionLabel(label: AppLocalizations.of(context)!.howItWorks),
               const SizedBox(height: 14),
-              const _StepRow(
+              _StepRow(
                 step: '1',
                 icon: Icons.camera_alt_rounded,
-                title: 'Take a photo',
-                subtitle: 'Use camera or gallery',
+                title: AppLocalizations.of(context)!.takePhoto,
+                subtitle: AppLocalizations.of(context)!.useCameraOrGallery,
               ),
               const SizedBox(height: 10),
-              const _StepRow(
+              _StepRow(
                 step: '2',
                 icon: Icons.auto_awesome_rounded,
-                title: 'AI Identification',
-                subtitle: 'PlantNet analyzes the plant',
+                title: AppLocalizations.of(context)!.aiIdentification,
+                subtitle: AppLocalizations.of(context)!.plantNetAnalyzes,
               ),
               const SizedBox(height: 10),
-              const _StepRow(
+              _StepRow(
                 step: '3',
                 icon: Icons.eco_rounded,
-                title: 'Detailed results',
-                subtitle: 'Name, distribution, translations',
+                title: AppLocalizations.of(context)!.detailedResults,
+                subtitle:
+                    AppLocalizations.of(context)!.nameDistributionTranslations,
               ),
 
               const SizedBox(height: 40),
@@ -240,7 +245,7 @@ class _CameraScreenState extends State<CameraScreen>
         Expanded(
           child: _PrimaryActionButton(
             icon: Icons.camera_alt_rounded,
-            label: 'Camera',
+            label: AppLocalizations.of(context)!.camera,
             onTap: () => _pickImage(ImageSource.camera),
           ),
         ),
@@ -248,7 +253,7 @@ class _CameraScreenState extends State<CameraScreen>
         Expanded(
           child: _SecondaryActionButton(
             icon: Icons.photo_library_rounded,
-            label: 'Gallery',
+            label: AppLocalizations.of(context)!.gallery,
             onTap: () => _pickImage(ImageSource.gallery),
           ),
         ),
@@ -313,15 +318,15 @@ class _CameraScreenState extends State<CameraScreen>
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusPill),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_circle_rounded,
+                              const Icon(Icons.check_circle_rounded,
                                   size: 13, color: Colors.white),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 5),
                               Text(
-                                'Photo selected',
-                                style: TextStyle(
+                                AppLocalizations.of(context)!.photoSelected,
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
@@ -345,7 +350,7 @@ class _CameraScreenState extends State<CameraScreen>
                 Expanded(
                   child: _PrimaryActionButton(
                     icon: Icons.camera_alt_rounded,
-                    label: 'Retake',
+                    label: AppLocalizations.of(context)!.retake,
                     onTap: () => _pickImage(ImageSource.camera),
                   ),
                 ),
@@ -353,7 +358,7 @@ class _CameraScreenState extends State<CameraScreen>
                 Expanded(
                   child: _SecondaryActionButton(
                     icon: Icons.photo_library_rounded,
-                    label: 'Gallery',
+                    label: AppLocalizations.of(context)!.gallery,
                     onTap: () => _pickImage(ImageSource.gallery),
                   ),
                 ),
@@ -368,7 +373,7 @@ class _CameraScreenState extends State<CameraScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Text(
-                  'Clear photo',
+                  AppLocalizations.of(context)!.clearPhoto,
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w500,
@@ -419,9 +424,9 @@ class _HeroCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
-            'Identify a plant',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.identifyPlantTitle,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
@@ -430,7 +435,7 @@ class _HeroCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Take a photo or import from\nyour gallery to start',
+            AppLocalizations.of(context)!.useCameraOrGallery,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.5,

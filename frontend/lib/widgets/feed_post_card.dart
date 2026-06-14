@@ -4,6 +4,7 @@ import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../utils/constants.dart';
 import '../widgets/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import '../screens/comments_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -199,7 +200,8 @@ class _FeedPostCardState extends State<FeedPostCard> {
   // ── helpers ────────────────────────────────────────────────────────────────
   Color get _typeColor => _resolveTypeColor(widget.post.type);
   Color get _typeBg => _resolveTypeBg(widget.post.type);
-  String get _typeLabel => _resolveTypeLabel(widget.post.type);
+  String _typeLabel(BuildContext context) =>
+      _resolveTypeLabel(widget.post.type, context);
 
   static Color _resolveTypeColor(String type) {
     switch (type) {
@@ -227,25 +229,28 @@ class _FeedPostCardState extends State<FeedPostCard> {
     }
   }
 
-  static String _resolveTypeLabel(String type) {
+  static String _resolveTypeLabel(String type, BuildContext context) {
     switch (type) {
       case 'identification':
-        return 'Identification';
+        return AppLocalizations.of(context)!.identification;
       case 'translation_suggestion':
-        return 'Translation';
+        return AppLocalizations.of(context)!.translation;
       case 'plant_of_day':
-        return 'Plant of Day';
+        return AppLocalizations.of(context)!.plantOfDayShort;
       default:
-        return 'Post';
+        return AppLocalizations.of(context)!.post;
     }
   }
 
-  String _timeAgo() {
+  String _timeAgo(BuildContext context) {
     final diff = DateTime.now().difference(widget.post.createdAt);
-    if (diff.inDays > 0) return '${diff.inDays}d ago';
-    if (diff.inHours > 0) return '${diff.inHours}h ago';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
-    return 'Just now';
+    if (diff.inDays > 0)
+      return '${diff.inDays}${AppLocalizations.of(context)!.daysAgo}';
+    if (diff.inHours > 0)
+      return '${diff.inHours}${AppLocalizations.of(context)!.hoursAgo}';
+    if (diff.inMinutes > 0)
+      return '${diff.inMinutes}${AppLocalizations.of(context)!.minutesAgo}';
+    return AppLocalizations.of(context)!.justNow;
   }
 
   // ── build ──────────────────────────────────────────────────────────────────
@@ -309,7 +314,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
                     Flexible(
                       child: Text(
                         widget.post.isAnonymous
-                            ? 'Anonymous'
+                            ? AppLocalizations.of(context)!.anonymous
                             : (widget.post.user?.email ?? 'Unknown'),
                         style: AppTheme.userHandle,
                         overflow: TextOverflow.ellipsis,
@@ -319,7 +324,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
                         widget.post.type == 'translation_suggestion') ...[
                       const SizedBox(width: 6),
                       _Pill(
-                        label: 'Approved by admin',
+                        label: AppLocalizations.of(context)!.approvedByAdmin,
                         color: AppTheme.approvedText,
                         bg: AppTheme.approvedBg,
                         icon: Icons.verified_rounded,
@@ -341,7 +346,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
             ),
           ),
           // Type badge
-          _Pill(label: _typeLabel, color: _typeColor, bg: _typeBg),
+          _Pill(label: _typeLabel(context), color: _typeColor, bg: _typeBg),
         ],
       ),
     );
@@ -398,7 +403,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
             _buildTranslationBox(),
           ],
           const SizedBox(height: 10),
-          Text(_timeAgo(), style: AppTheme.timeAgo),
+          Text(_timeAgo(context), style: AppTheme.timeAgo),
         ],
       ),
     );
@@ -421,8 +426,8 @@ class _FeedPostCardState extends State<FeedPostCard> {
                   size: 14, color: AppTheme.translationText),
               const SizedBox(width: 5),
               Text(
-                'Translation Suggestions',
-                style: TextStyle(
+                AppLocalizations.of(context)!.translationSuggestions,
+                style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.translationText,
@@ -693,13 +698,15 @@ class _FeedPostCardState extends State<FeedPostCard> {
         _showSnack(
           result['success']
               ? 'Traduction proposée avec succès!'
-              : (result['message'] ?? 'Erreur'),
+              : (result['message'] ?? AppLocalizations.of(context)!.error),
           backgroundColor:
               result['success'] ? AppTheme.primary : Colors.redAccent,
         );
       }
     } catch (e) {
-      if (mounted) _showSnack('Erreur: $e', backgroundColor: Colors.redAccent);
+      if (mounted)
+        _showSnack('${AppLocalizations.of(context)!.error}: $e',
+            backgroundColor: Colors.redAccent);
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -712,8 +719,10 @@ class _FeedPostCardState extends State<FeedPostCard> {
         voteType: voteType,
       );
       if (result['success']) {
-        _showSnack(result['message'] ?? 'Vote recorded',
-            backgroundColor: AppTheme.primary, duration: 1);
+        _showSnack(
+            result['message'] ?? AppLocalizations.of(context)!.voteRecorded,
+            backgroundColor: AppTheme.primary,
+            duration: 1);
         if (result['voteCounts'] != null) {
           setState(() {
             _upvotes = result['voteCounts']['upvotes'] ?? _upvotes;
@@ -724,11 +733,14 @@ class _FeedPostCardState extends State<FeedPostCard> {
           );
         }
       } else {
-        _showSnack(result['message'] ?? 'Error voting',
+        _showSnack(
+            result['message'] ?? AppLocalizations.of(context)!.errorVoting,
             backgroundColor: Colors.redAccent);
       }
     } catch (e) {
-      if (mounted) _showSnack('Error: $e', backgroundColor: Colors.redAccent);
+      if (mounted)
+        _showSnack('${AppLocalizations.of(context)!.error}: $e',
+            backgroundColor: Colors.redAccent);
     }
   }
 
@@ -754,14 +766,17 @@ class _FeedPostCardState extends State<FeedPostCard> {
         setState(() {
           _isLiking = false;
         });
-        _showSnack(result['message'] ?? 'Error liking post',
+        _showSnack(
+            result['message'] ?? AppLocalizations.of(context)!.errorLikingPost,
             backgroundColor: Colors.redAccent);
       }
     } catch (e) {
       setState(() {
         _isLiking = false;
       });
-      if (mounted) _showSnack('Error: $e', backgroundColor: Colors.redAccent);
+      if (mounted)
+        _showSnack('${AppLocalizations.of(context)!.error}: $e',
+            backgroundColor: Colors.redAccent);
     }
   }
 

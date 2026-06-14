@@ -5,6 +5,7 @@ import '../widgets/feed_post_card.dart';
 import 'camera_screen.dart';
 import 'notifications_screen.dart';
 import 'profile_screen.dart';
+import '../l10n/app_localizations.dart';
 
 // ─────────────────────────────────────────────
 //  THEME HELPER  (put in lib/theme/app_theme.dart if you prefer)
@@ -65,12 +66,20 @@ class FloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  static const _items = [
-    _NavItem(icon: Icons.home_rounded, label: 'Feed'),
-    _NavItem(icon: Icons.camera_alt_rounded, label: 'Camera'),
-    _NavItem(icon: Icons.notifications_rounded, label: 'Notifications'),
-    _NavItem(icon: Icons.person_rounded, label: 'Profile'),
-  ];
+  List<_NavItem> _items(BuildContext context) => [
+        _NavItem(
+            icon: Icons.home_rounded,
+            label: AppLocalizations.of(context)!.feed),
+        _NavItem(
+            icon: Icons.camera_alt_rounded,
+            label: AppLocalizations.of(context)!.camera),
+        _NavItem(
+            icon: Icons.notifications_rounded,
+            label: AppLocalizations.of(context)!.notifications),
+        _NavItem(
+            icon: Icons.person_rounded,
+            label: AppLocalizations.of(context)!.profile),
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -99,8 +108,8 @@ class FloatingNavBar extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(_items.length, (i) {
-            final item = _items[i];
+          children: List.generate(_items(context).length, (i) {
+            final item = _items(context)[i];
             final isActive = i == currentIndex;
             return _NavTile(
               icon: item.icon,
@@ -220,9 +229,9 @@ class SfeAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Text(
-            'FLORAI',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.appName,
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -365,17 +374,17 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Flag Post'),
-        content: const Text('Are you sure you want to flag this post?'),
+        title: Text(AppLocalizations.of(context)!.flagPost),
+        content: Text(AppLocalizations.of(context)!.areYouSureFlag),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Flag'),
+            child: Text(AppLocalizations.of(context)!.flag),
           ),
         ],
       ),
@@ -444,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> {
               FilledButton.icon(
                 onPressed: _refreshFeed,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
+                label: Text(AppLocalizations.of(context)!.retry),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   shape: RoundedRectangleBorder(
@@ -476,16 +485,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   size: 40, color: AppTheme.primary),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'No posts yet',
-              style: TextStyle(
+            Text(
+              AppLocalizations.of(context)!.noPostsYet,
+              style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 6),
             Text(
-              'Be the first to share a discovery!',
+              AppLocalizations.of(context)!.beFirstToShare,
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
           ],

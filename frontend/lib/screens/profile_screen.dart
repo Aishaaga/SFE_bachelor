@@ -5,6 +5,7 @@ import '../models/user.dart';
 import '../services/profile_service.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -69,7 +70,10 @@ class _ProfileScreenState extends State<ProfileScreen>
           ..reset()
           ..forward();
       } else {
-        _showSnack(result['message'] ?? 'Erreur de chargement', isError: true);
+        _showSnack(
+            result['message'] ??
+                AppLocalizations.of(context)!.loadingProfileError,
+            isError: true);
       }
     }
   }
@@ -90,7 +94,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           _isEditing = false;
         }
       });
-      _showSnack(result['message'] ?? 'Profil mis à jour',
+      _showSnack(
+          result['message'] ?? AppLocalizations.of(context)!.profileUpdated,
           isError: result['success'] != true);
     }
   }

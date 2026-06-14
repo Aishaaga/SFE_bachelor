@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/feed_post.dart';
 import '../services/feed_service.dart';
 import '../widgets/feed_post_card.dart';
+import '../l10n/app_localizations.dart';
 
 class SocialFeedScreen extends StatefulWidget {
   const SocialFeedScreen({super.key});
@@ -152,14 +153,18 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Failed to like post')),
+            SnackBar(
+                content: Text(result['message'] ??
+                    AppLocalizations.of(context)!.failedToLikePost)),
           );
         }
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Network error: $e')),
+          SnackBar(
+              content:
+                  Text('${AppLocalizations.of(context)!.networkError}: $e')),
         );
       }
     }
@@ -169,16 +174,16 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Flag Post'),
-        content: const Text('Are you sure you want to flag this post?'),
+        title: Text(AppLocalizations.of(context)!.flagPost),
+        content: Text(AppLocalizations.of(context)!.areYouSureFlag),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Flag'),
+            child: Text(AppLocalizations.of(context)!.flag),
           ),
         ],
       ),
@@ -202,14 +207,17 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text(result['message'] ?? 'Failed to flag post')),
+                  content: Text(result['message'] ??
+                      AppLocalizations.of(context)!.failedToFlagPost)),
             );
           }
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Network error: $e')),
+            SnackBar(
+                content:
+                    Text('${AppLocalizations.of(context)!.networkError}: $e')),
           );
         }
       }
@@ -222,7 +230,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Community Feed'),
+        title: Text(AppLocalizations.of(context)!.communityFeed),
         backgroundColor: Colors.green,
         foregroundColor: Colors.white,
         actions: [
@@ -234,21 +242,22 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
               _refreshFeed();
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'all',
-                child: Text('All Posts'),
+                child: Text(AppLocalizations.of(context)!.allPosts),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'identification',
-                child: Text('Identifications'),
+                child: Text(AppLocalizations.of(context)!.identifications),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'translation_suggestion',
-                child: Text('Translation Suggestions'),
+                child:
+                    Text(AppLocalizations.of(context)!.translationSuggestions),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'plant_of_day',
-                child: Text('Plant of the Day'),
+                child: Text(AppLocalizations.of(context)!.plantOfDay),
               ),
             ],
           ),
@@ -290,7 +299,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _refreshFeed,
-              child: const Text('Retry'),
+              child: Text(AppLocalizations.of(context)!.retry),
             ),
           ],
         ),
@@ -309,7 +318,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
             ),
             const SizedBox(height: 16),
             Text(
-              'No posts yet',
+              AppLocalizations.of(context)!.noPostsYet,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -317,7 +326,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Be the first to share a discovery!',
+              AppLocalizations.of(context)!.beFirstToShare,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[500],

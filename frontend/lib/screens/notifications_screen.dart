@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
 import '../models/notification.dart';
 import '../widgets/app_theme.dart';
+import '../l10n/app_localizations.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -70,7 +71,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       await _notificationService.markAsRead(id);
       _loadNotifications();
     } catch (_) {
-      _showSnack('Failed to mark as read', isError: true);
+      _showSnack(AppLocalizations.of(context)!.failedToMarkAsRead,
+          isError: true);
     }
   }
 
@@ -79,7 +81,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       await _notificationService.markAllAsRead();
       _loadNotifications();
     } catch (_) {
-      _showSnack('Failed to mark all as read', isError: true);
+      _showSnack(AppLocalizations.of(context)!.failedToMarkAllAsRead,
+          isError: true);
     }
   }
 
@@ -88,7 +91,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
       await _notificationService.deleteNotification(id);
       _loadNotifications();
     } catch (_) {
-      _showSnack('Failed to delete notification', isError: true);
+      _showSnack(AppLocalizations.of(context)!.failedToDelete, isError: true);
     }
   }
 
@@ -108,10 +111,13 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   String _timeAgo(DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inDays > 0) return '${diff.inDays}d ago';
-    if (diff.inHours > 0) return '${diff.inHours}h ago';
-    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
-    return 'Just now';
+    if (diff.inDays > 0)
+      return '${diff.inDays}${AppLocalizations.of(context)!.daysAgo}';
+    if (diff.inHours > 0)
+      return '${diff.inHours}${AppLocalizations.of(context)!.hoursAgo}';
+    if (diff.inMinutes > 0)
+      return '${diff.inMinutes}${AppLocalizations.of(context)!.minutesAgo}';
+    return AppLocalizations.of(context)!.justNow;
   }
 
   IconData _iconFor(String type) {
@@ -196,9 +202,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             ),
           ),
           const SizedBox(width: 10),
-          const Text(
-            'Notifications',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.notifications,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: Colors.white,
@@ -219,9 +225,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               onPressed: _markAllAsRead,
               icon: const Icon(Icons.done_all_rounded,
                   size: 17, color: Colors.white),
-              label: const Text(
-                'Tout lire',
-                style: TextStyle(
+              label: Text(
+                AppLocalizations.of(context)!.markAllAsRead,
+                style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
@@ -272,10 +278,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   size: 36, color: Colors.redAccent),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Impossible de charger\nles notifications',
+            Text(
+              AppLocalizations.of(context)!.cannotLoadNotifications,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textPrimary,
@@ -298,14 +304,15 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                     ),
                   ],
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.refresh_rounded, size: 17, color: Colors.white),
-                    SizedBox(width: 7),
+                    const Icon(Icons.refresh_rounded,
+                        size: 17, color: Colors.white),
+                    const SizedBox(width: 7),
                     Text(
-                      'Réessayer',
-                      style: TextStyle(
+                      AppLocalizations.of(context)!.retry,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -337,9 +344,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 size: 38, color: AppTheme.primary),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Aucune notification',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.notificationsEmpty,
+            style: const TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -347,7 +354,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            'Vous verrez vos notifications ici',
+            AppLocalizations.of(context)!.willSeeNotificationsHere,
             style: TextStyle(
               fontSize: 13.5,
               color: AppTheme.textSecondary,

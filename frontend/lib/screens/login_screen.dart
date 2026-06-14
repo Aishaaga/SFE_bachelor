@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../l10n/app_localizations.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 
@@ -83,9 +84,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'FLORAI',
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.appName,
+                      style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF2E7D32),
@@ -96,20 +97,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email),
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.email,
+                        prefixIcon: const Icon(Icons.email),
+                        border: const OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          v!.contains('@') ? null : 'Email invalide',
+                      validator: (v) => v!.contains('@')
+                          ? null
+                          : AppLocalizations.of(context)!.invalidEmail,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
-                        labelText: 'Mot de passe',
+                        labelText: AppLocalizations.of(context)!.password,
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(_obscurePassword
@@ -120,8 +122,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         border: const OutlineInputBorder(),
                       ),
-                      validator: (v) =>
-                          v!.length >= 6 ? null : '6 caractères min',
+                      validator: (v) => v!.length >= 6
+                          ? null
+                          : AppLocalizations.of(context)!.passwordTooShort,
                     ),
                     const SizedBox(height: 24),
                     SizedBox(
@@ -131,8 +134,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: _isLoading ? null : _login,
                         child: _isLoading
                             ? const CircularProgressIndicator()
-                            : const Text('Se connecter',
-                                style: TextStyle(fontSize: 16)),
+                            : Text(AppLocalizations.of(context)!.signIn,
+                                style: const TextStyle(fontSize: 16)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -144,7 +147,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               builder: (_) => const RegisterScreen()),
                         );
                       },
-                      child: const Text('Pas de compte ? S\'inscrire'),
+                      child: Text(AppLocalizations.of(context)!.noAccount),
                     ),
                   ],
                 ),

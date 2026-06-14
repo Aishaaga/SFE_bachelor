@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/plant.dart';
 import '../data/plant_translations.dart';
 import '../widgets/app_theme.dart';
+import '../l10n/app_localizations.dart';
 import 'history_screen.dart';
 import 'plant_map_screen.dart';
 import 'translation_proposal_screen.dart';
@@ -158,8 +159,8 @@ class _ResultScreenState extends State<ResultScreen>
                 const Center(child: Text('🌿', style: TextStyle(fontSize: 18))),
           ),
           const SizedBox(width: 10),
-          const Text('Résultat',
-              style: TextStyle(
+          Text(AppLocalizations.of(context)!.result,
+              style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.1)),
@@ -184,13 +185,13 @@ class _ResultScreenState extends State<ResultScreen>
                 color: Colors.white.withOpacity(0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radiusPill),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.map_rounded, size: 15, color: Colors.white),
-                  SizedBox(width: 5),
-                  Text('Distribution',
-                      style: TextStyle(
+                  const Icon(Icons.map_rounded, size: 15, color: Colors.white),
+                  const SizedBox(width: 5),
+                  Text(AppLocalizations.of(context)!.distribution,
+                      style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w600,
                           color: Colors.white)),
@@ -293,7 +294,7 @@ class _ResultScreenState extends State<ResultScreen>
               Icon(Icons.verified_rounded, size: 15, color: color),
               const SizedBox(width: 6),
               Text(
-                'Confiance de l\'identification',
+                AppLocalizations.of(context)!.confidence,
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -334,7 +335,7 @@ class _ResultScreenState extends State<ResultScreen>
         Expanded(
           child: _InfoTile(
             icon: Icons.science_rounded,
-            label: 'Famille',
+            label: AppLocalizations.of(context)!.family,
             value: widget.plant.family,
           ),
         ),
@@ -342,7 +343,7 @@ class _ResultScreenState extends State<ResultScreen>
         Expanded(
           child: _InfoTile(
             icon: Icons.eco_rounded,
-            label: 'Nom scientifique',
+            label: AppLocalizations.of(context)!.scientificName,
             value: widget.plant.scientificName,
             italic: true,
           ),
@@ -441,7 +442,7 @@ class _ResultScreenState extends State<ResultScreen>
               ),
             )
           else if (displayNames.isEmpty)
-            Text('Aucune traduction disponible',
+            Text(AppLocalizations.of(context)!.noTranslationAvailable,
                 style: TextStyle(
                     fontSize: 13.5,
                     fontStyle: FontStyle.italic,
@@ -494,7 +495,7 @@ class _ResultScreenState extends State<ResultScreen>
                 borderRadius: BorderRadius.circular(AppTheme.radiusPill),
               ),
               child: Text(
-                '${displayNames.length} noms disponibles',
+                '${displayNames.length} ${AppLocalizations.of(context)!.namesAvailable}',
                 style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -527,15 +528,15 @@ class _ResultScreenState extends State<ResultScreen>
               border: Border.all(color: AppTheme.translationBorder),
               boxShadow: AppTheme.cardShadow,
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.contact_support_rounded,
+                const Icon(Icons.contact_support_rounded,
                     size: 17, color: AppTheme.badgeTranslation),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Text(
-                  'Proposer une traduction Darija / Tamazight',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.proposeTranslation,
+                  style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.badgeTranslation,
@@ -572,14 +573,14 @@ class _ResultScreenState extends State<ResultScreen>
                 ),
               ],
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.people_rounded, size: 18, color: Colors.white),
-                SizedBox(width: 8),
+                const Icon(Icons.people_rounded, size: 18, color: Colors.white),
+                const SizedBox(width: 8),
                 Text(
-                  'Partager avec la communauté',
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.shareWithCommunity,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
@@ -605,14 +606,14 @@ class _ResultScreenState extends State<ResultScreen>
                         Border.all(color: AppTheme.primary.withOpacity(0.35)),
                     boxShadow: AppTheme.cardShadow,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.camera_alt_rounded,
+                      const Icon(Icons.camera_alt_rounded,
                           size: 17, color: AppTheme.primary),
-                      SizedBox(width: 7),
-                      Text('Nouvelle photo',
-                          style: TextStyle(
+                      const SizedBox(width: 7),
+                      Text(AppLocalizations.of(context)!.newPhoto,
+                          style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.primary)),
@@ -637,14 +638,14 @@ class _ResultScreenState extends State<ResultScreen>
                     border: Border.all(color: AppTheme.divider),
                     boxShadow: AppTheme.cardShadow,
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.history_rounded,
+                      const Icon(Icons.history_rounded,
                           size: 17, color: AppTheme.textSecondary),
-                      SizedBox(width: 7),
-                      Text('Historique',
-                          style: TextStyle(
+                      const SizedBox(width: 7),
+                      Text(AppLocalizations.of(context)!.history,
+                          style: const TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textSecondary)),
