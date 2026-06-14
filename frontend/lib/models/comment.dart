@@ -113,12 +113,14 @@ class Comment {
 class CommentUser {
   final String? id;
   final String? name;
+  final String? username;
   final String? email;
   final String? profileImage;
 
   CommentUser({
     this.id,
     this.name,
+    this.username,
     this.email,
     this.profileImage,
   });
@@ -127,6 +129,7 @@ class CommentUser {
     return CommentUser(
       id: json['_id']?.toString() ?? json['id']?.toString(),
       name: json['name']?.toString(),
+      username: json['username']?.toString(),
       email: json['email']?.toString(),
       profileImage: json['profileImage']?.toString(),
     );
@@ -136,12 +139,16 @@ class CommentUser {
     return {
       'id': id,
       'name': name,
+      'username': username,
       'email': email,
       'profileImage': profileImage,
     };
   }
 
   String get displayName {
+    if (username != null && username!.isNotEmpty) {
+      return username!;
+    }
     if (name != null && name!.isNotEmpty) {
       return name!;
     }

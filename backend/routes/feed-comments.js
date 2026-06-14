@@ -108,7 +108,7 @@ router.post('/posts/:postId/comments', auth, async (req, res) => {
 
     // Populate user data (only if not anonymous)
     if (isAnonymous !== true) {
-      await comment.populate('userId', 'name email profileImage');
+      await comment.populate('userId', 'username name email profileImage');
     }
 
     // Update post's comment count
@@ -162,7 +162,7 @@ router.put('/comments/:commentId', auth, async (req, res) => {
     
     // Edit comment
     await comment.editContent(content.trim());
-    await comment.populate('userId', 'name email profileImage');
+    await comment.populate('userId', 'username name email profileImage');
 
     // Convert to plain object and handle anonymous comments
     const commentObj = comment.toObject();
@@ -247,7 +247,7 @@ router.get('/comments/:commentId', async (req, res) => {
     const { commentId } = req.params;
 
     const comment = await FeedComment.findById(commentId)
-      .populate('userId', 'name email profileImage')
+      .populate('userId', 'username name email profileImage')
       .populate('parentId', 'content userId');
 
     if (!comment) {

@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../models/plant.dart';
-import '../services/auth_service.dart';
 import '../services/location_service.dart';
 import '../services/feed_service.dart';
+import '../services/profile_service.dart';
 
 class ShareScreen extends StatefulWidget {
   final Plant plant;
@@ -22,10 +22,10 @@ class ShareScreen extends StatefulWidget {
 }
 
 class _ShareScreenState extends State<ShareScreen> {
-  final AuthService _authService = AuthService();
+  final ProfileService _profileService = ProfileService();
   String _postAs = 'Ahmed';
   String _location = 'Morocco only';
-  String? _userEmail;
+  String? _username;
   String? _detectedCity;
   bool _isLoadingLocation = false;
   bool _locationPermissionDenied = false;
@@ -49,11 +49,12 @@ class _ShareScreenState extends State<ShareScreen> {
   }
 
   Future<void> _loadUserInfo() async {
-    final email = await _authService.getCurrentUserEmail();
-    if (mounted && email != null) {
+    final result = await _profileService.getProfile();
+    if (mounted && result['success'] == true) {
+      final user = result['user'];
       setState(() {
-        _userEmail = email;
-        _postAs = email; // Set default to user email
+        _username = user.username;
+        _postAs = user.username; // Set default to user username
       });
     }
   }
@@ -222,8 +223,8 @@ class _ShareScreenState extends State<ShareScreen> {
                   ),
                   const SizedBox(height: 8),
                   RadioListTile<String>(
-                    title: Text(_userEmail != null ? _userEmail! : 'User'),
-                    value: _userEmail != null ? _userEmail! : 'User',
+                    title: Text(_username != null ? _username! : 'User'),
+                    value: _username != null ? _username! : 'User',
                     groupValue: _postAs,
                     onChanged: (value) {
                       setState(() {
