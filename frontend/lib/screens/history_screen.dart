@@ -4,6 +4,7 @@ import '../utils/constants.dart';
 import '../models/plant.dart';
 import 'plant_detail_screen.dart';
 import 'translation_proposal_screen.dart';
+import 'camera_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -332,7 +333,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       },
                     ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CameraScreen()),
+          );
+        },
         child: const Icon(Icons.camera_alt),
       ),
     );
