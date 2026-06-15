@@ -238,6 +238,9 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                 subtitle: const Text('Traduction en arabe marocain'),
                 value: _proposeDarija,
                 onChanged: (value) {
+                  if (value == false && !_proposeTamazight) {
+                    return;
+                  }
                   setState(() {
                     _proposeDarija = value ?? true;
                   });
@@ -249,6 +252,9 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                 subtitle: const Text('Traduction en berbère marocain'),
                 value: _proposeTamazight,
                 onChanged: (value) {
+                  if (value == false && !_proposeDarija) {
+                    return;
+                  }
                   setState(() {
                     _proposeTamazight = value ?? true;
                   });
