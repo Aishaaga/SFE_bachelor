@@ -330,7 +330,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
         padding: EdgeInsets.zero,
         itemCount: 1 + // post card
             1 + // divider
-            (_comments.isEmpty ? 1 : _comments.length) +
+            (_comments.isEmpty ? 1 : _comments.length * 2 - 1) +
             (_hasMore && _comments.isNotEmpty ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -345,10 +345,16 @@ class _CommentsScreenState extends State<CommentsScreen> {
                 height: 1, thickness: 1, color: AppTheme.divider);
           }
 
-          final commentIndex = index - 2;
+          final commentIndex = (index - 2) ~/ 2;
+          final isDivider = (index - 2) % 2 == 1;
 
           if (_comments.isEmpty) {
             return _buildEmptyState();
+          }
+
+          if (isDivider && commentIndex < _comments.length - 1) {
+            return const Divider(
+                height: 1, thickness: 1, color: AppTheme.divider);
           }
 
           if (commentIndex == _comments.length) {
