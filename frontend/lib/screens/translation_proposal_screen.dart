@@ -340,7 +340,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                       activeColor: AppTheme.primary,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 8,
+                        vertical: 1,
                       ),
                     ),
                     Divider(height: 1, color: AppTheme.divider),
@@ -371,7 +371,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                       activeColor: AppTheme.primary,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
-                        vertical: 8,
+                        vertical: 1,
                       ),
                     ),
                   ],
