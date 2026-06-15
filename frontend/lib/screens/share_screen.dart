@@ -4,6 +4,7 @@ import '../models/plant.dart';
 import '../services/location_service.dart';
 import '../services/feed_service.dart';
 import '../services/profile_service.dart';
+import '../data/plant_translations.dart';
 import '../l10n/app_localizations.dart';
 
 class ShareScreen extends StatefulWidget {
@@ -465,6 +466,44 @@ class _ShareScreenState extends State<ShareScreen> {
       }
 
       print('DEBUG: Final plant ID: $plantId');
+      print('DEBUG: Plant scientificName: "${widget.plant.scientificName}"');
+      print('DEBUG: Plant name: "${widget.plant.name}"');
+
+      // Fetch approved translations for the plant
+      String? approvedDarija;
+      String? approvedTamazight;
+
+      if (widget.plant.scientificName.isNotEmpty) {
+        try {
+          print(
+              'DEBUG: Attempting to fetch translations for: "${widget.plant.scientificName}"');
+          approvedDarija = await PlantTranslations.getDarijaName(
+              widget.plant.scientificName);
+          approvedTamazight = await PlantTranslations.getTamazightName(
+              widget.plant.scientificName);
+
+          print('DEBUG: Raw Darija result: "$approvedDarija"');
+          print('DEBUG: Raw Tamazight result: "$approvedTamazight"');
+
+          // Only use translations if they're different from the scientific name
+          if (approvedDarija == widget.plant.scientificName) {
+            approvedDarija = null;
+            print('DEBUG: Darija same as scientific name, setting to null');
+          }
+          if (approvedTamazight == widget.plant.scientificName) {
+            approvedTamazight = null;
+            print('DEBUG: Tamazight same as scientific name, setting to null');
+          }
+
+          print('DEBUG: Final Approved Darija: $approvedDarija');
+          print('DEBUG: Final Approved Tamazight: $approvedTamazight');
+        } catch (e) {
+          print('DEBUG: Error fetching translations: $e');
+          // Continue without translations if fetch fails
+        }
+      } else {
+        print('DEBUG: Scientific name is empty, skipping translation fetch');
+      }
 
       // Share to feed
       final result = await feedService.shareToFeed(
@@ -475,6 +514,8 @@ class _ShareScreenState extends State<ShareScreen> {
             ? widget.plant.scientificName
             : 'Unknown',
         identificationId: widget.identificationId,
+        suggestedDarija: approvedDarija,
+        suggestedTamazight: approvedTamazight,
         isAnonymous: _postAs == l10n.anonymous,
         location: locationData,
       );

@@ -392,6 +392,9 @@ class _FeedPostCardState extends State<FeedPostCard> {
 
   // ── content ────────────────────────────────────────────────────────────────
   Widget _buildContent() {
+    final hasTranslations = widget.post.suggestedDarija != null ||
+        widget.post.suggestedTamazight != null;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 4),
       child: Column(
@@ -400,7 +403,8 @@ class _FeedPostCardState extends State<FeedPostCard> {
           Text(widget.post.plantName, style: AppTheme.plantName),
           const SizedBox(height: 3),
           Text(widget.post.scientificName, style: AppTheme.scientificName),
-          if (widget.post.type == 'translation_suggestion') ...[
+          if (widget.post.type == 'translation_suggestion' ||
+              hasTranslations) ...[
             const SizedBox(height: 12),
             _buildTranslationBox(),
           ],
@@ -412,6 +416,11 @@ class _FeedPostCardState extends State<FeedPostCard> {
   }
 
   Widget _buildTranslationBox() {
+    final isIdentification = widget.post.type == 'identification';
+    final label = isIdentification
+        ? 'Traductions approuvées'
+        : AppLocalizations.of(context)!.translationSuggestions;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -424,15 +433,24 @@ class _FeedPostCardState extends State<FeedPostCard> {
         children: [
           Row(
             children: [
-              Icon(Icons.translate_rounded,
-                  size: 14, color: AppTheme.translationText),
+              Icon(
+                isIdentification
+                    ? Icons.verified_rounded
+                    : Icons.translate_rounded,
+                size: 14,
+                color: isIdentification
+                    ? AppTheme.primary
+                    : AppTheme.translationText,
+              ),
               const SizedBox(width: 5),
               Text(
-                AppLocalizations.of(context)!.translationSuggestions,
-                style: const TextStyle(
+                label,
+                style: TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.translationText,
+                  color: isIdentification
+                      ? AppTheme.primary
+                      : AppTheme.translationText,
                 ),
               ),
             ],

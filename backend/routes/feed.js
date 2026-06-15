@@ -93,8 +93,8 @@ router.post('/share', auth, async (req, res) => {
       scientificName,
       imageUrl: type === 'identification' ? actualImageUrl : undefined,
       identificationId: type === 'identification' ? identificationId : undefined,
-      suggestedDarija: type === 'translation_suggestion' ? suggestedDarija : undefined,
-      suggestedTamazight: type === 'translation_suggestion' ? suggestedTamazight : undefined,
+      suggestedDarija: suggestedDarija,
+      suggestedTamazight: suggestedTamazight,
       location: {
         level: location.level,
         country: location.country || 'Morocco',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/location_service.dart';
 import '../services/feed_service.dart';
 import '../services/profile_service.dart';
+import '../data/plant_translations.dart';
 
 class ShareFromHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> identification;
@@ -475,6 +476,33 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
       final identificationId =
           identificationIds.isNotEmpty ? identificationIds.first : null;
 
+      // Fetch approved translations for the plant
+      String? approvedDarija;
+      String? approvedTamazight;
+
+      if (scientificName != 'Unknown') {
+        try {
+          approvedDarija =
+              await PlantTranslations.getDarijaName(scientificName);
+          approvedTamazight =
+              await PlantTranslations.getTamazightName(scientificName);
+
+          // Only use translations if they're different from the scientific name
+          if (approvedDarija == scientificName) {
+            approvedDarija = null;
+          }
+          if (approvedTamazight == scientificName) {
+            approvedTamazight = null;
+          }
+
+          print('DEBUG: Approved Darija: $approvedDarija');
+          print('DEBUG: Approved Tamazight: $approvedTamazight');
+        } catch (e) {
+          print('DEBUG: Error fetching translations: $e');
+          // Continue without translations if fetch fails
+        }
+      }
+
       // Share to feed
       final result = await feedService.shareToFeed(
         plantId: plantId,
@@ -482,6 +510,8 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
         scientificName: scientificName,
         imageUrl: imageUrl,
         identificationId: identificationId,
+        suggestedDarija: approvedDarija,
+        suggestedTamazight: approvedTamazight,
         isAnonymous: _postAs == 'Anonymous',
         location: locationData,
       );
