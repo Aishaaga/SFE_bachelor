@@ -6,6 +6,7 @@ import '../models/translation_suggestion.dart';
 import '../services/proposal_service.dart';
 import '../services/auth_service.dart';
 import '../data/plant_translations.dart';
+import '../widgets/app_theme.dart';
 
 class TranslationProposalScreen extends StatefulWidget {
   final Plant plant;
@@ -141,10 +142,25 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Merci!'),
-        content: const Text(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Text(
+          'Merci!',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
+        content: Text(
           'Votre proposition de traduction a été soumise avec succès.\n'
           'Elle sera examinée par notre équipe avant d\'être validée.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.textSecondary,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
@@ -156,7 +172,13 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },
-            child: const Text('OK'),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -167,12 +189,35 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Erreur'),
-        content: Text(message),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Text(
+          'Erreur',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.refusedText,
+          ),
+        ),
+        content: Text(
+          message,
+          style: TextStyle(
+            fontSize: 14,
+            color: AppTheme.textSecondary,
+            height: 1.5,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(
+              'OK',
+              style: TextStyle(
+                color: AppTheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -182,10 +227,19 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        title: const Text('Proposer une traduction'),
-        backgroundColor: Colors.green,
+        title: const Text(
+          'Proposer une traduction',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
+        ),
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -195,27 +249,44 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Plant info card
-              Card(
-                elevation: 4,
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBg,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  boxShadow: AppTheme.cardShadow,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.plant.scientificName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primarySurface,
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                            ),
+                            child: Icon(Icons.eco,
+                                color: AppTheme.primary, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              widget.plant.scientificName,
+                              style: AppTheme.plantName,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
                         'Famille: ${widget.plant.family}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: AppTheme.textSecondary,
                         ),
                       ),
                     ],
@@ -225,41 +296,86 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               const SizedBox(height: 24),
 
               // Translation options
-              const Text(
+              Text(
                 'Quelles traductions souhaitez-vous proposer?',
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
-              CheckboxListTile(
-                title: const Text('Darija (Marocain Arabe)'),
-                subtitle: const Text('Traduction en arabe marocain'),
-                value: _proposeDarija,
-                onChanged: (value) {
-                  if (value == false && !_proposeTamazight) {
-                    return;
-                  }
-                  setState(() {
-                    _proposeDarija = value ?? true;
-                  });
-                },
-                activeColor: Colors.green,
-              ),
-              CheckboxListTile(
-                title: const Text('Tamazight'),
-                subtitle: const Text('Traduction en berbère marocain'),
-                value: _proposeTamazight,
-                onChanged: (value) {
-                  if (value == false && !_proposeDarija) {
-                    return;
-                  }
-                  setState(() {
-                    _proposeTamazight = value ?? true;
-                  });
-                },
-                activeColor: Colors.green,
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBg,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  boxShadow: AppTheme.cardShadow,
+                ),
+                child: Column(
+                  children: [
+                    CheckboxListTile(
+                      title: Text(
+                        'Darija (Marocain Arabe)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Traduction en arabe marocain',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      value: _proposeDarija,
+                      onChanged: (value) {
+                        if (value == false && !_proposeTamazight) {
+                          return;
+                        }
+                        setState(() {
+                          _proposeDarija = value ?? true;
+                        });
+                      },
+                      activeColor: AppTheme.primary,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                    Divider(height: 1, color: AppTheme.divider),
+                    CheckboxListTile(
+                      title: Text(
+                        'Tamazight',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Traduction en berbère marocain',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      value: _proposeTamazight,
+                      onChanged: (value) {
+                        if (value == false && !_proposeDarija) {
+                          return;
+                        }
+                        setState(() {
+                          _proposeTamazight = value ?? true;
+                        });
+                      },
+                      activeColor: AppTheme.primary,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
 
@@ -267,11 +383,25 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               if (_proposeDarija) ...[
                 TextFormField(
                   controller: _darijaController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Traduction en Darija',
                     hintText: 'Entrez le nom en arabe marocain',
-                    prefixIcon: Icon(Icons.translate),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.translate, color: AppTheme.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.divider),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.divider),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide:
+                          const BorderSide(color: AppTheme.primary, width: 1.5),
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.cardBg,
                   ),
                   textDirection: TextDirection.rtl,
                   textAlign: TextAlign.right,
@@ -291,11 +421,25 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               if (_proposeTamazight) ...[
                 TextFormField(
                   controller: _tamazightController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Traduction en Tamazight',
                     hintText: 'Entrez le nom en tamazight',
-                    prefixIcon: Icon(Icons.translate),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.translate, color: AppTheme.primary),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.divider),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.divider),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide:
+                          const BorderSide(color: AppTheme.primary, width: 1.5),
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.cardBg,
                   ),
                   style: const TextStyle(fontFamily: 'Tifinagh'),
                   validator: (value) {
@@ -313,15 +457,18 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
+                  color: AppTheme.primarySurface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  border: Border.all(
+                    color: AppTheme.primary.withOpacity(0.2),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.person,
-                      color: Colors.grey[600],
+                      color: AppTheme.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 12),
@@ -331,9 +478,10 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                         children: [
                           Text(
                             'Soumis par: ${_userName ?? 'Chargement...'}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -341,7 +489,7 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                             _userEmail ?? 'Chargement...',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                         ],
@@ -353,22 +501,50 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _regionController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Région (optionnel)',
                   hintText: 'Ex: Rabat, Marrakech, Souss...',
-                  prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on, color: AppTheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    borderSide: const BorderSide(color: AppTheme.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    borderSide: const BorderSide(color: AppTheme.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    borderSide:
+                        const BorderSide(color: AppTheme.primary, width: 1.5),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.cardBg,
                 ),
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _notesController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Notes supplémentaires (optionnel)',
                   hintText:
                       'Informations additionnelles sur votre traduction...',
-                  prefixIcon: Icon(Icons.note_add),
-                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.note_add, color: AppTheme.primary),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    borderSide: const BorderSide(color: AppTheme.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    borderSide: const BorderSide(color: AppTheme.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    borderSide:
+                        const BorderSide(color: AppTheme.primary, width: 1.5),
+                  ),
+                  filled: true,
+                  fillColor: AppTheme.cardBg,
                 ),
                 maxLines: 3,
               ),
@@ -380,20 +556,28 @@ class _TranslationProposalScreenState extends State<TranslationProposalScreen> {
                 child: ElevatedButton(
                   onPressed: _isSubmitting ? null : _submitProposal,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: AppTheme.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     ),
                   ),
                   child: _isSubmitting
-                      ? const CircularProgressIndicator(color: Colors.white)
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
                       : const Text(
                           'Soumettre la proposition',
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                 ),
