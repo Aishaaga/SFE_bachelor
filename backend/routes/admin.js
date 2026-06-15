@@ -233,7 +233,7 @@ router.post('/reject/:id', auth, adminAuth, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Suggestion not found' });
     }
     
-    suggestion.status = 'hidden'; // rejected = hidden
+    suggestion.status = 'refused'; // rejected = refused (not hidden, stays in feed)
     suggestion.updatedAt = new Date();
     // Store rejection reason in notes field for now
     if (reason) {
@@ -271,9 +271,9 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
     // Get unique plants with approved translations
     const approvedPlants = await ApprovedTranslation.find({ status: 'active' })
       .distinct('scientificName');
-    const rejectedCount = await FeedPost.countDocuments({ 
-      type: 'translation_suggestion', 
-      status: 'hidden' 
+    const rejectedCount = await FeedPost.countDocuments({
+      type: 'translation_suggestion',
+      status: 'refused'
     });
     
     // Get total users

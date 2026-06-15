@@ -120,7 +120,7 @@ router.get('/', async (req, res) => {
       const statusMap = {
         'pending': 'flagged',
         'approved': 'active',
-        'rejected': 'hidden'
+        'rejected': 'refused'
       };
       filter.status = statusMap[status] || status;
     }

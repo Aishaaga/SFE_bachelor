@@ -108,7 +108,7 @@ const feedPostSchema = new mongoose.Schema({
   // Status
   status: {
     type: String,
-    enum: ['active', 'flagged', 'hidden', 'deleted', 'approved'],
+    enum: ['active', 'flagged', 'hidden', 'deleted', 'approved', 'refused'],
     default: 'active'
   },
   

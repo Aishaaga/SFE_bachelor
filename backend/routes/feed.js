@@ -147,23 +147,24 @@ router.get('/', async (req, res) => {
     }
 
     // Build query
-    // Show both active and approved posts (approved translations should appear in feed)
+    // Show active, approved, and refused posts (refused translations should appear in feed with badge)
     let query;
     if (type === 'translation_suggestion') {
-      // For translation suggestions, show both active and approved
+      // For translation suggestions, show active, approved, and refused
       query = {
         type: 'translation_suggestion',
-        status: { $in: ['active', 'approved'] }
+        status: { $in: ['active', 'approved', 'refused'] }
       };
     } else if (type) {
       // For specific other types, only show active
       query = { status: 'active', type: type };
     } else {
-      // When no type specified, show all active posts plus approved translation suggestions
+      // When no type specified, show all active posts plus approved and refused translation suggestions
       query = {
         $or: [
           { status: 'active' },
-          { type: 'translation_suggestion', status: 'approved' }
+          { type: 'translation_suggestion', status: 'approved' },
+          { type: 'translation_suggestion', status: 'refused' }
         ]
       };
     }

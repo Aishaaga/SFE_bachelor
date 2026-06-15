@@ -26,6 +26,10 @@ class AppTheme {
   static const Color approvedText = Color(0xFF6A1B9A);
   static const Color approvedBg = Color(0xFFF3E5F5);
 
+  // Refused chip
+  static const Color refusedText = Color(0xFFC62828);
+  static const Color refusedBg = Color(0xFFFFEBEE);
+
   // Translation box
   static const Color translationText = Color(0xFF1565C0);
   static const Color translationBg = Color(0xFFEEF4FF);

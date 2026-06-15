@@ -19,6 +19,7 @@ class FeedPost {
   final int commentCount;
   final String status;
   final bool isApproved;
+  final bool isRefused;
   final bool isLiked;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -44,6 +45,7 @@ class FeedPost {
     this.commentCount = 0,
     this.status = 'active',
     this.isApproved = false,
+    this.isRefused = false,
     this.isLiked = false,
     required this.createdAt,
     required this.updatedAt,
@@ -105,6 +107,7 @@ class FeedPost {
             int.tryParse(json['commentCount']?.toString() ?? '0') ?? 0,
         status: json['status']?.toString() ?? 'active',
         isApproved: json['status']?.toString() == 'approved',
+        isRefused: json['status']?.toString() == 'refused',
         isLiked: json['isLiked'] == true,
         createdAt: DateTime.parse(
             json['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
@@ -164,6 +167,7 @@ class FeedPost {
     int? commentCount,
     String? status,
     bool? isApproved,
+    bool? isRefused,
     bool? isLiked,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -189,6 +193,7 @@ class FeedPost {
       commentCount: commentCount ?? this.commentCount,
       status: status ?? this.status,
       isApproved: isApproved ?? this.isApproved,
+      isRefused: isRefused ?? this.isRefused,
       isLiked: isLiked ?? this.isLiked,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

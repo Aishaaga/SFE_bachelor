@@ -332,6 +332,16 @@ class _FeedPostCardState extends State<FeedPostCard> {
                         icon: Icons.verified_rounded,
                       ),
                     ],
+                    if (widget.post.isRefused &&
+                        widget.post.type == 'translation_suggestion') ...[
+                      const SizedBox(width: 6),
+                      _Pill(
+                        label: 'Refusé par l\'admin',
+                        color: AppTheme.refusedText,
+                        bg: AppTheme.refusedBg,
+                        icon: Icons.block_rounded,
+                      ),
+                    ],
                   ],
                 ),
                 const SizedBox(height: 2),
