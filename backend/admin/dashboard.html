@@ -387,6 +387,175 @@
         .btn-save:hover {
             background: #1e5a3a;
         }
+        .moderation-section h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .moderation-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .moderation-filters label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        .moderation-filters select,
+        .moderation-filters input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .moderation-filters select {
+            min-width: 120px;
+        }
+        .moderation-filters input[type="text"] {
+            min-width: 200px;
+        }
+        .moderation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .moderation-tab {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .moderation-tab:hover {
+            border-color: #2e8b57;
+        }
+        .moderation-tab.active {
+            background: #2e8b57;
+            color: white;
+            border-color: #2e8b57;
+        }
+        .moderation-content {
+            display: none;
+        }
+        .moderation-content.active {
+            display: block;
+        }
+        .moderation-content h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .moderation-table-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .moderation-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .moderation-table th {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .moderation-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .moderation-table tr:hover {
+            background: #f8f9fa;
+        }
+        .content-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .content-preview img {
+            max-width: 50px;
+            max-height: 50px;
+            border-radius: 4px;
+            object-fit: cover;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.visible {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status-badge.hidden {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .report-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            background: #fff3e0;
+            color: #e65100;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .moderation-actions {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        .btn-action-small {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        .btn-hide {
+            background: #ffc107;
+            color: #333;
+        }
+        .btn-hide:hover {
+            background: #ffb300;
+        }
+        .btn-restore {
+            background: #28a745;
+            color: white;
+        }
+        .btn-restore:hover {
+            background: #218838;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        .btn-view {
+            background: #17a2b8;
+            color: white;
+        }
+        .btn-view:hover {
+            background: #138496;
+        }
     </style>
 </head>
 <body>
@@ -398,6 +567,7 @@
     <div class="nav-tabs">
         <button class="nav-tab active" data-tab="suggestions">📝 Suggestions</button>
         <button class="nav-tab" data-tab="users">👥 Users</button>
+        <button class="nav-tab" data-tab="moderation">🛡️ Moderation</button>
     </div>
     
     <div class="tab-content active" id="suggestionsTab">
@@ -446,6 +616,72 @@
         </div>
     </div>
     
+    <div class="tab-content" id="moderationTab">
+        <div class="moderation-section">
+            <h2>🛡️ Content Moderation</h2>
+            
+            <div class="moderation-filters">
+                <label>
+                    <input type="checkbox" id="reportedOnlyFilter"> Show only reported posts
+                </label>
+                <select id="dateRangeFilter">
+                    <option value="all">All time</option>
+                    <option value="7days">Last 7 days</option>
+                    <option value="30days">Last 30 days</option>
+                </select>
+                <input type="text" id="userFilter" placeholder="Filter by user email...">
+            </div>
+            
+            <div class="moderation-tabs">
+                <button class="moderation-tab active" data-content="identifications">📝 Identification Posts</button>
+                <button class="moderation-tab" data-content="translations">🌐 Translation Suggestions</button>
+            </div>
+            
+            <div class="moderation-content active" id="identifications">
+                <h3>Identification Posts</h3>
+                <div class="moderation-table-container">
+                    <table class="moderation-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Content</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Reports</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="identificationsList">
+                            <tr><td colspan="6"><div class="loading">Loading identifications...</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="identificationsPagination"></div>
+            </div>
+            
+            <div class="moderation-content" id="translations">
+                <h3>Translation Suggestions</h3>
+                <div class="moderation-table-container">
+                    <table class="moderation-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Content</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Reports</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="translationsList">
+                            <tr><td colspan="6"><div class="loading">Loading translations...</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="translationsPagination"></div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const token = localStorage.getItem('adminToken');
@@ -469,9 +705,11 @@
                 document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
-                
+
                 if (tab.dataset.tab === 'users') {
                     loadUsers();
+                } else if (tab.dataset.tab === 'moderation') {
+                    loadModerationContent();
                 }
             });
         });
@@ -703,7 +941,280 @@
             div.textContent = text;
             return div.innerHTML;
         }
-        
+
+        // ==================== SIMPLIFIED MODERATION FUNCTIONS ====================
+
+        let moderationCurrentPage = 1;
+        let currentModerationTab = 'identifications';
+
+        // Moderation sub-tab switching
+        document.querySelectorAll('.moderation-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.moderation-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.moderation-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.content).classList.add('active');
+                currentModerationTab = tab.dataset.content;
+                moderationCurrentPage = 1;
+                loadModerationContent();
+            });
+        });
+
+        // Filter event listeners
+        document.getElementById('reportedOnlyFilter').addEventListener('change', () => {
+            moderationCurrentPage = 1;
+            loadModerationContent();
+        });
+
+        document.getElementById('dateRangeFilter').addEventListener('change', () => {
+            moderationCurrentPage = 1;
+            loadModerationContent();
+        });
+
+        document.getElementById('userFilter').addEventListener('input', () => {
+            moderationCurrentPage = 1;
+            loadModerationContent();
+        });
+
+        async function loadModerationContent() {
+            if (currentModerationTab === 'identifications') {
+                loadIdentifications();
+            } else if (currentModerationTab === 'translations') {
+                loadTranslations();
+            }
+        }
+
+        async function loadIdentifications(page = 1) {
+            const container = document.getElementById('identificationsList');
+            const paginationContainer = document.getElementById('identificationsPagination');
+            container.innerHTML = '<tr><td colspan="6"><div class="loading">Loading identifications...</div></td></tr>';
+            paginationContainer.innerHTML = '';
+
+            try {
+                const reportedOnly = document.getElementById('reportedOnlyFilter').checked;
+                const dateRange = document.getElementById('dateRangeFilter').value;
+                const userEmail = document.getElementById('userFilter').value;
+
+                let url = `http://localhost:3000/api/admin/moderation/identifications?page=${page}&limit=10&reportedOnly=${reportedOnly}&dateRange=${dateRange}`;
+                if (userEmail) {
+                    url += `&userId=${userEmail}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.posts && data.posts.length > 0) {
+                    container.innerHTML = data.posts.map(post => `
+                        <tr>
+                            <td>
+                                <div>${escapeHtml(post.userId?.name || 'Anonymous')}</div>
+                                <div style="font-size: 12px; color: #666;">${escapeHtml(post.userId?.email || '')}</div>
+                            </td>
+                            <td>
+                                <div class="content-preview">
+                                    ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" alt="">` : ''}
+                                    <strong>${escapeHtml(post.plantName)}</strong> (${escapeHtml(post.scientificName)})
+                                </div>
+                            </td>
+                            <td>${new Date(post.createdAt).toLocaleDateString()}</td>
+                            <td><span class="status-badge ${post.status}">${post.status}</span></td>
+                            <td><span class="report-count">🚩 ${post.reportCount}</span></td>
+                            <td>
+                                <div class="moderation-actions">
+                                    ${post.status === 'visible' 
+                                        ? `<button class="btn-action-small btn-hide" onclick="hideContent('identification', '${post._id}')">Hide</button>`
+                                        : `<button class="btn-action-small btn-restore" onclick="restoreContent('identification', '${post._id}')">Restore</button>`
+                                    }
+                                    <button class="btn-action-small btn-delete" onclick="deleteContent('identification', '${post._id}')">Delete</button>
+                                    <button class="btn-action-small btn-view" onclick="viewReports('identification', '${post._id}')">View Reports</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    if (data.pagination.pages > 1) {
+                        let paginationHTML = '';
+                        for (let i = 1; i <= data.pagination.pages; i++) {
+                            paginationHTML += `<button class="${i === page ? 'active' : ''}" onclick="loadIdentifications(${i})">${i}</button>`;
+                        }
+                        paginationContainer.innerHTML = paginationHTML;
+                    }
+                } else {
+                    container.innerHTML = '<tr><td colspan="6"><div class="empty-state">No identifications found.</div></td></tr>';
+                }
+            } catch (err) {
+                console.error('Error loading identifications:', err);
+                container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Error loading identifications.</div></td></tr>';
+            }
+        }
+
+        async function loadTranslations(page = 1) {
+            const container = document.getElementById('translationsList');
+            const paginationContainer = document.getElementById('translationsPagination');
+            container.innerHTML = '<tr><td colspan="6"><div class="loading">Loading translations...</div></td></tr>';
+            paginationContainer.innerHTML = '';
+
+            try {
+                const reportedOnly = document.getElementById('reportedOnlyFilter').checked;
+                const dateRange = document.getElementById('dateRangeFilter').value;
+                const userEmail = document.getElementById('userFilter').value;
+
+                let url = `http://localhost:3000/api/admin/moderation/translations?page=${page}&limit=10&reportedOnly=${reportedOnly}&dateRange=${dateRange}`;
+                if (userEmail) {
+                    url += `&userId=${userEmail}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.posts && data.posts.length > 0) {
+                    container.innerHTML = data.posts.map(post => `
+                        <tr>
+                            <td>
+                                <div>${escapeHtml(post.userId?.name || 'Anonymous')}</div>
+                                <div style="font-size: 12px; color: #666;">${escapeHtml(post.userId?.email || '')}</div>
+                            </td>
+                            <td>
+                                <div class="content-preview">
+                                    <strong>${escapeHtml(post.plantName)}</strong> (${escapeHtml(post.scientificName)})
+                                    ${post.suggestedDarija ? `<div>🇩🇿 ${escapeHtml(post.suggestedDarija)}</div>` : ''}
+                                    ${post.suggestedTamazight ? `<div>🏔️ ${escapeHtml(post.suggestedTamazight)}</div>` : ''}
+                                </div>
+                            </td>
+                            <td>${new Date(post.createdAt).toLocaleDateString()}</td>
+                            <td><span class="status-badge ${post.status}">${post.status}</span></td>
+                            <td><span class="report-count">🚩 ${post.reportCount}</span></td>
+                            <td>
+                                <div class="moderation-actions">
+                                    ${post.status === 'visible' 
+                                        ? `<button class="btn-action-small btn-hide" onclick="hideContent('translation', '${post._id}')">Hide</button>`
+                                        : `<button class="btn-action-small btn-restore" onclick="restoreContent('translation', '${post._id}')">Restore</button>`
+                                    }
+                                    <button class="btn-action-small btn-delete" onclick="deleteContent('translation', '${post._id}')">Delete</button>
+                                    <button class="btn-action-small btn-view" onclick="viewReports('translation', '${post._id}')">View Reports</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `).join('');
+
+                    if (data.pagination.pages > 1) {
+                        let paginationHTML = '';
+                        for (let i = 1; i <= data.pagination.pages; i++) {
+                            paginationHTML += `<button class="${i === page ? 'active' : ''}" onclick="loadTranslations(${i})">${i}</button>`;
+                        }
+                        paginationContainer.innerHTML = paginationHTML;
+                    }
+                } else {
+                    container.innerHTML = '<tr><td colspan="6"><div class="empty-state">No translations found.</div></td></tr>';
+                }
+            } catch (err) {
+                console.error('Error loading translations:', err);
+                container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Error loading translations.</div></td></tr>';
+            }
+        }
+
+        async function hideContent(contentType, contentId) {
+            const reason = prompt('Reason for hiding this content (optional):');
+            try {
+                const response = await fetch('http://localhost:3000/api/admin/moderation/hide', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ contentType, contentId, reason })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    loadModerationContent();
+                    alert('Content hidden successfully!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function restoreContent(contentType, contentId) {
+            if (confirm('Restore this content to make it visible again?')) {
+                try {
+                    const response = await fetch('http://localhost:3000/api/admin/moderation/restore', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ contentType, contentId })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        loadModerationContent();
+                        alert('Content restored successfully!');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            }
+        }
+
+        async function deleteContent(contentType, contentId) {
+            if (confirm('PERMANENTLY delete this content? This action cannot be undone.')) {
+                try {
+                    const response = await fetch('http://localhost:3000/api/admin/moderation/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ contentType, contentId })
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        loadModerationContent();
+                        alert('Content deleted permanently!');
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                } catch (err) {
+                    alert('Error: ' + err.message);
+                }
+            }
+        }
+
+        async function viewReports(contentType, contentId) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/admin/moderation/reports/${contentType}/${contentId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.reports && data.reports.length > 0) {
+                    let reportDetails = 'Reports for this content:\n\n';
+                    data.reports.forEach(report => {
+                        reportDetails += `- ${new Date(report.createdAt).toLocaleString()}\n`;
+                        reportDetails += `  By: ${report.reportedBy?.name || 'Unknown'} (${report.reportedBy?.email || ''})\n`;
+                        reportDetails += `  Reason: ${report.reason}\n`;
+                        reportDetails += `  Status: ${report.status}\n\n`;
+                    });
+                    alert(reportDetails);
+                } else {
+                    alert('No reports found for this content.');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
         loadStats();
         loadSuggestions();
     </script>

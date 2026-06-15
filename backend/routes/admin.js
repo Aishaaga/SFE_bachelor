@@ -7,6 +7,9 @@ const adminAuth = require('../middleware/adminAuth');
 const auth = require('../middleware/auth'); // Regular auth first
 const TranslationSuggestion = require('../models/TranslationSuggestion');
 const FeedPost = require('../models/FeedPost');
+const FeedComment = require('../models/FeedComment');
+const HiddenContent = require('../models/HiddenContent');
+const ContentReport = require('../models/ContentReport');
 const TranslationVote = require('../models/TranslationVote');
 const User = require('../models/User');
 const Identification = require('../models/Identification');
@@ -453,4 +456,283 @@ router.post('/users/:id/reset-password', auth, adminAuth, async (req, res) => {
   }
 });
 
+
+// ==================== SIMPLIFIED CONTENT MODERATION ENDPOINTS ====================
+
+// GET /api/admin/moderation/identifications - Get all identification posts with filters
+router.get('/moderation/identifications', auth, adminAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const reportedOnly = req.query.reportedOnly === 'true';
+    const userId = req.query.userId;
+    const dateRange = req.query.dateRange; // '7days', '30days', 'all'
+
+    let query = { type: 'identification' };
+
+    // Filter by reported content
+    if (reportedOnly) {
+      const reportedContentIds = await ContentReport.find({
+        contentType: 'identification',
+        status: 'pending'
+      }).distinct('contentId');
+      query._id = { $in: reportedContentIds };
+    }
+
+    // Filter by user
+    if (userId) {
+      query.userId = userId;
+    }
+
+    // Filter by date range
+    if (dateRange === '7days') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      query.createdAt = { $gte: sevenDaysAgo };
+    } else if (dateRange === '30days') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      query.createdAt = { $gte: thirtyDaysAgo };
+    }
+
+    const posts = await FeedPost.find(query)
+      .populate('userId', 'name email username')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Get hidden content IDs and report counts for each post
+    const postIds = posts.map(p => p._id);
+    const hiddenContent = await HiddenContent.find({
+      contentType: 'identification',
+      contentId: { $in: postIds }
+    });
+    const hiddenContentIds = new Set(hiddenContent.map(h => h.contentId.toString()));
+
+    const reports = await ContentReport.aggregate([
+      { $match: { contentType: 'identification', contentId: { $in: postIds } } },
+      { $group: { _id: '$contentId', count: { $sum: 1 } } }
+    ]);
+    const reportCounts = {};
+    reports.forEach(r => { reportCounts[r._id.toString()] = r.count; });
+
+    // Add status and report count to each post
+    const postsWithStatus = posts.map(post => ({
+      ...post.toObject(),
+      status: hiddenContentIds.has(post._id.toString()) ? 'hidden' : 'visible',
+      reportCount: reportCounts[post._id.toString()] || 0
+    }));
+
+    const total = await FeedPost.countDocuments(query);
+
+    res.json({
+      success: true,
+      posts: postsWithStatus,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching identifications:', error);
+    res.status(500).json({ success: false, message: 'Error fetching identifications' });
+  }
+});
+
+// GET /api/admin/moderation/translations - Get all translation suggestions with filters
+router.get('/moderation/translations', auth, adminAuth, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+    const reportedOnly = req.query.reportedOnly === 'true';
+    const userId = req.query.userId;
+    const dateRange = req.query.dateRange; // '7days', '30days', 'all'
+
+    let query = { type: 'translation_suggestion' };
+
+    // Filter by reported content
+    if (reportedOnly) {
+      const reportedContentIds = await ContentReport.find({
+        contentType: 'translation',
+        status: 'pending'
+      }).distinct('contentId');
+      query._id = { $in: reportedContentIds };
+    }
+
+    // Filter by user
+    if (userId) {
+      query.userId = userId;
+    }
+
+    // Filter by date range
+    if (dateRange === '7days') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      query.createdAt = { $gte: sevenDaysAgo };
+    } else if (dateRange === '30days') {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      query.createdAt = { $gte: thirtyDaysAgo };
+    }
+
+    const posts = await FeedPost.find(query)
+      .populate('userId', 'name email username')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // Get hidden content IDs and report counts for each post
+    const postIds = posts.map(p => p._id);
+    const hiddenContent = await HiddenContent.find({
+      contentType: 'translation',
+      contentId: { $in: postIds }
+    });
+    const hiddenContentIds = new Set(hiddenContent.map(h => h.contentId.toString()));
+
+    const reports = await ContentReport.aggregate([
+      { $match: { contentType: 'translation', contentId: { $in: postIds } } },
+      { $group: { _id: '$contentId', count: { $sum: 1 } } }
+    ]);
+    const reportCounts = {};
+    reports.forEach(r => { reportCounts[r._id.toString()] = r.count; });
+
+    // Add status and report count to each post
+    const postsWithStatus = posts.map(post => ({
+      ...post.toObject(),
+      status: hiddenContentIds.has(post._id.toString()) ? 'hidden' : 'visible',
+      reportCount: reportCounts[post._id.toString()] || 0
+    }));
+
+    const total = await FeedPost.countDocuments(query);
+
+    res.json({
+      success: true,
+      posts: postsWithStatus,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching translations:', error);
+    res.status(500).json({ success: false, message: 'Error fetching translations' });
+  }
+});
+
+// POST /api/admin/moderation/hide - Hide content
+router.post('/moderation/hide', auth, adminAuth, async (req, res) => {
+  try {
+    const { contentType, contentId, reason } = req.body;
+
+    // Check if already hidden
+    const existingHidden = await HiddenContent.findOne({
+      contentType,
+      contentId
+    });
+
+    if (existingHidden) {
+      return res.status(400).json({ success: false, message: 'Content already hidden' });
+    }
+
+    // Create hidden content record
+    const hiddenContent = new HiddenContent({
+      contentType,
+      contentId,
+      hiddenBy: req.userId,
+      reason: reason || ''
+    });
+
+    await hiddenContent.save();
+
+    res.json({
+      success: true,
+      message: 'Content hidden successfully'
+    });
+  } catch (error) {
+    console.error('Error hiding content:', error);
+    res.status(500).json({ success: false, message: 'Error hiding content' });
+  }
+});
+
+// POST /api/admin/moderation/restore - Restore hidden content
+router.post('/moderation/restore', auth, adminAuth, async (req, res) => {
+  try {
+    const { contentType, contentId } = req.body;
+
+    await HiddenContent.deleteOne({
+      contentType,
+      contentId
+    });
+
+    res.json({
+      success: true,
+      message: 'Content restored successfully'
+    });
+  } catch (error) {
+    console.error('Error restoring content:', error);
+    res.status(500).json({ success: false, message: 'Error restoring content' });
+  }
+});
+
+// DELETE /api/admin/moderation/delete - Permanently delete content
+router.delete('/moderation/delete', auth, adminAuth, async (req, res) => {
+  try {
+    const { contentType, contentId } = req.body;
+
+    // Delete from FeedPost
+    await FeedPost.findByIdAndDelete(contentId);
+
+    // Also remove from hidden content if exists
+    await HiddenContent.deleteOne({
+      contentType,
+      contentId
+    });
+
+    // Mark all related reports as reviewed
+    await ContentReport.updateMany(
+      { contentType, contentId },
+      { status: 'reviewed', reviewedBy: req.userId, reviewedAt: new Date() }
+    );
+
+    res.json({
+      success: true,
+      message: 'Content deleted permanently'
+    });
+  } catch (error) {
+    console.error('Error deleting content:', error);
+    res.status(500).json({ success: false, message: 'Error deleting content' });
+  }
+});
+
+// GET /api/admin/moderation/reports/:contentType/:contentId - Get reports for specific content
+router.get('/moderation/reports/:contentType/:contentId', auth, adminAuth, async (req, res) => {
+  try {
+    const { contentType, contentId } = req.params;
+
+    const reports = await ContentReport.find({
+      contentType,
+      contentId
+    })
+      .populate('reportedBy', 'name email username')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      reports: reports
+    });
+  } catch (error) {
+    console.error('Error fetching reports:', error);
+    res.status(500).json({ success: false, message: 'Error fetching reports' });
+  }
+});
+
+
 module.exports = router;
+
+

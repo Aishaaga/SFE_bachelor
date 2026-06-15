@@ -4,6 +4,8 @@ const FeedPost = require('../models/FeedPost');
 const FeedLike = require('../models/FeedLike');
 const Plant = require('../models/Plant');
 const Identification = require('../models/Identification');
+const ContentReport = require('../models/ContentReport');
+const HiddenContent = require('../models/HiddenContent');
 const auth = require('../middleware/auth');
 
 // POST /api/feed/share - Share a discovery to the community feed
@@ -173,6 +175,15 @@ router.get('/', async (req, res) => {
       }
     }
 
+    // Get hidden content IDs to exclude from feed
+    const hiddenContent = await HiddenContent.find({});
+    const hiddenContentIds = new Set(hiddenContent.map(h => h.contentId.toString()));
+
+    // Add exclusion for hidden content
+    if (hiddenContentIds.size > 0) {
+      query._id = { $nin: Array.from(hiddenContentIds) };
+    }
+
     const posts = await FeedPost.find(query)
       .populate('userId', 'email username')
       .populate('plantId', 'name scientificName family')
@@ -277,11 +288,12 @@ router.post('/:id/like', auth, async (req, res) => {
   }
 });
 
-// POST /api/feed/:id/flag - Flag a feed post
-router.post('/:id/flag', auth, async (req, res) => {
+// POST /api/feed/:id/report - Report a feed post
+router.post('/:id/report', auth, async (req, res) => {
   try {
+    const { reason } = req.body;
     const post = await FeedPost.findById(req.params.id);
-    
+
     if (!post) {
       return res.status(404).json({
         success: false,
@@ -289,19 +301,51 @@ router.post('/:id/flag', auth, async (req, res) => {
       });
     }
 
-    post.status = 'flagged';
-    await post.save();
+    if (!reason || reason.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Report reason is required'
+      });
+    }
+
+    // Determine content type based on post type
+    const contentType = post.type === 'identification' ? 'identification' : 'translation';
+
+    // Check if user already reported this content
+    const existingReport = await ContentReport.findOne({
+      contentType,
+      contentId: post._id,
+      reportedBy: req.userId
+    });
+
+    if (existingReport) {
+      return res.status(400).json({
+        success: false,
+        message: 'You have already reported this content'
+      });
+    }
+
+    // Create report
+    const report = new ContentReport({
+      contentType,
+      contentId: post._id,
+      reportedBy: req.userId,
+      reason: reason.trim(),
+      status: 'pending'
+    });
+
+    await report.save();
 
     res.json({
       success: true,
-      message: 'Post flagged successfully'
+      message: 'Content reported successfully'
     });
 
   } catch (error) {
-    console.error('Error flagging post:', error);
+    console.error('Error reporting post:', error);
     res.status(500).json({
       success: false,
-      message: 'Error flagging post'
+      message: 'Error reporting post'
     });
   }
 });
