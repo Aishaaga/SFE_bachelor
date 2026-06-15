@@ -21,6 +21,7 @@ class FeedPost {
   final bool isApproved;
   final bool isRefused;
   final bool isLiked;
+  final String? userVoteType; // 'upvote', 'downvote', or null
   final DateTime createdAt;
   final DateTime updatedAt;
   final User? user;
@@ -47,6 +48,7 @@ class FeedPost {
     this.isApproved = false,
     this.isRefused = false,
     this.isLiked = false,
+    this.userVoteType,
     required this.createdAt,
     required this.updatedAt,
     this.user,
@@ -109,6 +111,7 @@ class FeedPost {
         isApproved: json['status']?.toString() == 'approved',
         isRefused: json['status']?.toString() == 'refused',
         isLiked: json['isLiked'] == true,
+        userVoteType: json['userVoteType']?.toString(),
         createdAt: DateTime.parse(
             json['createdAt']?.toString() ?? DateTime.now().toIso8601String()),
         updatedAt: DateTime.parse(
@@ -169,6 +172,7 @@ class FeedPost {
     bool? isApproved,
     bool? isRefused,
     bool? isLiked,
+    String? userVoteType,
     DateTime? createdAt,
     DateTime? updatedAt,
     User? user,
@@ -195,6 +199,7 @@ class FeedPost {
       isApproved: isApproved ?? this.isApproved,
       isRefused: isRefused ?? this.isRefused,
       isLiked: isLiked ?? this.isLiked,
+      userVoteType: userVoteType ?? this.userVoteType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       user: user ?? this.user,

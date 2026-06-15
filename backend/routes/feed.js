@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const FeedPost = require('../models/FeedPost');
 const FeedLike = require('../models/FeedLike');
+const TranslationVote = require('../models/TranslationVote');
 const Plant = require('../models/Plant');
 const Identification = require('../models/Identification');
 const ContentReport = require('../models/ContentReport');
@@ -206,6 +207,27 @@ router.get('/', async (req, res) => {
       posts.forEach(post => {
         post._doc.isLiked = likedPostIds.has(post._id.toString());
       });
+
+      // Check vote status for translation suggestion posts
+      const translationPosts = posts.filter(post => post.type === 'translation_suggestion');
+      if (translationPosts.length > 0) {
+        const translationPostIds = translationPosts.map(post => post._id);
+        const userVotes = await TranslationVote.find({
+          translationSuggestionId: { $in: translationPostIds },
+          userId: userId
+        });
+
+        // Create a map of post ID to vote type
+        const voteMap = {};
+        userVotes.forEach(vote => {
+          voteMap[vote.translationSuggestionId.toString()] = vote.voteType;
+        });
+
+        // Add vote type to each translation post
+        translationPosts.forEach(post => {
+          post._doc.userVoteType = voteMap[post._id.toString()] || null;
+        });
+      }
     }
 
     const total = await FeedPost.countDocuments(query);
@@ -243,6 +265,39 @@ router.get('/:id', async (req, res) => {
         success: false,
         message: 'Post not found'
       });
+    }
+
+    // Get user ID from auth header if available
+    const authHeader = req.headers.authorization;
+    let userId = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+        userId = decoded.userId;
+      } catch (e) {
+        // Token invalid, continue without user ID
+      }
+    }
+
+    // If user is authenticated, check liked and vote status
+    if (userId) {
+      // Check liked status
+      const userLike = await FeedLike.findOne({
+        feedPostId: post._id,
+        userId: userId
+      });
+      post._doc.isLiked = !!userLike;
+
+      // Check vote status for translation suggestions
+      if (post.type === 'translation_suggestion') {
+        const userVote = await TranslationVote.findOne({
+          translationSuggestionId: post._id,
+          userId: userId
+        });
+        post._doc.userVoteType = userVote ? userVote.voteType : null;
+      }
     }
 
     res.json({

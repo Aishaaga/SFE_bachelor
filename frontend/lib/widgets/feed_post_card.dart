@@ -180,6 +180,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
   late int _downvotes;
   late int _likes;
   bool _isLiked = false;
+  String? _userVoteType; // 'upvote', 'downvote', or null
 
   @override
   void initState() {
@@ -188,6 +189,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
     _downvotes = widget.post.downvotes;
     _likes = widget.post.likeCount;
     _isLiked = widget.post.isLiked;
+    _userVoteType = widget.post.userVoteType;
   }
 
   @override
@@ -531,13 +533,14 @@ class _FeedPostCardState extends State<FeedPostCard> {
                 },
               ),
               const Spacer(),
-              // Upvote / Downvote (translation only, not approved)
-              if (isTranslation && !widget.post.isApproved) ...[
+              // Upvote / Downvote (translation only)
+              if (isTranslation) ...[
                 _ActionButton(
                   icon: Icons.thumb_up_rounded,
                   count: _upvotes.toString(),
                   onTap: () => _handleVote('upvote'),
                   activeColor: AppTheme.upvoteColor,
+                  isActive: _userVoteType == 'upvote',
                 ),
                 const SizedBox(width: 2),
                 _ActionButton(
@@ -545,6 +548,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
                   count: _downvotes.toString(),
                   onTap: () => _handleVote('downvote'),
                   activeColor: AppTheme.downvoteColor,
+                  isActive: _userVoteType == 'downvote',
                 ),
                 const SizedBox(width: 4),
               ],
@@ -757,9 +761,18 @@ class _FeedPostCardState extends State<FeedPostCard> {
           setState(() {
             _upvotes = result['voteCounts']['upvotes'] ?? _upvotes;
             _downvotes = result['voteCounts']['downvotes'] ?? _downvotes;
+            // Update user vote type based on action
+            final action = result['action'];
+            if (action == 'created' || action == 'updated') {
+              _userVoteType = voteType;
+            }
           });
           widget.onVoteUpdate?.call(
-            widget.post.copyWith(upvotes: _upvotes, downvotes: _downvotes),
+            widget.post.copyWith(
+              upvotes: _upvotes,
+              downvotes: _downvotes,
+              userVoteType: _userVoteType,
+            ),
           );
         }
       } else {
