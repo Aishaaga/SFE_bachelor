@@ -232,6 +232,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
     final updatedPost = widget.post.copyWith(commentCount: _commentCount);
     return Scaffold(
       backgroundColor: AppTheme.scaffoldBg,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: AppTheme.primary,
         elevation: 0,
@@ -250,101 +251,74 @@ class _CommentsScreenState extends State<CommentsScreen> {
       ),
       body: Column(
         children: [
-          // Post preview at the top
-          Container(
-            color: Colors.white,
-            child: FeedPostCard(
-              post: updatedPost,
-              onLike: () {},
-              onFlag: () {},
-            ),
-          ),
-          const Divider(height: 1, thickness: 1, color: AppTheme.divider),
-          // Comments list
           Expanded(
-            child: _buildCommentsList(),
+            child: _buildScrollableContent(updatedPost),
           ),
-          // Comment input
           _buildCommentInput(),
         ],
       ),
     );
   }
 
-  Widget _buildCommentsList() {
+  Widget _buildScrollableContent(FeedPost updatedPost) {
     if (_isLoading && _comments.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppTheme.primary),
+      return Column(
+        children: [
+          Container(
+              color: Colors.white,
+              child: FeedPostCard(
+                  post: updatedPost, onLike: () {}, onFlag: () {})),
+          const Divider(height: 1, thickness: 1, color: AppTheme.divider),
+          const Expanded(
+            child: Center(
+                child: CircularProgressIndicator(color: AppTheme.primary)),
+          ),
+        ],
       );
     }
 
     if (_error != null && _comments.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 64, color: Colors.grey[300]),
-              const SizedBox(height: 20),
-              Text(
-                _error!,
-                style: TextStyle(fontSize: 15, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () => _loadComments(refresh: true),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      return Column(
+        children: [
+          Container(
+              color: Colors.white,
+              child: FeedPostCard(
+                  post: updatedPost, onLike: () {}, onFlag: () {})),
+          const Divider(height: 1, thickness: 1, color: AppTheme.divider),
+          Expanded(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline_rounded,
+                        size: 64, color: Colors.grey[300]),
+                    const SizedBox(height: 20),
+                    Text(
+                      _error!,
+                      style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: () => _loadComments(refresh: true),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('Retry'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      );
-    }
-
-    if (_comments.isEmpty) {
-      return Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.08),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.chat_bubble_outline_rounded,
-                    size: 40, color: AppTheme.primary),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'No comments yet',
-                style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Be the first to comment!',
-                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-              ),
-            ],
-          ),
-        ),
+        ],
       );
     }
 
@@ -353,24 +327,81 @@ class _CommentsScreenState extends State<CommentsScreen> {
       onRefresh: () => _loadComments(refresh: true),
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: _comments.length + (_hasMore ? 1 : 0),
+        padding: EdgeInsets.zero,
+        itemCount: 1 + // post card
+            1 + // divider
+            (_comments.isEmpty ? 1 : _comments.length) +
+            (_hasMore && _comments.isNotEmpty ? 1 : 0),
         itemBuilder: (context, index) {
-          if (index == _comments.length) {
+          if (index == 0) {
+            return Container(
+              color: Colors.white,
+              child:
+                  FeedPostCard(post: updatedPost, onLike: () {}, onFlag: () {}),
+            );
+          }
+          if (index == 1) {
+            return const Divider(
+                height: 1, thickness: 1, color: AppTheme.divider);
+          }
+
+          final commentIndex = index - 2;
+
+          if (_comments.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          if (commentIndex == _comments.length) {
             return const Padding(
               padding: EdgeInsets.all(24),
               child: Center(
-                child: CircularProgressIndicator(color: AppTheme.primary),
-              ),
+                  child: CircularProgressIndicator(color: AppTheme.primary)),
             );
           }
-          final comment = _comments[index];
+
+          final comment = _comments[commentIndex];
           return _CommentTile(
             comment: comment,
             onDelete: () => _deleteComment(comment.id!),
             currentUserId: _currentUserId,
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.chat_bubble_outline_rounded,
+                  size: 40, color: AppTheme.primary),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No comments yet',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Be the first to comment!',
+              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -389,6 +420,7 @@ class _CommentsScreenState extends State<CommentsScreen> {
         ],
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Anonymous toggle
           Row(
