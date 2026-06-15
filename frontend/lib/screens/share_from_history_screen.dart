@@ -3,6 +3,7 @@ import '../services/location_service.dart';
 import '../services/feed_service.dart';
 import '../services/profile_service.dart';
 import '../data/plant_translations.dart';
+import '../widgets/app_theme.dart';
 
 class ShareFromHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> identification;
@@ -117,7 +118,17 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select City'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Text(
+          'Select City',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -126,9 +137,15 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
             itemBuilder: (context, index) {
               final city = _moroccanCities[index];
               return ListTile(
-                title: Text(city),
+                title: Text(
+                  city,
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 trailing: _location == city
-                    ? const Icon(Icons.check, color: Colors.green)
+                    ? Icon(Icons.check, color: AppTheme.primary)
                     : null,
                 onTap: () {
                   setState(() {
@@ -143,7 +160,13 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -153,11 +176,20 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        title: const Text('Share Discovery'),
+        title: const Text(
+          'Share Discovery',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -172,51 +204,39 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title with leaf icon
-                  Row(
-                    children: [
-                      Icon(Icons.eco, color: Colors.green, size: 28),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Share your discovery?',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
 
                   // Plant photo
                   Center(
-                    child: Card(
-                      elevation: 4,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        boxShadow: AppTheme.cardShadow,
+                      ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         child: Image.network(
                           widget.imageUrl,
-                          height: 200,
+                          height: 220,
                           width: double.infinity,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              height: 200,
+                              height: 220,
                               width: double.infinity,
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.eco,
-                                  size: 50, color: Colors.grey),
+                              color: AppTheme.primarySurface,
+                              child: Icon(Icons.eco,
+                                  size: 50, color: AppTheme.primary),
                             );
                           },
                           loadingBuilder: (context, child, loadingProgress) {
                             if (loadingProgress == null) return child;
                             return Container(
-                              height: 200,
+                              height: 220,
                               width: double.infinity,
-                              color: Colors.grey[200],
+                              color: AppTheme.primarySurface,
                               child: const Center(
                                 child: CircularProgressIndicator(
-                                    color: Colors.green),
+                                    color: AppTheme.primary),
                               ),
                             );
                           },
@@ -230,70 +250,146 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                   Text(
                     'Post as:',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  RadioListTile<String>(
-                    title: Text(_username != null ? _username! : 'User'),
-                    value: _username != null ? _username! : 'User',
-                    groupValue: _postAs,
-                    onChanged: (value) {
-                      setState(() {
-                        _postAs = value!;
-                      });
-                    },
-                    activeColor: Colors.green,
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        RadioListTile<String>(
+                          title: Text(
+                            _username != null ? _username! : 'User',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          value: _username != null ? _username! : 'User',
+                          groupValue: _postAs,
+                          onChanged: (value) {
+                            setState(() {
+                              _postAs = value!;
+                            });
+                          },
+                          activeColor: AppTheme.primary,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 1,
+                          ),
+                        ),
+                        Divider(height: 1, color: AppTheme.divider),
+                        RadioListTile<String>(
+                          title: const Text(
+                            'Anonymous',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          value: 'Anonymous',
+                          groupValue: _postAs,
+                          onChanged: (value) {
+                            setState(() {
+                              _postAs = value!;
+                            });
+                          },
+                          activeColor: AppTheme.primary,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  RadioListTile<String>(
-                    title: const Text('Anonymous'),
-                    value: 'Anonymous',
-                    groupValue: _postAs,
-                    onChanged: (value) {
-                      setState(() {
-                        _postAs = value!;
-                      });
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // Location section
                   Text(
                     'Location:',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  ..._locationLevels.map((level) => RadioListTile<String>(
-                        title: Text(_getLocationTitle(level)),
-                        subtitle: Text(_getLocationSubtitle(level)),
-                        value: level,
-                        groupValue: _location,
-                        onChanged: (value) {
-                          setState(() {
-                            _location = value!;
-                            if (value == 'City' && _detectedCity == null) {
-                              _detectLocation();
-                            }
-                          });
-                        },
-                        activeColor: Colors.green,
-                      )),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        ..._locationLevels.map((level) {
+                          final isLast = level == _locationLevels.last;
+                          return Column(
+                            children: [
+                              RadioListTile<String>(
+                                title: Text(
+                                  _getLocationTitle(level),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  _getLocationSubtitle(level),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                                value: level,
+                                groupValue: _location,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _location = value!;
+                                    if (value == 'City' &&
+                                        _detectedCity == null) {
+                                      _detectLocation();
+                                    }
+                                  });
+                                },
+                                activeColor: AppTheme.primary,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 1,
+                                ),
+                              ),
+                              if (!isLast)
+                                Divider(height: 1, color: AppTheme.divider),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
                   if (_location == 'City') ...[
                     if (_isLoadingLocation)
-                      const Padding(
-                        padding: EdgeInsets.all(16),
+                      Padding(
+                        padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            CircularProgressIndicator(color: Colors.green),
-                            SizedBox(width: 16),
-                            Text('Detecting your city...'),
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppTheme.primary),
+                            ),
+                            const SizedBox(width: 16),
+                            Text(
+                              'Detecting your city...',
+                              style: TextStyle(color: AppTheme.textSecondary),
+                            ),
                           ],
                         ),
                       )
@@ -306,80 +402,100 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                             Text(
                               'Location permission denied',
                               style: TextStyle(
-                                color: Colors.red[700],
-                                fontWeight: FontWeight.w500,
+                                color: AppTheme.refusedText,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             ElevatedButton(
                               onPressed: _openSettings,
                               child: const Text('Open Settings'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: AppTheme.refusedText,
                                 foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusSm),
+                                ),
                               ),
                             ),
                           ],
                         ),
                       )
                     else if (_detectedCity != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppTheme.primarySurface,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(
+                            color: AppTheme.primary.withOpacity(0.2),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(Icons.location_on,
-                                color: Colors.green, size: 20),
-                            const SizedBox(width: 8),
+                                color: AppTheme.primary, size: 20),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 'Detected city: $_detectedCity',
                                 style: TextStyle(
-                                  color: Colors.green[800],
-                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                             TextButton(
                               onPressed: () => _showCitySelectionDialog(),
-                              child: const Text('Change'),
+                              child: Text(
+                                'Change',
+                                style: TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ],
                   ],
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
                   // Info message
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      border: Border.all(
+                        color: AppTheme.divider,
+                        width: 1,
+                      ),
                     ),
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                            color: Colors.grey[600], size: 20),
-                        const SizedBox(width: 8),
+                            color: AppTheme.textSecondary, size: 20),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Your country is always shown for context',
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // Action buttons
                   Row(
@@ -387,9 +503,20 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            side: BorderSide(color: AppTheme.divider),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                            ),
                           ),
                         ),
                       ),
@@ -397,11 +524,19 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _shareDiscovery,
-                          child: const Text('Share'),
+                          child: const Text(
+                            'Share',
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                            ),
                           ),
                         ),
                       ),
@@ -424,12 +559,18 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
         content: Row(
           children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 16),
-            Text('Sharing to community...'),
+            CircularProgressIndicator(color: AppTheme.primary),
+            const SizedBox(width: 16),
+            Text(
+              'Sharing to community...',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
           ],
         ),
       ),
@@ -525,11 +666,21 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            ),
             title: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green),
+                Icon(Icons.check_circle, color: AppTheme.primary),
                 const SizedBox(width: 8),
-                const Text('Discovery Posted!'),
+                Text(
+                  'Discovery Posted!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
               ],
             ),
             content: Column(
@@ -538,13 +689,18 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
               children: [
                 Text(
                   'Your discovery has been posted ${_postAs == 'Anonymous' ? 'anonymously' : 'as $_postAs'} and will be visible to the community.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   'Location: $locationText',
                   style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
               ],
@@ -555,7 +711,13 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
                   Navigator.pop(context); // Close dialog
                   Navigator.pop(context); // Go back to detail screen
                 },
-                child: const Text('OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -565,18 +727,41 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            ),
             title: Row(
               children: [
-                Icon(Icons.error, color: Colors.red),
+                Icon(Icons.error, color: AppTheme.refusedText),
                 const SizedBox(width: 8),
-                const Text('Error'),
+                Text(
+                  'Error',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.refusedText,
+                  ),
+                ),
               ],
             ),
-            content: Text(result['message'] ?? 'Failed to share discovery'),
+            content: Text(
+              result['message'] ?? 'Failed to share discovery',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.5,
+              ),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -590,18 +775,41 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          ),
           title: Row(
             children: [
-              Icon(Icons.error, color: Colors.red),
+              Icon(Icons.error, color: AppTheme.refusedText),
               const SizedBox(width: 8),
-              const Text('Error'),
+              Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.refusedText,
+                ),
+              ),
             ],
           ),
-          content: Text('Failed to share discovery: $e'),
+          content: Text(
+            'Failed to share discovery: $e',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),

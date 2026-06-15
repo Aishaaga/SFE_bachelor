@@ -6,6 +6,7 @@ import '../services/feed_service.dart';
 import '../services/profile_service.dart';
 import '../data/plant_translations.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_theme.dart';
 
 class ShareScreen extends StatefulWidget {
   final Plant plant;
@@ -131,7 +132,17 @@ class _ShareScreenState extends State<ShareScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.selectCity),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
+        title: Text(
+          l10n.selectCity,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.textPrimary,
+          ),
+        ),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.builder(
@@ -140,9 +151,15 @@ class _ShareScreenState extends State<ShareScreen> {
             itemBuilder: (context, index) {
               final city = _moroccanCities[index];
               return ListTile(
-                title: Text(city),
+                title: Text(
+                  city,
+                  style: TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 trailing: _location == city
-                    ? const Icon(Icons.check, color: Colors.green)
+                    ? Icon(Icons.check, color: AppTheme.primary)
                     : null,
                 onTap: () {
                   setState(() {
@@ -157,7 +174,13 @@ class _ShareScreenState extends State<ShareScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
+            child: Text(
+              l10n.cancel,
+              style: TextStyle(
+                color: AppTheme.textSecondary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -168,11 +191,20 @@ class _ShareScreenState extends State<ShareScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        title: Text(l10n.shareDiscovery),
+        title: Text(
+          l10n.shareDiscovery,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -186,32 +218,18 @@ class _ShareScreenState extends State<ShareScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title with leaf icon
-                  Row(
-                    children: [
-                      Icon(Icons.eco, color: Colors.green, size: 28),
-                      const SizedBox(width: 8),
-                      Text(
-                        l10n.shareYourDiscovery,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green[800],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
                   // Plant photo
                   Center(
-                    child: Card(
-                      elevation: 4,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        boxShadow: AppTheme.cardShadow,
+                      ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         child: Image.file(
                           widget.photo,
-                          height: 200,
+                          height: 220,
                           width: double.infinity,
                           fit: BoxFit.cover,
                         ),
@@ -224,63 +242,130 @@ class _ShareScreenState extends State<ShareScreen> {
                   Text(
                     l10n.postAs,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  RadioListTile<String>(
-                    title: Text(_username != null ? _username! : 'User'),
-                    value: _username != null ? _username! : 'User',
-                    groupValue: _postAs,
-                    onChanged: (value) {
-                      setState(() {
-                        _postAs = value!;
-                      });
-                    },
-                    activeColor: Colors.green,
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        RadioListTile<String>(
+                          title: Text(
+                            _username != null ? _username! : 'User',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          value: _username != null ? _username! : 'User',
+                          groupValue: _postAs,
+                          onChanged: (value) {
+                            setState(() {
+                              _postAs = value!;
+                            });
+                          },
+                          activeColor: AppTheme.primary,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 1,
+                          ),
+                        ),
+                        Divider(height: 1, color: AppTheme.divider),
+                        RadioListTile<String>(
+                          title: Text(
+                            l10n.anonymous,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          value: l10n.anonymous,
+                          groupValue: _postAs,
+                          onChanged: (value) {
+                            setState(() {
+                              _postAs = value!;
+                            });
+                          },
+                          activeColor: AppTheme.primary,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  RadioListTile<String>(
-                    title: Text(l10n.anonymous),
-                    value: l10n.anonymous,
-                    groupValue: _postAs,
-                    onChanged: (value) {
-                      setState(() {
-                        _postAs = value!;
-                      });
-                    },
-                    activeColor: Colors.green,
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // Location section
                   Text(
                     l10n.location,
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey[800],
+                      color: AppTheme.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  // Location level selection
-                  ..._locationLevels.map((level) => RadioListTile<String>(
-                        title: Text(_getLocationTitle(level)),
-                        subtitle: Text(_getLocationSubtitle(level)),
-                        value: level,
-                        groupValue: _location,
-                        onChanged: (value) {
-                          setState(() {
-                            _location = value!;
-                            if (value == l10n.cityLevel &&
-                                _detectedCity == null) {
-                              _detectLocation();
-                            }
-                          });
-                        },
-                        activeColor: Colors.green,
-                      )),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      boxShadow: AppTheme.cardShadow,
+                    ),
+                    child: Column(
+                      children: [
+                        ..._locationLevels.map((level) {
+                          final isLast = level == _locationLevels.last;
+                          return Column(
+                            children: [
+                              RadioListTile<String>(
+                                title: Text(
+                                  _getLocationTitle(level),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  _getLocationSubtitle(level),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                                value: level,
+                                groupValue: _location,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _location = value!;
+                                    if (value == l10n.cityLevel &&
+                                        _detectedCity == null) {
+                                      _detectLocation();
+                                    }
+                                  });
+                                },
+                                activeColor: AppTheme.primary,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 1,
+                                ),
+                              ),
+                              if (!isLast)
+                                Divider(height: 1, color: AppTheme.divider),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
                   // City selection and detection
                   if (_location == l10n.cityLevel) ...[
                     if (_isLoadingLocation)
@@ -288,10 +373,17 @@ class _ShareScreenState extends State<ShareScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Row(
                           children: [
-                            const CircularProgressIndicator(
-                                color: Colors.green),
+                            SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppTheme.primary),
+                            ),
                             const SizedBox(width: 16),
-                            Text(l10n.detectingYourCity),
+                            Text(
+                              l10n.detectingYourCity,
+                              style: TextStyle(color: AppTheme.textSecondary),
+                            ),
                           ],
                         ),
                       )
@@ -304,80 +396,100 @@ class _ShareScreenState extends State<ShareScreen> {
                             Text(
                               l10n.locationPermissionDenied,
                               style: TextStyle(
-                                color: Colors.red[700],
-                                fontWeight: FontWeight.w500,
+                                color: AppTheme.refusedText,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             ElevatedButton(
                               onPressed: _openSettings,
                               child: Text(l10n.openSettings),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
+                                backgroundColor: AppTheme.refusedText,
                                 foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusSm),
+                                ),
                               ),
                             ),
                           ],
                         ),
                       )
                     else if (_detectedCity != null) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppTheme.primarySurface,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(
+                            color: AppTheme.primary.withOpacity(0.2),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           children: [
                             Icon(Icons.location_on,
-                                color: Colors.green, size: 20),
-                            const SizedBox(width: 8),
+                                color: AppTheme.primary, size: 20),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 '${l10n.detectedCity} $_detectedCity',
                                 style: TextStyle(
-                                  color: Colors.green[800],
-                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                             TextButton(
                               onPressed: () => _showCitySelectionDialog(),
-                              child: Text(l10n.change),
+                              child: Text(
+                                l10n.change,
+                                style: TextStyle(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ],
                   ],
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
                   // Info message
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppTheme.cardBg,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      border: Border.all(
+                        color: AppTheme.divider,
+                        width: 1,
+                      ),
                     ),
                     child: Row(
                       children: [
                         Icon(Icons.info_outline,
-                            color: Colors.grey[600], size: 20),
-                        const SizedBox(width: 8),
+                            color: AppTheme.textSecondary, size: 20),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             l10n.yourCountryIsAlwaysShownForContext,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: AppTheme.textSecondary,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // Action buttons
                   Row(
@@ -385,9 +497,20 @@ class _ShareScreenState extends State<ShareScreen> {
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text(l10n.cancel),
+                          child: Text(
+                            l10n.cancel,
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            side: BorderSide(color: AppTheme.divider),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                            ),
                           ),
                         ),
                       ),
@@ -395,11 +518,19 @@ class _ShareScreenState extends State<ShareScreen> {
                       Expanded(
                         child: ElevatedButton(
                           onPressed: _shareDiscovery,
-                          child: Text(l10n.share),
+                          child: Text(
+                            l10n.share,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor: AppTheme.primary,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                            ),
                           ),
                         ),
                       ),
@@ -424,11 +555,17 @@ class _ShareScreenState extends State<ShareScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        ),
         content: Row(
           children: [
-            const CircularProgressIndicator(),
+            CircularProgressIndicator(color: AppTheme.primary),
             const SizedBox(width: 16),
-            Text(l10n.sharingToCommunity),
+            Text(
+              l10n.sharingToCommunity,
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
           ],
         ),
       ),
@@ -529,11 +666,21 @@ class _ShareScreenState extends State<ShareScreen> {
           context: context,
           barrierDismissible: false,
           builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            ),
             title: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green),
+                Icon(Icons.check_circle, color: AppTheme.primary),
                 const SizedBox(width: 8),
-                Text(l10n.discoveryPosted),
+                Text(
+                  l10n.discoveryPosted,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
               ],
             ),
             content: Column(
@@ -542,13 +689,18 @@ class _ShareScreenState extends State<ShareScreen> {
               children: [
                 Text(
                   '${l10n.yourDiscoveryHasBeenPosted} ${_postAs == l10n.anonymous ? l10n.anonymously : '${l10n.as} $_postAs'} ${l10n.andWillBeVisibleToTheCommunity}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppTheme.textSecondary,
+                    height: 1.5,
+                  ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   '${l10n.location}: $locationText',
                   style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
               ],
@@ -559,7 +711,13 @@ class _ShareScreenState extends State<ShareScreen> {
                   Navigator.pop(context); // Close dialog
                   Navigator.pop(context); // Go back to result screen
                 },
-                child: Text(l10n.ok),
+                child: Text(
+                  l10n.ok,
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -569,18 +727,41 @@ class _ShareScreenState extends State<ShareScreen> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            ),
             title: Row(
               children: [
-                Icon(Icons.error, color: Colors.red),
+                Icon(Icons.error, color: AppTheme.refusedText),
                 const SizedBox(width: 8),
-                Text(l10n.error),
+                Text(
+                  l10n.error,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.refusedText,
+                  ),
+                ),
               ],
             ),
-            content: Text(result['message'] ?? l10n.failedToShareDiscovery),
+            content: Text(
+              result['message'] ?? l10n.failedToShareDiscovery,
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.5,
+              ),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(l10n.ok),
+                child: Text(
+                  l10n.ok,
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -594,18 +775,41 @@ class _ShareScreenState extends State<ShareScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          ),
           title: Row(
             children: [
-              Icon(Icons.error, color: Colors.red),
+              Icon(Icons.error, color: AppTheme.refusedText),
               const SizedBox(width: 8),
-              Text(l10n.error),
+              Text(
+                l10n.error,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.refusedText,
+                ),
+              ),
             ],
           ),
-          content: Text('${l10n.failedToShareDiscovery}: $e'),
+          content: Text(
+            '${l10n.failedToShareDiscovery}: $e',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppTheme.textSecondary,
+              height: 1.5,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(l10n.ok),
+              child: Text(
+                l10n.ok,
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
