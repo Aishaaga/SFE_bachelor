@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/translation_suggestion.dart';
 import '../services/auth_service.dart';
+import '../utils/constants.dart';
 
 class ProposalService {
-  static const String _baseUrl =
-      'http://192.168.0.182:3000/api/translation-suggestions';
+  static const String _baseUrl = '${Constants.apiUrl}/translation-suggestions';
 
   static Future<Map<String, String>> _getHeaders() async {
     final authService = AuthService();
