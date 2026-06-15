@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../data/plant_translations.dart';
 import '../utils/constants.dart';
 import '../models/plant.dart';
+import '../widgets/app_theme.dart';
 import 'share_from_history_screen.dart';
 import 'translation_proposal_screen.dart';
 
@@ -85,80 +86,10 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     return images;
   }
 
-  String _getPlantUsage(String scientificName) {
-    // You could expand this with more detailed usage information
-    final Map<String, String> usageInfo = {
-      'Argania spinosa':
-          'L\'arganier est un arbre emblématique du Maroc. Son huile est utilisée en cosmétique et en cuisine. Le bois est utilisé pour le chauffage et l\'artisanat.',
-      'Olea europaea':
-          'L\'olivier est cultivé pour ses fruits qui produisent l\'huile d\'olive, un pilier de la cuisine méditerranéenne. Le bois est également utilisé en ébénisterie.',
-      'Punica granatum':
-          'Le grenadier produit des grenades riches en antioxydants. Le jus et les graines sont consommés, l\'écorce est utilisée en médecine traditionnelle.',
-      'Mentha':
-          'La menthe est utilisée pour préparer le thé à la menthe, boisson traditionnelle marocaine. Elle possède également des propriétés digestives et rafraîchissantes.',
-      'Salvia rosmarinus':
-          'Le romarin est utilisé comme aromate en cuisine et en médecine traditionnelle pour ses propriétés antioxydantes et stimulantes.',
-      'Thymus vulgaris':
-          'Le thym est utilisé comme herbe aromatique et en médecine traditionnelle pour ses propriétés antiseptiques et expectorantes.',
-      'Lavandula':
-          'La lavande est utilisée en parfumerie, en cosmétique et en aromathérapie pour ses propriétés relaxantes.',
-      'Cedrus atlantica':
-          'Le cèdre de l\'Atlas est un arbre majestueux dont le bois est très prisé en construction et en ébénisterie.',
-      'Quercus ilex':
-          'Le chêne vert produit des glands utilisés pour nourrir le bétail. Son bois est dur et résistant, utilisé en charpente.',
-      'Ficus carica':
-          'Le figuier produit des figues fraîches ou séchées, riches en fibres et minéraux. Le latex du figuier a des usages médicinaux traditionnels.',
-      'Opuntia ficus-indica':
-          'Le figuier de barbarie produit des fruits riches en vitamines. Les raquettes sont utilisées fourrage et les fleurs en tisane.',
-      'Allium sativum':
-          'L\'ail est utilisé comme condiment et en médecine traditionnelle pour ses propriétés antibiotiques et cardiovasculaires.',
-      'Ocimum basilicum':
-          'Le basilic est utilisé comme herbe aromatique en cuisine et possède des propriétés anti-inflammatoires.',
-      'Helianthus annuus':
-          'Le tournesol produit des graines riches en huile, utilisées en alimentation et pour la production d\'huile végétale.',
-      'Jasminum':
-          'Le jasmin est cultivé pour ses fleurs parfumées utilisées en parfumerie et pour faire le thé au jasmin.',
-      'Nerium oleander':
-          'Attention: Le laurier-rose est toxique. Il est utilisé uniquement comme plante ornementale malgré sa beauté.',
-    };
-
-    return usageInfo[scientificName] ??
-        'Cette plante a été identifiée par notre système d\'intelligence artificielle. ' +
-            'Elle fait partie de la flore de la région. Pour plus d\'informations sur ses utilisations traditionnelles ' +
-            'et ses propriétés, nous vous recommandons de consulter des ouvrages spécialisés sur la flore locale.';
-  }
-
-  String _getPlantOrigin(String scientificName) {
-    final Map<String, String> originInfo = {
-      'Argania spinosa':
-          'Endémique du Maroc, l\'arganier pousse principalement dans la région du Souss et l\'Anti-Atlas.',
-      'Olea europaea':
-          'Originaire du bassin méditerranéen, l\'olivier est cultivé au Maroc depuis des millénaires.',
-      'Punica granatum':
-          'Originaire de la Perse antique, le grenadier est cultivé au Maroc dans les régions tempérées.',
-      'Cedrus atlantica':
-          'Endémique de l\'Atlas marocain et de l\'Algérie, le cèdre de l\'Atlas forme de majestueuses forêts.',
-      'Quercus ilex':
-          'Originaire du bassin méditerranéen, le chêne vert est très répandu dans les forêts marocaines.',
-      'Opuntia ficus-indica':
-          'Originaire du Mexique, le figuier de barbarie a été introduit au Maroc où il s\'est naturalisé.',
-    };
-
-    return originInfo[scientificName] ??
-        'Cette plante fait partie de la diversité végétale de la région. ' +
-            'Elle s\'est adaptée au climat local et contribue à l\'écosystème.';
-  }
-
   double _getConfidence() {
     return widget.identification.containsKey('latestConfidence')
         ? widget.identification['latestConfidence']
         : widget.identification['confidence'] ?? 0;
-  }
-
-  DateTime _getDate() {
-    return widget.identification.containsKey('latestDate')
-        ? DateTime.parse(widget.identification['latestDate'])
-        : DateTime.parse(widget.identification['date']);
   }
 
   @override
@@ -180,13 +111,12 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     }
     final images = _getPlantImages();
     final confidence = _getConfidence();
-    final date = _getDate();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         title: Text(plant['name'] ?? 'Plante'),
-        backgroundColor: Colors.green,
+        backgroundColor: AppTheme.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -200,18 +130,9 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
             // Plant Information Card
             _buildPlantInfoCard(plant, scientificName, confidence, family),
 
-            // Usage Information Card
-            _buildUsageCard(scientificName),
-
-            // Origin Information Card
-            _buildOriginCard(scientificName),
-
-            // Technical Information Card
-            _buildTechnicalCard(),
-
             // Share with community button
             Container(
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ElevatedButton.icon(
                 onPressed: () {
                   final images = _getPlantImages();
@@ -227,36 +148,42 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                     );
                   }
                 },
-                icon: const Icon(Icons.share),
+                icon: const Icon(Icons.share, size: 20),
                 label: const Text('Partager avec la communauté'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  minimumSize: const Size(double.infinity, 48),
+                  minimumSize: const Size(double.infinity, 52),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
                 ),
               ),
             ),
-
-            const SizedBox(height: 12),
 
             // Proposer traduction button
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ElevatedButton.icon(
                 onPressed: () => _navigateToTranslationProposal(),
-                icon: const Icon(Icons.translate),
+                icon: const Icon(Icons.translate, size: 20),
                 label: const Text('Proposer traduction'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: AppTheme.accent,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  minimumSize: const Size(double.infinity, 48),
+                  minimumSize: const Size(double.infinity, 52),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -266,36 +193,30 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   Widget _buildImageGallery(List<String> images) {
     if (images.length == 1) {
       return Container(
-        height: 250,
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        height: 280,
+        margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          boxShadow: AppTheme.cardShadow,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           child: Image.network(
             images[0],
             fit: BoxFit.cover,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return Container(
-                color: Colors.grey[200],
+                color: AppTheme.primarySurface,
                 child: const Center(
-                  child: CircularProgressIndicator(color: Colors.green),
+                  child: CircularProgressIndicator(color: AppTheme.primary),
                 ),
               );
             },
             errorBuilder: (context, error, stackTrace) => Container(
-              color: Colors.grey[200],
+              color: AppTheme.primarySurface,
               child: const Center(
-                child: Icon(Icons.eco, size: 50, color: Colors.grey),
+                child: Icon(Icons.eco, size: 50, color: AppTheme.primary),
               ),
             ),
           ),
@@ -306,52 +227,45 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     return Column(
       children: [
         Container(
-          height: 250,
-          child: PageView.builder(
-            itemCount: images.length,
-            onPageChanged: (index) {
-              setState(() => _currentImageIndex = index);
-            },
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    images[index],
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(color: Colors.green),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[200],
+          height: 280,
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            boxShadow: AppTheme.cardShadow,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            child: PageView.builder(
+              itemCount: images.length,
+              onPageChanged: (index) {
+                setState(() => _currentImageIndex = index);
+              },
+              itemBuilder: (context, index) {
+                return Image.network(
+                  images[index],
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      color: AppTheme.primarySurface,
                       child: const Center(
-                        child: Icon(Icons.eco, size: 50, color: Colors.grey),
+                        child:
+                            CircularProgressIndicator(color: AppTheme.primary),
                       ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: AppTheme.primarySurface,
+                    child: const Center(
+                      child: Icon(Icons.eco, size: 50, color: AppTheme.primary),
                     ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
@@ -363,8 +277,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _currentImageIndex == index
-                    ? Colors.green
-                    : Colors.grey.withOpacity(0.4),
+                    ? AppTheme.primary
+                    : AppTheme.textHint,
               ),
             ),
           ),
@@ -376,95 +290,94 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
   Widget _buildPlantInfoCard(Map<String, dynamic> plant, String scientificName,
       double confidence, String family) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppTheme.cardBg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.eco, color: Colors.green, size: 24),
-                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primarySurface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: Icon(Icons.eco, color: AppTheme.primary, size: 20),
+                ),
+                const SizedBox(width: 12),
                 Text(
                   'Informations sur la plante',
                   style: TextStyle(
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[800],
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                // Small refresh button
+                InkWell(
+                  onTap: () async {
+                    setState(() => _isLoadingTranslations = true);
+                    await PlantTranslations.refreshTranslations(scientificName);
+                    _loadAllTranslations();
+                  },
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primarySurface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                    child: _isLoadingTranslations
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.primary,
+                            ),
+                          )
+                        : Icon(Icons.refresh,
+                            color: AppTheme.primary, size: 18),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             _buildInfoRow('Nom commun', plant['name'] ?? ''),
             if (scientificName.isNotEmpty)
               _buildInfoRow('Nom scientifique', scientificName, isItalic: true),
             if (family.isNotEmpty && family != 'Famille inconnue')
               _buildInfoRow('Famille', family),
             ..._buildTranslationRows(scientificName),
-            const SizedBox(height: 12),
-
-            // Refresh translations button
+            const SizedBox(height: 16),
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  setState(() => _isLoadingTranslations = true);
-                  await PlantTranslations.refreshTranslations(scientificName);
-                  _loadAllTranslations();
-                },
-                icon: _isLoadingTranslations
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.blue,
-                        ),
-                      )
-                    : Icon(Icons.refresh, color: Colors.blue),
-                label: Text(
-                  _isLoadingTranslations
-                      ? 'Actualisation...'
-                      : 'Actualiser les traductions',
-                  style: TextStyle(color: Colors.blue),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.withOpacity(0.1),
-                  foregroundColor: Colors.blue,
-                  side: BorderSide(color: Colors.blue),
-                  minimumSize: const Size(double.infinity, 48),
-                ),
-              ),
-            ),
-
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: AppTheme.primarySurface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                border: Border.all(
+                  color: AppTheme.primary.withOpacity(0.2),
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 20),
-                  const SizedBox(width: 8),
+                  Icon(Icons.check_circle, color: AppTheme.primary, size: 18),
+                  const SizedBox(width: 10),
                   Text(
                     'Confiance: ${(confidence * 100).toInt()}%',
                     style: TextStyle(
-                      color: Colors.green[800],
-                      fontWeight: FontWeight.w500,
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
                     ),
                   ),
                 ],
@@ -476,220 +389,19 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
     );
   }
 
-  Widget _buildUsageCard(String scientificName) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.blue, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Usages et propriétés',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[800],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _getPlantUsage(scientificName),
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOriginCard(String scientificName) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.public, color: Colors.orange, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Origine et distribution',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange[800],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              _getPlantOrigin(scientificName),
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTechnicalCard() {
-    final date = _getDate();
-    final identificationCount =
-        widget.identification.containsKey('identificationCount')
-            ? widget.identification['identificationCount']
-            : 1;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.settings, color: Colors.grey, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Informations techniques',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[700],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow('Date d\'identification',
-                '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}'),
-            if (identificationCount > 1)
-              _buildInfoRow(
-                  'Nombre d\'identifications', '$identificationCount'),
-            _buildInfoRow(
-                'Source',
-                widget.identification.containsKey('sources')
-                    ? widget.identification['sources'][0] ?? 'plantnet'
-                    : widget.identification['source'] ?? 'plantnet'),
-            _buildInfoRow(
-                'ID',
-                widget.identification.containsKey('identificationIds')
-                    ? widget.identification['identificationIds'][0]
-                            ?.toString()
-                            .substring(0, 8) ??
-                        ''
-                    : widget.identification['id']?.toString().substring(0, 8) ??
-                        ''),
-            if (widget.identification.containsKey('notes') &&
-                widget.identification['notes'].isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Notes:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 4),
-              ...widget.identification['notes'].map((note) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      note,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  )),
-            ] else if (widget.identification['notes'] != null &&
-                widget.identification['notes'].toString().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Notes:',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey[700],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.identification['notes'].toString(),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildInfoRow(String label, String value, {bool isItalic = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 120,
+            width: 130,
             child: Text(
               label,
               style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textSecondary,
                 fontSize: 14,
               ),
             ),
@@ -701,7 +413,8 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
-                color: Colors.black87,
+                color: AppTheme.textPrimary,
+                height: 1.4,
               ),
             ),
           ),
