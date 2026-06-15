@@ -228,7 +228,7 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
                   }
                 },
                 icon: const Icon(Icons.share),
-                label: const Text('Share with community'),
+                label: const Text('Partager avec la communauté'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
