@@ -315,33 +315,35 @@ class _CommentsScreenState extends State<CommentsScreen> {
 
     if (_comments.isEmpty) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.08),
-                shape: BoxShape.circle,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.chat_bubble_outline_rounded,
+                    size: 40, color: AppTheme.primary),
               ),
-              child: const Icon(Icons.chat_bubble_outline_rounded,
-                  size: 40, color: AppTheme.primary),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'No comments yet',
-              style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Be the first to comment!',
-              style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-            ),
-          ],
+              const SizedBox(height: 20),
+              const Text(
+                'No comments yet',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Be the first to comment!',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
+          ),
         ),
       );
     }
