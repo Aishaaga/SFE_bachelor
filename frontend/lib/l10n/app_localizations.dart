@@ -611,7 +611,7 @@ abstract class AppLocalizations {
   /// No description provided for @flagPost.
   ///
   /// In en, this message translates to:
-  /// **'Flag Post'**
+  /// **'Report Post'**
   String get flagPost;
 
   /// No description provided for @areYouSureFlag.
@@ -629,8 +629,26 @@ abstract class AppLocalizations {
   /// No description provided for @flag.
   ///
   /// In en, this message translates to:
-  /// **'Flag'**
+  /// **'Report'**
   String get flag;
+
+  /// No description provided for @reportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for report'**
+  String get reportReason;
+
+  /// No description provided for @reportReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Please explain why you\'re reporting this content...'**
+  String get reportReasonHint;
+
+  /// No description provided for @reportReasonRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Report reason is required'**
+  String get reportReasonRequired;
 
   /// No description provided for @communityFeed.
   ///

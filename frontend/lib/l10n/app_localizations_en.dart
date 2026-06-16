@@ -264,7 +264,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get daysAgo => 'd ago';
 
   @override
-  String get flagPost => 'Flag Post';
+  String get flagPost => 'Report Post';
 
   @override
   String get areYouSureFlag => 'Are you sure you want to flag this post?';
@@ -273,7 +273,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
-  String get flag => 'Flag';
+  String get flag => 'Report';
+
+  @override
+  String get reportReason => 'Reason for report';
+
+  @override
+  String get reportReasonHint =>
+      'Please explain why you\'re reporting this content...';
+
+  @override
+  String get reportReasonRequired => 'Report reason is required';
 
   @override
   String get communityFeed => 'Community Feed';

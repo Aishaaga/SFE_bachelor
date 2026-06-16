@@ -210,14 +210,16 @@ class FeedService {
     }
   }
 
-  // Flag a feed post
-  Future<Map<String, dynamic>> flagPost(String postId) async {
+  // Report a feed post
+  Future<Map<String, dynamic>> reportPost(String postId, String reason) async {
     try {
       final response = await http.post(
-        Uri.parse('${Constants.apiUrl}/feed/$postId/flag'),
+        Uri.parse('${Constants.apiUrl}/feed/$postId/report'),
         headers: {
           'Authorization': 'Bearer ${await _getToken()}',
+          'Content-Type': 'application/json',
         },
+        body: jsonEncode({'reason': reason}),
       );
 
       if (response.statusCode == 401) {
@@ -238,7 +240,7 @@ class FeedService {
       } else {
         return {
           'success': false,
-          'message': data['message'] ?? 'Error flagging post',
+          'message': data['message'] ?? 'Error reporting post',
         };
       }
     } catch (e) {

@@ -171,27 +171,55 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
   }
 
   Future<void> _flagPost(String postId) async {
+    final reasonController = TextEditingController();
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.flagPost),
-        content: Text(AppLocalizations.of(context)!.areYouSureFlag),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.reportReason,
+                hintText: AppLocalizations.of(context)!.reportReasonHint,
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        AppLocalizations.of(context)!.reportReasonRequired),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(context, true);
+            },
             child: Text(AppLocalizations.of(context)!.flag),
           ),
         ],
       ),
     );
 
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
+
     if (confirmed == true) {
       try {
-        final result = await _feedService.flagPost(postId);
+        final result = await _feedService.reportPost(postId, reason);
 
         if (result['success']) {
           setState(() {

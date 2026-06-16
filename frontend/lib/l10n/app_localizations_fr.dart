@@ -278,6 +278,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get flag => 'Signaler';
 
   @override
+  String get reportReason => 'Raison du signalement';
+
+  @override
+  String get reportReasonHint =>
+      'Veuillez expliquer pourquoi vous signalez ce contenu...';
+
+  @override
+  String get reportReasonRequired => 'La raison du signalement est requise';
+
+  @override
   String get communityFeed => 'Fil communautaire';
 
   @override

@@ -370,12 +370,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _flagPost(String postId) async {
+    final reasonController = TextEditingController();
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(AppLocalizations.of(context)!.flagPost),
-        content: Text(AppLocalizations.of(context)!.areYouSureFlag),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.reportReason,
+                hintText: AppLocalizations.of(context)!.reportReasonHint,
+              ),
+              maxLines: 3,
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -383,21 +397,35 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () {
+              if (reasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                        AppLocalizations.of(context)!.reportReasonRequired),
+                  ),
+                );
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
             child: Text(AppLocalizations.of(context)!.flag),
           ),
         ],
       ),
     );
 
+    final reason = reasonController.text.trim();
+    reasonController.dispose();
+
     if (confirmed == true) {
       try {
-        final result = await _feedService.flagPost(postId);
+        final result = await _feedService.reportPost(postId, reason);
         if (result['success']) {
           setState(() => _posts.removeWhere((p) => p.id == postId));
         }
       } catch (e) {
-        debugPrint('Error flagging post: $e');
+        debugPrint('Error reporting post: $e');
       }
     }
   }
