@@ -423,22 +423,7 @@ class PlantTranslations {
     },
     //list
     ///****************************** */
-    'Mentha pulegium': {
-      'translations': {
-        'darija': {
-          'value': 'النعناع',
-          'source': 'regional_usage',
-          'confidence': 'high'
-        },
-        'tamazight': {
-          'value': 'ⴼⵍⴰⵢⵢⵓ \nFlayyu',
-          'source': 'regional_usage',
-          'confidence': 'high',
-          'dialect': 'Souss'
-        }
-      },
-      'metadata': {'region': '', 'notes': ''}
-    },
+
     'Salvia rosmarinus': {
       'translations': {
         'darija': {
