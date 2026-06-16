@@ -414,12 +414,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirmed == true && reason != null && reason!.trim().isNotEmpty) {
       try {
-        print('Submitting report for post: $postId, reason: $reason');
         final result = await _feedService.reportPost(postId, reason!.trim());
-        print('Report result: $result');
 
         if (result['success'] && mounted) {
-          setState(() => _posts.removeWhere((p) => p.id == postId));
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(result['message'] ?? 'Report submitted')),
           );
@@ -430,7 +427,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
       } catch (e) {
-        debugPrint('Error reporting post: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error: $e')),
