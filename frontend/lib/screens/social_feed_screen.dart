@@ -171,62 +171,53 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
   }
 
   Future<void> _flagPost(String postId) async {
-    final reasonController = TextEditingController();
+    String? reason;
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.flagPost),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          final controller = TextEditingController(text: reason);
+          return AlertDialog(
+            title: Text(AppLocalizations.of(context)!.flagPost),
+            content: TextField(
+              controller: controller,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.reportReason,
                 hintText: AppLocalizations.of(context)!.reportReasonHint,
               ),
               maxLines: 3,
+              onChanged: (value) {
+                reason = value;
+                setState(() {});
+              },
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              if (reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                        AppLocalizations.of(context)!.reportReasonRequired),
-                  ),
-                );
-                return;
-              }
-              Navigator.pop(context, true);
-            },
-            child: Text(AppLocalizations.of(context)!.flag),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              TextButton(
+                onPressed: (reason?.trim().isEmpty ?? true)
+                    ? null
+                    : () => Navigator.pop(context, true),
+                child: Text(AppLocalizations.of(context)!.flag),
+              ),
+            ],
+          );
+        },
       ),
     );
 
-    final reason = reasonController.text.trim();
-    reasonController.dispose();
-
-    if (confirmed == true) {
+    if (confirmed == true && reason != null && reason!.trim().isNotEmpty) {
       try {
-        final result = await _feedService.reportPost(postId, reason);
+        final result = await _feedService.reportPost(postId, reason!.trim());
 
         if (result['success']) {
-          setState(() {
-            _posts.removeWhere((post) => post.id == postId);
-          });
-
           if (mounted) {
+            setState(() {
+              _posts.removeWhere((post) => post.id == postId);
+            });
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(result['message'])),
             );

@@ -370,58 +370,52 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _flagPost(String postId) async {
-    final reasonController = TextEditingController();
+    String? reason;
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(AppLocalizations.of(context)!.flagPost),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: reasonController,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) {
+          final controller = TextEditingController(text: reason);
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: Text(AppLocalizations.of(context)!.flagPost),
+            content: TextField(
+              controller: controller,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.reportReason,
                 hintText: AppLocalizations.of(context)!.reportReasonHint,
               ),
               maxLines: 3,
+              onChanged: (value) {
+                reason = value;
+                setState(() {});
+              },
             ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
-            onPressed: () {
-              if (reasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                        AppLocalizations.of(context)!.reportReasonRequired),
-                  ),
-                );
-                return;
-              }
-              Navigator.pop(ctx, true);
-            },
-            child: Text(AppLocalizations.of(context)!.flag),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(AppLocalizations.of(context)!.cancel),
+              ),
+              FilledButton(
+                style:
+                    FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+                onPressed: (reason?.trim().isEmpty ?? true)
+                    ? null
+                    : () => Navigator.pop(ctx, true),
+                child: Text(AppLocalizations.of(context)!.flag),
+              ),
+            ],
+          );
+        },
       ),
     );
 
-    final reason = reasonController.text.trim();
-    reasonController.dispose();
-
-    if (confirmed == true) {
+    if (confirmed == true && reason != null && reason!.trim().isNotEmpty) {
       try {
-        final result = await _feedService.reportPost(postId, reason);
-        if (result['success']) {
+        final result = await _feedService.reportPost(postId, reason!.trim());
+        if (result['success'] && mounted) {
           setState(() => _posts.removeWhere((p) => p.id == postId));
         }
       } catch (e) {
