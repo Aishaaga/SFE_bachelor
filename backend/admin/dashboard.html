@@ -1,681 +1,767 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Dashboard - SFE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration · SFE</title>
+    <!-- Police et réinitialisation minimale -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            min-height: 100vh;
+            background: #0f3b2c;
+            background: radial-gradient(circle at 20% 30%, #1b5e3a, #0f3b2c 80%);
+            padding: 1.5rem;
+            color: #faf7f0;
         }
+
+        /* carte principale en verre – transparente, texte blanc crème */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border-radius: 2.5rem;
+            padding: 1.8rem 2rem 2.5rem;
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        /* en-tête – sans émoji */
         .header {
-            background: linear-gradient(135deg, #1e5a3a 0%, #2e8b57 100%);
-            color: white;
-            padding: 20px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 1.8rem;
         }
+
         .header h1 {
-            font-size: 24px;
+            font-size: 1.8rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: #faf7f0;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
+
         .btn-logout {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #faf7f0;
+            padding: 0.6rem 1.8rem;
+            border-radius: 60px;
             cursor: pointer;
-            font-size: 14px;
-            transition: background 0.3s;
+            font-size: 0.9rem;
+            font-weight: 450;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
         }
+
         .btn-logout:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
         }
+
+        /* onglets de navigation – vitrés, sans émoji */
         .nav-tabs {
             display: flex;
-            gap: 10px;
-            padding: 30px 30px 0 30px;
-            border-bottom: 2px solid #e0e0e0;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            padding-bottom: 0.8rem;
         }
+
         .nav-tab {
-            padding: 12px 24px;
-            background: none;
+            padding: 0.6rem 1.6rem;
+            background: transparent;
             border: none;
-            border-bottom: 3px solid transparent;
+            border-radius: 60px;
+            font-size: 0.95rem;
+            font-weight: 450;
+            color: rgba(255, 245, 230, 0.6);
             cursor: pointer;
-            font-size: 16px;
-            color: #666;
-            transition: all 0.3s;
+            transition: all 0.2s;
+            letter-spacing: 0.2px;
         }
+
         .nav-tab:hover {
-            color: #2e8b57;
+            color: #faf7f0;
+            background: rgba(255, 255, 255, 0.04);
         }
+
         .nav-tab.active {
-            color: #2e8b57;
-            border-bottom-color: #2e8b57;
-            font-weight: bold;
+            color: #faf7f0;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
+
         .tab-content {
             display: none;
-            padding: 30px;
+            animation: fade 0.25s ease;
         }
+
         .tab-content.active {
             display: block;
         }
+
+        @keyframes fade {
+            0% { opacity: 0.4; transform: translateY(4px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* cartes de statistiques – verre transparent */
         .stats-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            padding: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2rem;
         }
+
         .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 2rem;
+            padding: 1.5rem 0.8rem;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            transition: 0.2s;
         }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+        }
+
         .stat-number {
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 8px;
+            font-size: 2.2rem;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: #faf7f0;
+            margin-bottom: 0.2rem;
         }
+
         .stat-label {
-            color: #666;
-            font-size: 14px;
+            font-size: 0.8rem;
+            color: rgba(255, 245, 230, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
         }
-        .stat-card.pending .stat-number { color: #ffc107; }
-        .stat-card.approved .stat-number { color: #28a745; }
-        .stat-card.rejected .stat-number { color: #dc3545; }
-        .stat-card.total .stat-number { color: #17a2b8; }
-        
+
+        /* cartes de suggestions – transparentes */
         .suggestions-section h2 {
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 1.2rem;
+            font-weight: 450;
+            color: #faf7f0;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.3px;
         }
+
         .suggestion-card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border-left: 4px solid #ffc107;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 2rem;
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: 0.15s;
         }
+
+        .suggestion-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
         .suggestion-plant {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2e8b57;
-            margin-bottom: 10px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: #faf7f0;
+            margin-bottom: 0.5rem;
         }
+
         .suggestion-translations {
             display: flex;
-            gap: 30px;
-            margin-bottom: 15px;
+            gap: 2rem;
             flex-wrap: wrap;
+            margin-bottom: 0.8rem;
         }
+
         .translation-box {
             flex: 1;
-            min-width: 150px;
+            min-width: 120px;
         }
+
         .translation-label {
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: rgba(255, 245, 230, 0.4);
+            margin-bottom: 0.2rem;
         }
+
         .translation-value {
-            font-size: 18px;
-            font-weight: 500;
+            font-size: 1.1rem;
+            color: #faf7f0;
         }
+
         .translation-value.darija {
-            font-family: 'Segoe UI', 'Arabic', sans-serif;
-            font-size: 20px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
         }
+
         .translation-value.tamazight {
-            font-family: 'Segoe UI', 'Tifinagh', sans-serif;
-            font-size: 20px;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
         }
+
         .suggestion-user {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 15px;
+            font-size: 0.8rem;
+            color: rgba(255, 245, 230, 0.4);
+            margin-bottom: 0.8rem;
         }
+
         .vote-counts {
             display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            padding: 0.6rem 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 60px;
+            margin-bottom: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
+
         .vote-item {
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 14px;
+            gap: 4px;
+            font-size: 0.85rem;
+            color: rgba(255, 245, 230, 0.6);
         }
+
         .vote-number {
-            font-weight: bold;
-            font-size: 16px;
+            font-weight: 500;
+            color: #faf7f0;
+            margin: 0 2px;
         }
-        .vote-up {
-            color: #28a745;
-        }
-        .vote-down {
-            color: #dc3545;
-        }
-        .vote-total {
-            color: #6c757d;
-        }
+
         .btn-approve {
-            background: #28a745;
-            color: white;
+            background: #1f7547;
             border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
+            color: #faf7f0;
+            padding: 0.45rem 1.4rem;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            font-weight: 450;
             cursor: pointer;
-            margin-right: 10px;
-            font-size: 14px;
+            transition: 0.2s;
+            margin-right: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
+
         .btn-approve:hover {
-            background: #218838;
+            background: #2b8f57;
+            box-shadow: 0 4px 12px rgba(0, 40, 10, 0.3);
         }
+
         .btn-reject {
-            background: #dc3545;
-            color: white;
+            background: rgba(200, 70, 60, 0.6);
             border: none;
-            padding: 8px 20px;
-            border-radius: 6px;
+            color: #faf7f0;
+            padding: 0.45rem 1.4rem;
+            border-radius: 60px;
+            font-size: 0.85rem;
+            font-weight: 450;
             cursor: pointer;
-            font-size: 14px;
+            transition: 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
+
         .btn-reject:hover {
-            background: #c82333;
+            background: rgba(200, 70, 60, 0.8);
         }
+
         .empty-state {
             text-align: center;
-            padding: 60px;
-            color: #999;
-            background: white;
-            border-radius: 12px;
+            padding: 3rem 1rem;
+            color: rgba(255, 245, 230, 0.4);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
+
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            padding: 2rem;
+            color: rgba(255, 245, 230, 0.3);
         }
+
+        /* tableau des utilisateurs – verre transparent */
         .users-section h2 {
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 1.2rem;
+            font-weight: 450;
+            color: #faf7f0;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.3px;
         }
+
         .search-bar {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
         }
-        .search-bar input {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-        }
+
+        .search-bar input,
         .search-bar select {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            background: white;
+            padding: 0.6rem 1.2rem;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 60px;
+            font-size: 0.9rem;
+            color: #faf7f0;
+            outline: none;
+            transition: 0.2s;
         }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 245, 230, 0.3);
+        }
+
+        .search-bar input:focus,
+        .search-bar select:focus {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .search-bar select option {
+            background: #1b4a32;
+            color: #faf7f0;
+        }
+
         .users-table {
             width: 100%;
             border-collapse: collapse;
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
+
         .users-table th {
-            background: #f8f9fa;
-            padding: 15px;
+            padding: 0.9rem 1rem;
             text-align: left;
-            font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #e0e0e0;
+            font-weight: 450;
+            color: rgba(255, 245, 230, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.8px;
         }
+
         .users-table td {
-            padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #faf7f0;
         }
+
         .users-table tr:hover {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.03);
         }
+
         .user-role {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+            padding: 0.2rem 1rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            font-weight: 450;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 245, 230, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.04);
         }
+
         .user-role.admin {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: rgba(60, 130, 200, 0.2);
+            border-color: rgba(60, 130, 200, 0.1);
+            color: #b0d4f0;
         }
-        .user-role.user {
-            background: #f5f5f5;
-            color: #666;
-        }
+
         .btn-delete {
-            background: #dc3545;
-            color: white;
+            background: rgba(200, 70, 60, 0.4);
             border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
+            color: #faf7f0;
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
             cursor: pointer;
-            font-size: 12px;
+            transition: 0.2s;
         }
+
         .btn-delete:hover {
-            background: #c82333;
+            background: rgba(200, 70, 60, 0.7);
         }
+
         .pagination {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
         }
+
         .pagination button {
-            padding: 8px 16px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            padding: 0.3rem 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 60px;
+            color: rgba(255, 245, 230, 0.5);
             cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
         }
+
         .pagination button:hover {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.06);
+            color: #faf7f0;
         }
+
         .pagination button.active {
-            background: #2e8b57;
-            color: white;
-            border-color: #2e8b57;
+            background: rgba(255, 255, 255, 0.08);
+            color: #faf7f0;
+            border-color: rgba(255, 255, 255, 0.08);
         }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal.active {
-            display: flex;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-        .btn-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-        }
-        .btn-close:hover {
-            color: #333;
-        }
-        .modal-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .modal-form label {
-            font-weight: 500;
-            color: #333;
-        }
-        .modal-form input,
-        .modal-form select,
-        .modal-form textarea {
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .modal-form textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-        .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .modal-actions button {
-            flex: 1;
-        }
-        .btn-cancel {
-            background: #6c757d;
-        }
-        .btn-cancel:hover {
-            background: #5a6268;
-        }
-        .btn-save {
-            background: #2e8b57;
-        }
-        .btn-save:hover {
-            background: #1e5a3a;
-        }
+
+        /* modération – tableaux transparents */
         .moderation-section h2 {
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 1.2rem;
+            font-weight: 450;
+            color: #faf7f0;
+            margin-bottom: 1.2rem;
+            letter-spacing: 0.3px;
         }
+
         .moderation-filters {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 1rem;
+            flex-wrap: wrap;
             align-items: center;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            padding: 0.8rem 1.2rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 60px;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
+
         .moderation-filters label {
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 14px;
-            color: #666;
+            gap: 0.4rem;
+            color: rgba(255, 245, 230, 0.6);
+            font-size: 0.85rem;
         }
+
         .moderation-filters select,
-        .moderation-filters input[type="text"] {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
+        .moderation-filters input {
+            padding: 0.4rem 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 60px;
+            color: #faf7f0;
+            font-size: 0.85rem;
+            outline: none;
         }
-        .moderation-filters select {
-            min-width: 120px;
+
+        .moderation-filters select option {
+            background: #1b4a32;
         }
-        .moderation-filters input[type="text"] {
-            min-width: 200px;
-        }
+
         .moderation-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
         }
+
         .moderation-tab {
-            padding: 10px 20px;
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
+            padding: 0.4rem 1.6rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 60px;
+            color: rgba(255, 245, 230, 0.4);
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
+            transition: 0.2s;
+            font-size: 0.85rem;
         }
+
         .moderation-tab:hover {
-            border-color: #2e8b57;
+            color: #faf7f0;
+            background: rgba(255, 255, 255, 0.04);
         }
+
         .moderation-tab.active {
-            background: #2e8b57;
-            color: white;
-            border-color: #2e8b57;
+            background: rgba(255, 255, 255, 0.06);
+            color: #faf7f0;
+            border-color: rgba(255, 255, 255, 0.06);
         }
+
         .moderation-content {
             display: none;
         }
+
         .moderation-content.active {
             display: block;
         }
-        .moderation-content h3 {
-            margin-bottom: 15px;
-            color: #333;
-        }
+
         .moderation-table-container {
-            background: white;
-            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.02);
         }
+
         .moderation-table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .moderation-table th {
-            background: #f8f9fa;
-            padding: 15px;
+            padding: 0.9rem 1rem;
             text-align: left;
-            font-weight: 600;
-            color: #333;
-            border-bottom: 2px solid #e0e0e0;
+            font-weight: 450;
+            color: rgba(255, 245, 230, 0.5);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.8px;
         }
+
         .moderation-table td {
-            padding: 15px;
-            border-bottom: 1px solid #e0e0e0;
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            color: #faf7f0;
         }
+
         .moderation-table tr:hover {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.02);
         }
+
         .content-preview {
-            max-width: 300px;
+            max-width: 240px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
         .content-preview img {
-            max-width: 50px;
-            max-height: 50px;
-            border-radius: 4px;
-            object-fit: cover;
-        }
-        .status-badge {
-            padding: 4px 12px;
+            max-width: 40px;
+            max-height: 40px;
             border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+            object-fit: cover;
+            margin-right: 6px;
+            vertical-align: middle;
         }
+
+        .status-badge {
+            padding: 0.2rem 0.8rem;
+            border-radius: 60px;
+            font-size: 0.7rem;
+            font-weight: 450;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 245, 230, 0.5);
+        }
+
         .status-badge.visible {
-            background: #e3f2fd;
-            color: #1976d2;
+            background: rgba(60, 200, 120, 0.15);
+            color: #8cd4b0;
         }
+
         .status-badge.hidden {
-            background: #ffebee;
-            color: #c62828;
+            background: rgba(200, 100, 80, 0.15);
+            color: #e0a090;
         }
+
         .report-count {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 4px 8px;
-            background: #fff3e0;
-            color: #e65100;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
+            gap: 4px;
+            padding: 0.2rem 0.8rem;
+            background: rgba(255, 200, 100, 0.06);
+            border-radius: 60px;
+            color: rgba(255, 215, 140, 0.7);
+            font-size: 0.8rem;
         }
+
         .moderation-actions {
             display: flex;
-            gap: 5px;
+            gap: 4px;
             flex-wrap: wrap;
         }
+
         .btn-action-small {
-            padding: 5px 10px;
+            padding: 0.2rem 0.8rem;
             border: none;
-            border-radius: 4px;
+            border-radius: 60px;
             cursor: pointer;
-            font-size: 12px;
-            transition: background 0.3s;
+            font-size: 0.7rem;
+            transition: 0.2s;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 245, 230, 0.5);
         }
+
+        .btn-action-small:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #faf7f0;
+        }
+
         .btn-hide {
-            background: #ffc107;
-            color: #333;
+            background: rgba(200, 180, 80, 0.15);
+            color: #d4c080;
         }
-        .btn-hide:hover {
-            background: #ffb300;
-        }
+        .btn-hide:hover { background: rgba(200, 180, 80, 0.25); }
+
         .btn-restore {
-            background: #28a745;
-            color: white;
+            background: rgba(60, 200, 120, 0.12);
+            color: #8cd4b0;
         }
-        .btn-restore:hover {
-            background: #218838;
-        }
+        .btn-restore:hover { background: rgba(60, 200, 120, 0.2); }
+
         .btn-delete {
-            background: #dc3545;
-            color: white;
+            background: rgba(200, 70, 60, 0.15);
+            color: #d09080;
         }
-        .btn-delete:hover {
-            background: #c82333;
-        }
+        .btn-delete:hover { background: rgba(200, 70, 60, 0.25); }
+
         .btn-view {
-            background: #17a2b8;
-            color: white;
+            background: rgba(80, 160, 200, 0.12);
+            color: #80bcd0;
         }
-        .btn-view:hover {
-            background: #138496;
+        .btn-view:hover { background: rgba(80, 160, 200, 0.2); }
+
+        /* responsive */
+        @media (max-width: 640px) {
+            .dashboard-container { padding: 1rem; }
+            .header h1 { font-size: 1.4rem; }
+            .stat-card { padding: 1rem 0.5rem; }
+            .suggestion-card { padding: 1rem; }
+        }
+
+        /* sans émoji, tout blanc crème */
+        .no-emoji {
+            /* juste un marqueur */
         }
     </style>
 </head>
 <body>
+
+    <!-- en-tête -->
     <div class="header">
-        <h1>🌿 SFE Admin Dashboard</h1>
-        <button class="btn-logout" id="logoutBtn">Logout</button>
+        <h1>Administration SFE</h1>
+        <button class="btn-logout" id="logoutBtn">Déconnexion</button>
     </div>
-    
+
+    <!-- onglets de navigation -->
     <div class="nav-tabs">
-        <button class="nav-tab active" data-tab="suggestions">📝 Suggestions</button>
-        <button class="nav-tab" data-tab="users">👥 Users</button>
-        <button class="nav-tab" data-tab="moderation">🛡️ Moderation</button>
+        <button class="nav-tab active" data-tab="suggestions">Suggestions</button>
+        <button class="nav-tab" data-tab="users">Utilisateurs</button>
+        <button class="nav-tab" data-tab="moderation">Modération</button>
     </div>
-    
+
+    <!-- SUGGESTIONS -->
     <div class="tab-content active" id="suggestionsTab">
         <div class="stats-container" id="statsContainer">
             <div class="stat-card pending">
                 <div class="stat-number" id="pendingCount">-</div>
-                <div class="stat-label">Pending</div>
+                <div class="stat-label">En attente</div>
             </div>
             <div class="stat-card approved">
                 <div class="stat-number" id="approvedCount">-</div>
-                <div class="stat-label">Approved</div>
+                <div class="stat-label">Approuvées</div>
             </div>
             <div class="stat-card rejected">
                 <div class="stat-number" id="rejectedCount">-</div>
-                <div class="stat-label">Rejected</div>
+                <div class="stat-label">Rejetées</div>
             </div>
             <div class="stat-card total">
                 <div class="stat-number" id="totalCount">-</div>
-                <div class="stat-label">Total Suggestions</div>
+                <div class="stat-label">Total</div>
             </div>
         </div>
-        
+
         <div class="suggestions-section">
-            <h2>📝 Pending Suggestions</h2>
+            <h2>Suggestions en attente</h2>
             <div id="suggestionsList">
-                <div class="loading">Loading suggestions...</div>
+                <div class="loading">Chargement des suggestions…</div>
             </div>
         </div>
     </div>
-    
+
+    <!-- UTILISATEURS -->
     <div class="tab-content" id="usersTab">
-        <div class="users-section active">
-            <h2>👥 User Management</h2>
+        <div class="users-section">
+            <h2>Gestion des utilisateurs</h2>
             <div class="search-bar">
-                <input type="text" id="userSearch" placeholder="Search users by name or email...">
+                <input type="text" id="userSearch" placeholder="Rechercher par nom ou email…">
                 <select id="roleFilter">
-                    <option value="">All Roles</option>
-                    <option value="user">Users</option>
-                    <option value="admin">Admins</option>
+                    <option value="">Tous les rôles</option>
+                    <option value="user">Utilisateurs</option>
+                    <option value="admin">Administrateurs</option>
                 </select>
             </div>
-            <div id="usersList">
-                <div class="loading">Loading users...</div>
-            </div>
+            <div id="usersList"><div class="loading">Chargement des utilisateurs…</div></div>
             <div class="pagination" id="usersPagination"></div>
         </div>
     </div>
-    
+
+    <!-- MODÉRATION -->
     <div class="tab-content" id="moderationTab">
         <div class="moderation-section">
-            <h2>🛡️ Content Moderation</h2>
-            
+            <h2>Modération du contenu</h2>
             <div class="moderation-filters">
-                <label>
-                    <input type="checkbox" id="reportedOnlyFilter"> Show only reported posts
-                </label>
+                <label><input type="checkbox" id="reportedOnlyFilter"> Afficher uniquement les signalés</label>
                 <select id="dateRangeFilter">
-                    <option value="all">All time</option>
-                    <option value="7days">Last 7 days</option>
-                    <option value="30days">Last 30 days</option>
+                    <option value="all">Toutes les dates</option>
+                    <option value="7days">7 derniers jours</option>
+                    <option value="30days">30 derniers jours</option>
                 </select>
-                <input type="text" id="userFilter" placeholder="Filter by user email...">
+                <input type="text" id="userFilter" placeholder="Email de l'utilisateur…">
             </div>
-            
+
             <div class="moderation-tabs">
-                <button class="moderation-tab active" data-content="identifications">📝 Identification Posts</button>
-                <button class="moderation-tab" data-content="translations">🌐 Translation Suggestions</button>
+                <button class="moderation-tab active" data-content="identifications">Identifications</button>
+                <button class="moderation-tab" data-content="translations">Traductions</button>
             </div>
-            
+
             <div class="moderation-content active" id="identifications">
-                <h3>Identification Posts</h3>
+                <h3>Publications d'identification</h3>
                 <div class="moderation-table-container">
                     <table class="moderation-table">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Content</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Reports</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="identificationsList">
-                            <tr><td colspan="6"><div class="loading">Loading identifications...</div></td></tr>
-                        </tbody>
+                        <thead><tr><th>Utilisateur</th><th>Contenu</th><th>Date</th><th>Statut</th><th>Signalements</th><th>Actions</th></tr></thead>
+                        <tbody id="identificationsList"><tr><td colspan="6"><div class="loading">Chargement des identifications…</div></td></tr></tbody>
                     </table>
                 </div>
                 <div class="pagination" id="identificationsPagination"></div>
             </div>
-            
+
             <div class="moderation-content" id="translations">
-                <h3>Translation Suggestions</h3>
+                <h3>Suggestions de traduction</h3>
                 <div class="moderation-table-container">
                     <table class="moderation-table">
-                        <thead>
-                            <tr>
-                                <th>User</th>
-                                <th>Content</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Reports</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="translationsList">
-                            <tr><td colspan="6"><div class="loading">Loading translations...</div></td></tr>
-                        </tbody>
+                        <thead><tr><th>Utilisateur</th><th>Contenu</th><th>Date</th><th>Statut</th><th>Signalements</th><th>Actions</th></tr></thead>
+                        <tbody id="translationsList"><tr><td colspan="6"><div class="loading">Chargement des traductions…</div></td></tr></tbody>
                     </table>
                 </div>
                 <div class="pagination" id="translationsPagination"></div>
@@ -683,540 +769,366 @@
         </div>
     </div>
 
-    <script>
-        const token = localStorage.getItem('adminToken');
-        if (!token) {
-            window.location.href = '/';
-        }
-        
-        const adminEmail = localStorage.getItem('adminEmail');
-        if (adminEmail) {
-            console.log('Logged in as:', adminEmail);
-        }
-        
-        let currentPage = 1;
-        let currentSearch = '';
-        let currentRoleFilter = '';
-        
-        // Tab switching
-        document.querySelectorAll('.nav-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
 
-                if (tab.dataset.tab === 'users') {
-                    loadUsers();
-                } else if (tab.dataset.tab === 'moderation') {
-                    loadModerationContent();
-                }
-            });
+<script>
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+        window.location.href = '/';
+    }
+    const adminEmail = localStorage.getItem('adminEmail');
+    if (adminEmail) console.log('Connecté en tant que:', adminEmail);
+
+    let currentPage = 1;
+    let currentSearch = '';
+    let currentRoleFilter = '';
+    let moderationCurrentPage = 1;
+    let currentModerationTab = 'identifications';
+
+    // Changement d'onglet
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+
+            if (tab.dataset.tab === 'users') loadUsers();
+            else if (tab.dataset.tab === 'moderation') loadModerationContent();
         });
-        
-        async function loadStats() {
-            try {
-                const response = await fetch('http://localhost:3000/api/admin/stats', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('pendingCount').textContent = data.stats.pending || 0;
-                    document.getElementById('approvedCount').textContent = data.stats.approved || 0;
-                    document.getElementById('rejectedCount').textContent = data.stats.rejected || 0;
-                    document.getElementById('totalCount').textContent = data.stats.totalSuggestions || 0;
-                }
-            } catch (err) {
-                console.error('Error loading stats:', err);
+    });
+
+    // Sous-onglets de modération
+    document.querySelectorAll('.moderation-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.moderation-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.moderation-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.content).classList.add('active');
+            currentModerationTab = tab.dataset.content;
+            moderationCurrentPage = 1;
+            loadModerationContent();
+        });
+    });
+
+    // Filtres
+    document.getElementById('reportedOnlyFilter').addEventListener('change', () => { moderationCurrentPage = 1; loadModerationContent(); });
+    document.getElementById('dateRangeFilter').addEventListener('change', () => { moderationCurrentPage = 1; loadModerationContent(); });
+    document.getElementById('userFilter').addEventListener('input', () => { moderationCurrentPage = 1; loadModerationContent(); });
+
+    document.getElementById('userSearch').addEventListener('input', () => { currentPage = 1; loadUsers(); });
+    document.getElementById('roleFilter').addEventListener('change', () => { currentPage = 1; loadUsers(); });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminEmail');
+        window.location.href = '/';
+    });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ========== STATISTIQUES ET SUGGESTIONS ==========
+    async function loadStats() {
+        try {
+            const res = await fetch('http://localhost:3000/api/admin/stats', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('pendingCount').textContent = data.stats.pending || 0;
+                document.getElementById('approvedCount').textContent = data.stats.approved || 0;
+                document.getElementById('rejectedCount').textContent = data.stats.rejected || 0;
+                document.getElementById('totalCount').textContent = data.stats.totalSuggestions || 0;
             }
-        }
-        
-        async function loadSuggestions() {
-            const container = document.getElementById('suggestionsList');
-            container.innerHTML = '<div class="loading">Loading suggestions...</div>';
-            
-            try {
-                const response = await fetch('http://localhost:3000/api/admin/pending', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                
-                if (data.success && data.suggestions && data.suggestions.length > 0) {
-                    container.innerHTML = data.suggestions.map(s => `
-                        <div class="suggestion-card">
-                            <div class="suggestion-plant">🌿 ${escapeHtml(s.plantScientificName)}</div>
-                            <div class="suggestion-translations">
-                                <div class="translation-box">
-                                    <div class="translation-label">الدارجة (Darija)</div>
-                                    <div class="translation-value darija">${escapeHtml(s.suggestedDarija)}</div>
-                                </div>
-                                <div class="translation-box">
-                                    <div class="translation-label">ⵜⴰⵎⴰⵣⵉⵖⵜ (Tamazight)</div>
-                                    <div class="translation-value tamazight">${escapeHtml(s.suggestedTamazight)}</div>
-                                </div>
+        } catch (e) { console.error('Erreur de statistiques:', e); }
+    }
+
+    async function loadSuggestions() {
+        const container = document.getElementById('suggestionsList');
+        container.innerHTML = '<div class="loading">Chargement des suggestions…</div>';
+        try {
+            const res = await fetch('http://localhost:3000/api/admin/pending', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success && data.suggestions && data.suggestions.length) {
+                container.innerHTML = data.suggestions.map(s => `
+                    <div class="suggestion-card">
+                        <div class="suggestion-plant">${escapeHtml(s.plantScientificName)}</div>
+                        <div class="suggestion-translations">
+                            <div class="translation-box">
+                                <div class="translation-label">Darija</div>
+                                <div class="translation-value darija">${escapeHtml(s.suggestedDarija)}</div>
                             </div>
-                            <div class="vote-counts">
-                                <div class="vote-item vote-up">
-                                    <span>👍</span>
-                                    <span class="vote-number">${s.upvotes || 0}</span>
-                                    <span>Upvotes</span>
-                                </div>
-                                <div class="vote-item vote-down">
-                                    <span>👎</span>
-                                    <span class="vote-number">${s.downvotes || 0}</span>
-                                    <span>Downvotes</span>
-                                </div>
-                                <div class="vote-item vote-total">
-                                    <span>📊</span>
-                                    <span class="vote-number">${s.totalVotes || 0}</span>
-                                    <span>Total Votes</span>
-                                </div>
-                            </div>
-                            <div class="suggestion-user">
-                                Suggested by: ${escapeHtml(s.user?.name || 'Unknown')} (${escapeHtml(s.user?.email || '')})
-                            </div>
-                            <div>
-                                <button class="btn-approve" onclick="approveSuggestion('${s._id}')">✅ Approve</button>
-                                <button class="btn-reject" onclick="rejectSuggestion('${s._id}')">❌ Reject</button>
+                            <div class="translation-box">
+                                <div class="translation-label">Tamazight</div>
+                                <div class="translation-value tamazight">${escapeHtml(s.suggestedTamazight)}</div>
                             </div>
                         </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<div class="empty-state">✨ No pending suggestions. Great job!</div>';
-                }
-            } catch (err) {
-                console.error('Error loading suggestions:', err);
-                container.innerHTML = '<div class="empty-state">Error loading suggestions. Make sure backend is running.</div>';
+                        <div class="vote-counts">
+                            <span class="vote-item">↑ <span class="vote-number">${s.upvotes||0}</span> Pour</span>
+                            <span class="vote-item">↓ <span class="vote-number">${s.downvotes||0}</span> Contre</span>
+                            <span class="vote-item">⬡ <span class="vote-number">${s.totalVotes||0}</span> Total</span>
+                        </div>
+                        <div class="suggestion-user">Proposé par ${escapeHtml(s.user?.name||'Inconnu')} (${escapeHtml(s.user?.email||'')})</div>
+                        <div>
+                            <button class="btn-approve" onclick="approveSuggestion('${s._id}')">Approuver</button>
+                            <button class="btn-reject" onclick="rejectSuggestion('${s._id}')">Rejeter</button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucune suggestion en attente.</div>';
             }
+        } catch (e) {
+            container.innerHTML = '<div class="empty-state">Erreur de chargement des suggestions.</div>';
         }
-        
-        async function approveSuggestion(id) {
-            if (confirm('Approve this translation?')) {
-                try {
-                    const response = await fetch(`http://localhost:3000/api/admin/approve/${id}`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const data = await response.json();
-                    
-                    if (data.success) {
-                        loadStats();
-                        loadSuggestions();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                } catch (err) {
-                    alert('Network error: ' + err.message);
-                }
-            }
-        }
-        
-        async function rejectSuggestion(id) {
-            const reason = prompt('Optional: Why are you rejecting this?');
-            try {
-                const response = await fetch(`http://localhost:3000/api/admin/reject/${id}`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ reason: reason })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    loadStats();
-                    loadSuggestions();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (err) {
-                alert('Network error: ' + err.message);
-            }
-        }
-        
-        async function loadUsers(page = 1) {
-            const container = document.getElementById('usersList');
-            const paginationContainer = document.getElementById('usersPagination');
-            container.innerHTML = '<div class="loading">Loading users...</div>';
-            paginationContainer.innerHTML = '';
-            
-            try {
-                const search = document.getElementById('userSearch').value;
-                const roleFilter = document.getElementById('roleFilter').value;
-                
-                const response = await fetch(`http://localhost:3000/api/admin/users?page=${page}&limit=10&search=${encodeURIComponent(search)}&role=${roleFilter}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                
-                if (data.success && data.users && data.users.length > 0) {
-                    container.innerHTML = `
-                        <table class="users-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Email</th>
-                                    <th>Role</th>
-                                    <th>Location</th>
-                                    <th>Contributions</th>
-                                    <th>Joined</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${data.users.map(user => `
-                                    <tr>
-                                        <td>${escapeHtml(user.name || 'N/A')}</td>
-                                        <td>${escapeHtml(user.email)}</td>
-                                        <td><span class="user-role ${user.role}">${user.role}</span></td>
-                                        <td>${escapeHtml(user.location || 'N/A')}</td>
-                                        <td>${user.contributionsCount || 0}</td>
-                                        <td>${new Date(user.createdAt).toLocaleDateString()}</td>
-                                        <td>
-                                            <button class="btn-delete" onclick="deleteUser('${user._id}')">Delete</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                    
-                    // Pagination
-                    if (data.pagination.pages > 1) {
-                        let paginationHTML = '';
-                        for (let i = 1; i <= data.pagination.pages; i++) {
-                            paginationHTML += `<button class="${i === page ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
-                        }
-                        paginationContainer.innerHTML = paginationHTML;
-                    }
-                } else {
-                    container.innerHTML = '<div class="empty-state">No users found.</div>';
-                }
-            } catch (err) {
-                console.error('Error loading users:', err);
-                container.innerHTML = '<div class="empty-state">Error loading users. Make sure backend is running.</div>';
-            }
-        }
-        
-        function deleteUser(userId) {
-            if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-                fetch(`http://localhost:3000/api/admin/users/${userId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        loadUsers(currentPage);
-                        alert('User deleted successfully!');
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(err => alert('Error: ' + err.message));
-            }
-        }
-        
-        // Search and filter
-        document.getElementById('userSearch').addEventListener('input', () => {
-            currentPage = 1;
-            loadUsers(currentPage);
-        });
-        
-        document.getElementById('roleFilter').addEventListener('change', () => {
-            currentPage = 1;
-            loadUsers(currentPage);
-        });
-        
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('adminToken');
-            localStorage.removeItem('adminEmail');
-            window.location.href = '/';
-        });
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+    }
 
-        // ==================== SIMPLIFIED MODERATION FUNCTIONS ====================
-
-        let moderationCurrentPage = 1;
-        let currentModerationTab = 'identifications';
-
-        // Moderation sub-tab switching
-        document.querySelectorAll('.moderation-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.moderation-tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.moderation-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.content).classList.add('active');
-                currentModerationTab = tab.dataset.content;
-                moderationCurrentPage = 1;
-                loadModerationContent();
+    async function approveSuggestion(id) {
+        if (!confirm('Approuver cette suggestion ?')) return;
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/approve/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-        });
+            const data = await res.json();
+            if (data.success) { loadStats(); loadSuggestions(); } else alert('Erreur : '+data.message);
+        } catch (e) { alert('Erreur réseau'); }
+    }
 
-        // Filter event listeners
-        document.getElementById('reportedOnlyFilter').addEventListener('change', () => {
-            moderationCurrentPage = 1;
-            loadModerationContent();
-        });
+    async function rejectSuggestion(id) {
+        const reason = prompt('Motif (facultatif) :');
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/reject/${id}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason })
+            });
+            const data = await res.json();
+            if (data.success) { loadStats(); loadSuggestions(); } else alert('Erreur : '+data.message);
+        } catch (e) { alert('Erreur réseau'); }
+    }
 
-        document.getElementById('dateRangeFilter').addEventListener('change', () => {
-            moderationCurrentPage = 1;
-            loadModerationContent();
-        });
-
-        document.getElementById('userFilter').addEventListener('input', () => {
-            moderationCurrentPage = 1;
-            loadModerationContent();
-        });
-
-        async function loadModerationContent() {
-            if (currentModerationTab === 'identifications') {
-                loadIdentifications();
-            } else if (currentModerationTab === 'translations') {
-                loadTranslations();
-            }
-        }
-
-        async function loadIdentifications(page = 1) {
-            const container = document.getElementById('identificationsList');
-            const paginationContainer = document.getElementById('identificationsPagination');
-            container.innerHTML = '<tr><td colspan="6"><div class="loading">Loading identifications...</div></td></tr>';
-            paginationContainer.innerHTML = '';
-
-            try {
-                const reportedOnly = document.getElementById('reportedOnlyFilter').checked;
-                const dateRange = document.getElementById('dateRangeFilter').value;
-                const userEmail = document.getElementById('userFilter').value;
-
-                let url = `http://localhost:3000/api/admin/moderation/identifications?page=${page}&limit=10&reportedOnly=${reportedOnly}&dateRange=${dateRange}`;
-                if (userEmail) {
-                    url += `&userId=${userEmail}`;
-                }
-
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-
-                if (data.success && data.posts && data.posts.length > 0) {
-                    container.innerHTML = data.posts.map(post => `
-                        <tr>
-                            <td>
-                                <div>${escapeHtml(post.userId?.name || 'Anonymous')}</div>
-                                <div style="font-size: 12px; color: #666;">${escapeHtml(post.userId?.email || '')}</div>
-                            </td>
-                            <td>
-                                <div class="content-preview">
-                                    ${post.imageUrl ? `<img src="${escapeHtml(post.imageUrl)}" alt="">` : ''}
-                                    <strong>${escapeHtml(post.plantName)}</strong> (${escapeHtml(post.scientificName)})
-                                </div>
-                            </td>
-                            <td>${new Date(post.createdAt).toLocaleDateString()}</td>
-                            <td><span class="status-badge ${post.status}">${post.status}</span></td>
-                            <td><span class="report-count">🚩 ${post.reportCount}</span></td>
-                            <td>
-                                <div class="moderation-actions">
-                                    ${post.status === 'visible' 
-                                        ? `<button class="btn-action-small btn-hide" onclick="hideContent('identification', '${post._id}')">Hide</button>`
-                                        : `<button class="btn-action-small btn-restore" onclick="restoreContent('identification', '${post._id}')">Restore</button>`
-                                    }
-                                    <button class="btn-action-small btn-delete" onclick="deleteContent('identification', '${post._id}')">Delete</button>
-                                    <button class="btn-action-small btn-view" onclick="viewReports('identification', '${post._id}')">View Reports</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('');
-
-                    if (data.pagination.pages > 1) {
-                        let paginationHTML = '';
-                        for (let i = 1; i <= data.pagination.pages; i++) {
-                            paginationHTML += `<button class="${i === page ? 'active' : ''}" onclick="loadIdentifications(${i})">${i}</button>`;
-                        }
-                        paginationContainer.innerHTML = paginationHTML;
+    // ========== UTILISATEURS ==========
+    async function loadUsers(page = 1) {
+        const container = document.getElementById('usersList');
+        const pagContainer = document.getElementById('usersPagination');
+        container.innerHTML = '<div class="loading">Chargement des utilisateurs…</div>';
+        pagContainer.innerHTML = '';
+        try {
+            const search = document.getElementById('userSearch').value;
+            const role = document.getElementById('roleFilter').value;
+            const url = `http://localhost:3000/api/admin/users?page=${page}&limit=10&search=${encodeURIComponent(search)}&role=${role}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success && data.users && data.users.length) {
+                container.innerHTML = `
+                    <table class="users-table">
+                        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Localisation</th><th>Contrib.</th><th>Inscrit le</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${data.users.map(u => `
+                                <tr>
+                                    <td>${escapeHtml(u.name||'N/A')}</td>
+                                    <td>${escapeHtml(u.email)}</td>
+                                    <td><span class="user-role ${u.role}">${u.role}</span></td>
+                                    <td>${escapeHtml(u.location||'N/A')}</td>
+                                    <td>${u.contributionsCount||0}</td>
+                                    <td>${new Date(u.createdAt).toLocaleDateString()}</td>
+                                    <td><button class="btn-delete" onclick="deleteUser('${u._id}')">Supprimer</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                if (data.pagination.pages > 1) {
+                    let html = '';
+                    for (let i=1; i<=data.pagination.pages; i++) {
+                        html += `<button class="${i===page?'active':''}" onclick="loadUsers(${i})">${i}</button>`;
                     }
-                } else {
-                    container.innerHTML = '<tr><td colspan="6"><div class="empty-state">No identifications found.</div></td></tr>';
+                    pagContainer.innerHTML = html;
                 }
-            } catch (err) {
-                console.error('Error loading identifications:', err);
-                container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Error loading identifications.</div></td></tr>';
+            } else {
+                container.innerHTML = '<div class="empty-state">Aucun utilisateur trouvé.</div>';
             }
+        } catch (e) {
+            container.innerHTML = '<div class="empty-state">Erreur de chargement des utilisateurs.</div>';
         }
+    }
 
-        async function loadTranslations(page = 1) {
-            const container = document.getElementById('translationsList');
-            const paginationContainer = document.getElementById('translationsPagination');
-            container.innerHTML = '<tr><td colspan="6"><div class="loading">Loading translations...</div></td></tr>';
-            paginationContainer.innerHTML = '';
+    function deleteUser(userId) {
+        if (!confirm('Supprimer définitivement cet utilisateur ?')) return;
+        fetch(`http://localhost:3000/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => r.json()).then(data => {
+            if (data.success) { loadUsers(currentPage); alert('Utilisateur supprimé.'); } else alert('Erreur : '+data.message);
+        }).catch(e => alert('Erreur réseau'));
+    }
 
-            try {
-                const reportedOnly = document.getElementById('reportedOnlyFilter').checked;
-                const dateRange = document.getElementById('dateRangeFilter').value;
-                const userEmail = document.getElementById('userFilter').value;
+    // ========== MODÉRATION ==========
+    function loadModerationContent() {
+        if (currentModerationTab === 'identifications') loadIdentifications();
+        else if (currentModerationTab === 'translations') loadTranslations();
+    }
 
-                let url = `http://localhost:3000/api/admin/moderation/translations?page=${page}&limit=10&reportedOnly=${reportedOnly}&dateRange=${dateRange}`;
-                if (userEmail) {
-                    url += `&userId=${userEmail}`;
-                }
-
-                const response = await fetch(url, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-
-                if (data.success && data.posts && data.posts.length > 0) {
-                    container.innerHTML = data.posts.map(post => `
-                        <tr>
-                            <td>
-                                <div>${escapeHtml(post.userId?.name || 'Anonymous')}</div>
-                                <div style="font-size: 12px; color: #666;">${escapeHtml(post.userId?.email || '')}</div>
-                            </td>
-                            <td>
-                                <div class="content-preview">
-                                    <strong>${escapeHtml(post.plantName)}</strong> (${escapeHtml(post.scientificName)})
-                                    ${post.suggestedDarija ? `<div>🇩🇿 ${escapeHtml(post.suggestedDarija)}</div>` : ''}
-                                    ${post.suggestedTamazight ? `<div>🏔️ ${escapeHtml(post.suggestedTamazight)}</div>` : ''}
-                                </div>
-                            </td>
-                            <td>${new Date(post.createdAt).toLocaleDateString()}</td>
-                            <td><span class="status-badge ${post.status}">${post.status}</span></td>
-                            <td><span class="report-count">🚩 ${post.reportCount}</span></td>
-                            <td>
-                                <div class="moderation-actions">
-                                    ${post.status === 'visible' 
-                                        ? `<button class="btn-action-small btn-hide" onclick="hideContent('translation', '${post._id}')">Hide</button>`
-                                        : `<button class="btn-action-small btn-restore" onclick="restoreContent('translation', '${post._id}')">Restore</button>`
-                                    }
-                                    <button class="btn-action-small btn-delete" onclick="deleteContent('translation', '${post._id}')">Delete</button>
-                                    <button class="btn-action-small btn-view" onclick="viewReports('translation', '${post._id}')">View Reports</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `).join('');
-
-                    if (data.pagination.pages > 1) {
-                        let paginationHTML = '';
-                        for (let i = 1; i <= data.pagination.pages; i++) {
-                            paginationHTML += `<button class="${i === page ? 'active' : ''}" onclick="loadTranslations(${i})">${i}</button>`;
-                        }
-                        paginationContainer.innerHTML = paginationHTML;
+    async function loadIdentifications(page = 1) {
+        const container = document.getElementById('identificationsList');
+        const pagContainer = document.getElementById('identificationsPagination');
+        container.innerHTML = '<tr><td colspan="6"><div class="loading">Chargement des identifications…</div></td></tr>';
+        pagContainer.innerHTML = '';
+        try {
+            const reportedOnly = document.getElementById('reportedOnlyFilter').checked;
+            const dateRange = document.getElementById('dateRangeFilter').value;
+            const userEmail = document.getElementById('userFilter').value;
+            let url = `http://localhost:3000/api/admin/moderation/identifications?page=${page}&limit=10&reportedOnly=${reportedOnly}&dateRange=${dateRange}`;
+            if (userEmail) url += `&userId=${userEmail}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success && data.posts && data.posts.length) {
+                container.innerHTML = data.posts.map(p => `
+                    <tr>
+                        <td><div>${escapeHtml(p.userId?.name||'Anonyme')}</div><div style="font-size:0.75rem;color:rgba(255,245,230,0.3)">${escapeHtml(p.userId?.email||'')}</div></td>
+                        <td><div class="content-preview">${p.imageUrl?`<img src="${escapeHtml(p.imageUrl)}" alt="">`:''} ${escapeHtml(p.plantName)} (${escapeHtml(p.scientificName)})</div></td>
+                        <td>${new Date(p.createdAt).toLocaleDateString()}</td>
+                        <td><span class="status-badge ${p.status}">${p.status}</span></td>
+                        <td><span class="report-count">⚠ ${p.reportCount}</span></td>
+                        <td>
+                            <div class="moderation-actions">
+                                ${p.status==='visible'?`<button class="btn-action-small btn-hide" onclick="hideContent('identification','${p._id}')">Masquer</button>`
+                                :`<button class="btn-action-small btn-restore" onclick="restoreContent('identification','${p._id}')">Restaurer</button>`}
+                                <button class="btn-action-small btn-delete" onclick="deleteContent('identification','${p._id}')">Supprimer</button>
+                                <button class="btn-action-small btn-view" onclick="viewReports('identification','${p._id}')">Signalements</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                if (data.pagination.pages > 1) {
+                    let html = '';
+                    for (let i=1; i<=data.pagination.pages; i++) {
+                        html += `<button class="${i===page?'active':''}" onclick="loadIdentifications(${i})">${i}</button>`;
                     }
-                } else {
-                    container.innerHTML = '<tr><td colspan="6"><div class="empty-state">No translations found.</div></td></tr>';
+                    pagContainer.innerHTML = html;
                 }
-            } catch (err) {
-                console.error('Error loading translations:', err);
-                container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Error loading translations.</div></td></tr>';
+            } else {
+                container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Aucune identification.</div></td></tr>';
             }
+        } catch (e) {
+            container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Erreur de chargement des identifications.</div></td></tr>';
         }
+    }
 
-        async function hideContent(contentType, contentId) {
-            const reason = prompt('Reason for hiding this content (optional):');
-            try {
-                const response = await fetch('http://localhost:3000/api/admin/moderation/hide', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ contentType, contentId, reason })
-                });
-                const data = await response.json();
-
-                if (data.success) {
-                    loadModerationContent();
-                    alert('Content hidden successfully!');
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
-            }
-        }
-
-        async function restoreContent(contentType, contentId) {
-            if (confirm('Restore this content to make it visible again?')) {
-                try {
-                    const response = await fetch('http://localhost:3000/api/admin/moderation/restore', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ contentType, contentId })
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        loadModerationContent();
-                        alert('Content restored successfully!');
-                    } else {
-                        alert('Error: ' + data.message);
+    async function loadTranslations(page = 1) {
+        const container = document.getElementById('translationsList');
+        const pagContainer = document.getElementById('translationsPagination');
+        container.innerHTML = '<tr><td colspan="6"><div class="loading">Chargement des traductions…</div></td></tr>';
+        pagContainer.innerHTML = '';
+        try {
+            const reportedOnly = document.getElementById('reportedOnlyFilter').checked;
+            const dateRange = document.getElementById('dateRangeFilter').value;
+            const userEmail = document.getElementById('userFilter').value;
+            let url = `http://localhost:3000/api/admin/moderation/translations?page=${page}&limit=10&reportedOnly=${reportedOnly}&dateRange=${dateRange}`;
+            if (userEmail) url += `&userId=${userEmail}`;
+            const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (data.success && data.posts && data.posts.length) {
+                container.innerHTML = data.posts.map(p => `
+                    <tr>
+                        <td><div>${escapeHtml(p.userId?.name||'Anonyme')}</div><div style="font-size:0.75rem;color:rgba(255,245,230,0.3)">${escapeHtml(p.userId?.email||'')}</div></td>
+                        <td><div class="content-preview"><strong>${escapeHtml(p.plantName)}</strong> (${escapeHtml(p.scientificName)})<br>${escapeHtml(p.suggestedDarija? 'Darija: '+p.suggestedDarija : '')}${p.suggestedTamazight? ' Tamazight: '+p.suggestedTamazight : ''}</div></td>
+                        <td>${new Date(p.createdAt).toLocaleDateString()}</td>
+                        <td><span class="status-badge ${p.status}">${p.status}</span></td>
+                        <td><span class="report-count">⚠ ${p.reportCount}</span></td>
+                        <td>
+                            <div class="moderation-actions">
+                                ${p.status==='visible'?`<button class="btn-action-small btn-hide" onclick="hideContent('translation','${p._id}')">Masquer</button>`
+                                :`<button class="btn-action-small btn-restore" onclick="restoreContent('translation','${p._id}')">Restaurer</button>`}
+                                <button class="btn-action-small btn-delete" onclick="deleteContent('translation','${p._id}')">Supprimer</button>
+                                <button class="btn-action-small btn-view" onclick="viewReports('translation','${p._id}')">Signalements</button>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                if (data.pagination.pages > 1) {
+                    let html = '';
+                    for (let i=1; i<=data.pagination.pages; i++) {
+                        html += `<button class="${i===page?'active':''}" onclick="loadTranslations(${i})">${i}</button>`;
                     }
-                } catch (err) {
-                    alert('Error: ' + err.message);
+                    pagContainer.innerHTML = html;
                 }
+            } else {
+                container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Aucune traduction.</div></td></tr>';
             }
+        } catch (e) {
+            container.innerHTML = '<tr><td colspan="6"><div class="empty-state">Erreur de chargement des traductions.</div></td></tr>';
         }
+    }
 
-        async function deleteContent(contentType, contentId) {
-            if (confirm('PERMANENTLY delete this content? This action cannot be undone.')) {
-                try {
-                    const response = await fetch('http://localhost:3000/api/admin/moderation/delete', {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ contentType, contentId })
-                    });
-                    const data = await response.json();
+    // Actions de modération
+    async function hideContent(type, id) {
+        const reason = prompt('Motif du masquage :');
+        try {
+            const res = await fetch('http://localhost:3000/api/admin/moderation/hide', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentType: type, contentId: id, reason })
+            });
+            const data = await res.json();
+            if (data.success) { loadModerationContent(); alert('Contenu masqué.'); } else alert('Erreur : '+data.message);
+        } catch (e) { alert('Erreur réseau'); }
+    }
 
-                    if (data.success) {
-                        loadModerationContent();
-                        alert('Content deleted permanently!');
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                } catch (err) {
-                    alert('Error: ' + err.message);
-                }
-            }
-        }
+    async function restoreContent(type, id) {
+        if (!confirm('Restaurer ce contenu ?')) return;
+        try {
+            const res = await fetch('http://localhost:3000/api/admin/moderation/restore', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentType: type, contentId: id })
+            });
+            const data = await res.json();
+            if (data.success) { loadModerationContent(); alert('Contenu restauré.'); } else alert('Erreur : '+data.message);
+        } catch (e) { alert('Erreur réseau'); }
+    }
 
-        async function viewReports(contentType, contentId) {
-            try {
-                const response = await fetch(`http://localhost:3000/api/admin/moderation/reports/${contentType}/${contentId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+    async function deleteContent(type, id) {
+        if (!confirm('Supprimer définitivement ce contenu ?')) return;
+        try {
+            const res = await fetch('http://localhost:3000/api/admin/moderation/delete', {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contentType: type, contentId: id })
+            });
+            const data = await res.json();
+            if (data.success) { loadModerationContent(); alert('Contenu supprimé.'); } else alert('Erreur : '+data.message);
+        } catch (e) { alert('Erreur réseau'); }
+    }
+
+    async function viewReports(type, id) {
+        try {
+            const res = await fetch(`http://localhost:3000/api/admin/moderation/reports/${type}/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success && data.reports && data.reports.length) {
+                let msg = 'Signalements :\n\n';
+                data.reports.forEach(r => {
+                    msg += `- ${new Date(r.createdAt).toLocaleString()}\n  Par : ${r.reportedBy?.name||'Inconnu'} (${r.reportedBy?.email||''})\n  Motif : ${r.reason}\n  Statut : ${r.status}\n\n`;
                 });
-                const data = await response.json();
-
-                if (data.success && data.reports && data.reports.length > 0) {
-                    let reportDetails = 'Reports for this content:\n\n';
-                    data.reports.forEach(report => {
-                        reportDetails += `- ${new Date(report.createdAt).toLocaleString()}\n`;
-                        reportDetails += `  By: ${report.reportedBy?.name || 'Unknown'} (${report.reportedBy?.email || ''})\n`;
-                        reportDetails += `  Reason: ${report.reason}\n`;
-                        reportDetails += `  Status: ${report.status}\n\n`;
-                    });
-                    alert(reportDetails);
-                } else {
-                    alert('No reports found for this content.');
-                }
-            } catch (err) {
-                alert('Error: ' + err.message);
+                alert(msg);
+            } else {
+                alert('Aucun signalement.');
             }
-        }
+        } catch (e) { alert('Erreur réseau'); }
+    }
 
-        loadStats();
-        loadSuggestions();
-    </script>
+    // Initialisation
+    loadStats();
+    loadSuggestions();
+</script>
 </body>
 </html>
