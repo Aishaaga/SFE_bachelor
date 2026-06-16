@@ -1,143 +1,348 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Login - SFE</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin · SFE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz@14..32&display=swap" rel="stylesheet" />
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1e5a3a 0%, #2e8b57 100%);
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            background: #0f3b2c;
+            background: radial-gradient(circle at 20% 30%, #1b5e3a, #0f3b2c 80%);
+            padding: 1.5rem;
         }
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
+
+        /* ---------- login card: dynamic sizing via max-width & padding ---------- */
         .login-card {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            text-align: center;
+            width: 100%;
+            max-width: 400px;          /* default compact width */
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border-radius: 2.5rem;
+            padding: 2rem 1.8rem;       /* comfortable but compact */
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.25s ease;
+            /* the card will grow vertically when error appears, but we keep it compact */
         }
+
+        /* when error message appears, we give it a bit more vertical space */
+        .login-card.has-error {
+            padding-bottom: 2.2rem;     /* extra room for error message */
+        }
+
+        /* headings & text – creamy white */
         .login-card h1 {
-            color: #2e8b57;
-            margin-bottom: 8px;
-            font-size: 28px;
+            font-size: 1.9rem;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            color: #faf7f0;
+            margin-bottom: 0.1rem;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
+
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
+            color: #e2dcd0;
+            font-size: 0.9rem;
+            margin-bottom: 1.6rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 0.9rem;
+            letter-spacing: 0.3px;
+            font-weight: 350;
         }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.2rem;
             text-align: left;
         }
+
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 500;
+            margin-bottom: 0.4rem;
+            color: #f2ede4;
+            font-weight: 450;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
         }
+
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-        .form-group input:focus {
+            padding: 0.75rem 1.2rem;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 60px;
+            font-size: 0.95rem;
+            color: #faf7f0;
+            transition: 0.2s;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
             outline: none;
-            border-color: #2e8b57;
         }
+
+        .form-group input::placeholder {
+            color: rgba(255, 245, 230, 0.45);
+            font-weight: 300;
+            letter-spacing: 0.2px;
+        }
+
+        .form-group input:focus {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 4px rgba(200, 230, 200, 0.08), inset 0 2px 8px rgba(0,0,0,0.2);
+        }
+
         button {
             width: 100%;
-            padding: 12px;
-            background: #2e8b57;
-            color: white;
+            padding: 0.8rem 1.2rem;
+            background: #1f7547;
             border: none;
-            border-radius: 8px;
-            font-size: 16px;
+            border-radius: 60px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #faf7f0;
             cursor: pointer;
-            font-weight: bold;
-            transition: background 0.3s;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 20px rgba(0, 30, 10, 0.4);
+            letter-spacing: 0.4px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin-top: 0.2rem;
         }
+
         button:hover {
-            background: #1e5a3a;
+            background: #2b8f57;
+            transform: scale(1.01);
+            box-shadow: 0 12px 28px rgba(0, 40, 10, 0.6);
+            border-color: rgba(255, 255, 255, 0.15);
         }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* ---------- error message: hidden until it has content ---------- */
         .error-message {
-            color: #dc3545;
-            margin-top: 15px;
-            font-size: 14px;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #f5e6d3;
+            background: rgba(180, 60, 40, 0.15);
+            backdrop-filter: blur(2px);
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 200, 150, 0.08);
+            text-align: center;
+            font-weight: 400;
+            letter-spacing: 0.2px;
+            min-height: 0;              /* no fixed height, collapses when empty */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+
+            /* hidden by default */
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-6px);
+            margin-top: 0;              /* no margin when hidden */
+            padding: 0 1rem;            /* keep padding minimal when hidden */
+            height: 0;                  /* collapse height */
+            overflow: hidden;           /* prevent content from leaking */
+            border-width: 0;            /* no border when hidden */
+        }
+
+        /* when error-message has content → visible + give it space */
+        .error-message:not(:empty) {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0);
+            margin-top: 1rem;
+            height: auto;
+            padding: 0.6rem 1rem;
+            border-width: 1px;
+            overflow: visible;
+        }
+
+        /* also handle case with only whitespace (JS should set empty string) */
+        .error-message:empty {
+            visibility: hidden;
+            opacity: 0;
+            transform: translateY(-6px);
+            margin-top: 0;
+            height: 0;
+            padding: 0 1rem;
+            border-width: 0;
+            overflow: hidden;
+        }
+
+        /* small footnote */
+        .table-demo-note {
+            margin-top: 1.4rem;
+            font-size: 0.7rem;
+            color: rgba(255, 245, 230, 0.35);
+            text-align: center;
+            letter-spacing: 0.6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 1rem;
+        }
+
+        /* responsive: keep card compact */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 1.6rem 1.2rem;
+                max-width: 100%;
+                border-radius: 2rem;
+            }
+            .login-card h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* ready for future tables – transparent style */
+        .transparent-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+            color: #faf7f0;
+        }
+        .transparent-table th,
+        .transparent-table td {
+            padding: 0.7rem 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(2px);
+        }
+        .transparent-table th {
+            font-weight: 450;
+            color: #ede7db;
+            letter-spacing: 0.3px;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-card">
-            <h1>🌿 SFE Admin</h1>
-            <div class="subtitle">Plant Identification App</div>
-            
-            <form id="loginForm">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required placeholder="admin@example.com">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="••••••••">
-                </div>
-                
-                <button type="submit">Login</button>
-                
-                <div id="errorMessage" class="error-message"></div>
-            </form>
-        </div>
+    <div class="login-card" id="loginCard">
+        <h1>SFE Admin</h1>
+        <div class="subtitle">Plant identification · access panel</div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="admin@example.com" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="••••••••" />
+            </div>
+
+            <button type="submit">Login</button>
+
+            <!-- error message: hidden until it contains text -->
+            <div id="errorMessage" class="error-message"></div>
+        </form>
+
+        <div class="table-demo-note">secure · SFE v2</div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+        (function() {
+            const form = document.getElementById('loginForm');
             const errorDiv = document.getElementById('errorMessage');
-            
-            errorDiv.textContent = 'Connecting...';
-            
-            try {
-                const response = await fetch('http://localhost:3000/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    localStorage.setItem('adminToken', data.token);
-                    localStorage.setItem('adminEmail', email);
-                    window.location.href = '/dashboard.html';
+            const loginCard = document.getElementById('loginCard');
+
+            // Helper to set message – uses textContent, so :empty / :not(:empty) works
+            function setMessage(text, isError = true) {
+                // clear or set text
+                errorDiv.textContent = text || '';
+
+                // toggle class on card for extra spacing (if needed)
+                if (text && text.trim().length > 0) {
+                    loginCard.classList.add('has-error');
                 } else {
-                    errorDiv.textContent = data.message || 'Login failed';
+                    loginCard.classList.remove('has-error');
                 }
-            } catch (err) {
-                console.error('Login error:', err);
-                errorDiv.textContent = 'Cannot connect to backend. Make sure backend is running on port 3000';
+
+                // background style (cosmetic)
+                if (!text) {
+                    errorDiv.style.background = 'rgba(255,255,255,0.02)';
+                    errorDiv.style.borderColor = 'rgba(255,255,255,0.02)';
+                } else {
+                    errorDiv.style.background = 'rgba(180, 60, 40, 0.12)';
+                    errorDiv.style.borderColor = 'rgba(255, 200, 150, 0.08)';
+                }
             }
-        });
+
+            // initial: empty, hidden, card compact
+            setMessage('');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                if (!email || !password) {
+                    setMessage('Please fill in both fields.');
+                    return;
+                }
+
+                setMessage('Connecting …', true);
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+
+                    const data = await response.json();
+
+                    if (data && data.success) {
+                        localStorage.setItem('adminToken', data.token || 'demo-token');
+                        localStorage.setItem('adminEmail', email);
+                        setMessage('✓ Redirecting …', false);
+                        // redirect
+                        window.location.href = '/dashboard.html';
+                    } else {
+                        const msg = data?.message || 'Invalid credentials.';
+                        setMessage(msg);
+                    }
+                } catch (err) {
+                    console.warn('Login fetch error:', err);
+                    setMessage('Cannot reach backend. Ensure server runs on port 3000.');
+                }
+            });
+
+            // Clear error when user focuses or types (only if not connecting/redirecting)
+            function clearIfNotImportant() {
+                const current = errorDiv.textContent;
+                if (current && !current.includes('Connecting') && !current.includes('Redirecting')) {
+                    setMessage('');
+                }
+            }
+
+            document.querySelectorAll('#loginForm input').forEach(inp => {
+                inp.addEventListener('focus', clearIfNotImportant);
+                inp.addEventListener('input', clearIfNotImportant);
+            });
+
+            // ensure card is compact initially
+            loginCard.classList.remove('has-error');
+        })();
     </script>
 </body>
 </html>
