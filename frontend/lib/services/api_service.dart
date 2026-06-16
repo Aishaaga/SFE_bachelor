@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart';
 import '../utils/constants.dart';
 import '../models/plant.dart';
 import 'auth_service.dart';
@@ -14,7 +13,8 @@ class ApiService {
   final CacheService _cacheService = CacheService(); // ← ADD THIS
 
   // Identifier une plante à partir d'une photo
-  Future<Map<String, dynamic>> identifyPlant(File image) async {
+  // Accepts either a File (local image) or a String (Cloudinary URL)
+  Future<Map<String, dynamic>> identifyPlant(dynamic image) async {
     final startTime = DateTime.now();
 
     try {
@@ -25,7 +25,51 @@ class ApiService {
         return {'success': false, 'message': 'Non authentifié'};
       }
 
-      // 📸 STEP 1: Generate image hash for caching
+      // � STEP 2: Prepare the request
+      // Check if image is a File (local) or String (Cloudinary URL)
+      if (image is String) {
+        // Cloudinary URL - skip caching for URLs
+        print('🔄 Using Cloudinary URL, skipping local cache');
+
+        final response = await http
+            .post(
+              Uri.parse('${Constants.apiUrl}/identify'),
+              headers: {
+                'Authorization': 'Bearer $token',
+                'Content-Type': 'application/json',
+              },
+              body: jsonEncode({'imageUrl': image}),
+            )
+            .timeout(const Duration(seconds: 50));
+
+        if (response.statusCode == 401) {
+          await AuthService.handle401Error();
+          return {'success': false, 'message': 'Session expirée'};
+        }
+
+        print(
+            '✅ Response received (${DateTime.now().difference(startTime).inMilliseconds}ms)');
+        print('🔍 STEP 4: Reading response...');
+
+        final responseData = response.body;
+        print('📦 RAW RESPONSE: $responseData');
+        print('Response status code: ${response.statusCode}');
+
+        final data = jsonDecode(responseData);
+
+        if (response.statusCode == 200 && data['success'] == true) {
+          // For Cloudinary URLs, skip caching (pass null for imageHash)
+          return await _processIdentificationResponse(data, startTime, null);
+        } else {
+          return {
+            'success': false,
+            'message': data['message'] ?? 'Erreur d\'identification',
+          };
+        }
+      }
+
+      // Local File - use caching
+      // � STEP 1: Generate image hash for caching
       final imageBytes = await image.readAsBytes();
       final imageHash = CacheService.generateImageHash(imageBytes);
 
@@ -40,7 +84,7 @@ class ApiService {
 
       print('🔄 CACHE MISS! Calling PlantNet API');
 
-      // 🚀 STEP 3: Prepare the request
+      // Local File - send as multipart
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('${Constants.apiUrl}/identify'),
@@ -77,58 +121,13 @@ class ApiService {
       print('🔍 STEP 4: Reading response...');
 
       final responseData = await response.stream.bytesToString();
-      print('📦 RAW RESPONSE: $responseData'); // ← ADD THIS LINE
-      print('Response status code: ${response.statusCode}'); // ← ADD THIS
+      print('📦 RAW RESPONSE: $responseData');
+      print('Response status code: ${response.statusCode}');
 
       final data = jsonDecode(responseData);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        // ✅ VALIDATION: Check if plant data exists
-        if (data['plant'] == null) {
-          return {
-            'success': false,
-            'message': 'Plante non reconnue. Veuillez réessayer.',
-          };
-        }
-
-        final plant = Plant.fromJson({
-          ...data['plant'],
-          'id': data['identificationId'],
-          'confidence': data['plant']['confidence'],
-        });
-
-        // ✅ VALIDATION: Check if scientific name is valid
-        if (plant.scientificName.isEmpty ||
-            plant.scientificName == 'Nom scientifique inconnu') {
-          return {
-            'success': false,
-            'message':
-                'Cette plante n\'a pas pu être identifiée précisément. Essayez avec une photo plus nette.',
-          };
-        }
-
-        // ✅ VALIDATION: Check confidence level
-        if (plant.confidence < 0.3) {
-          return {
-            'success': false,
-            'message':
-                'Identification peu fiable (${(plant.confidence * 100).toInt()}%). Prenez une meilleure photo.',
-          };
-        }
-
-        // 💾 STEP 5: Save to cache
-        final result = {
-          'success': true,
-          'plant': plant,
-          'identificationId': data['identificationId'],
-        };
-
-        await _cacheService.cachePlantIdentification(imageHash, result);
-
-        final duration = DateTime.now().difference(startTime).inMilliseconds;
-        print('✅ Plant identified in ${duration}ms');
-
-        return result;
+        return await _processIdentificationResponse(data, startTime, imageHash);
       } else {
         return {
           'success': false,
@@ -142,6 +141,62 @@ class ApiService {
         'message': 'Erreur: $e',
       };
     }
+  }
+
+  // Helper method to process identification response
+  Future<Map<String, dynamic>> _processIdentificationResponse(
+    Map<String, dynamic> data,
+    DateTime startTime,
+    String? imageHash,
+  ) async {
+    // ✅ VALIDATION: Check if plant data exists
+    if (data['plant'] == null) {
+      return {
+        'success': false,
+        'message': 'Plante non reconnue. Veuillez réessayer.',
+      };
+    }
+
+    final plant = Plant.fromJson({
+      ...data['plant'],
+      'id': data['identificationId'],
+      'confidence': data['plant']['confidence'],
+    });
+
+    // ✅ VALIDATION: Check if scientific name is valid
+    if (plant.scientificName.isEmpty ||
+        plant.scientificName == 'Nom scientifique inconnu') {
+      return {
+        'success': false,
+        'message':
+            'Cette plante n\'a pas pu être identifiée précisément. Essayez avec une photo plus nette.',
+      };
+    }
+
+    // ✅ VALIDATION: Check confidence level
+    if (plant.confidence < 0.3) {
+      return {
+        'success': false,
+        'message':
+            'Identification peu fiable (${(plant.confidence * 100).toInt()}%). Prenez une meilleure photo.',
+      };
+    }
+
+    // 💾 STEP 5: Save to cache (only if imageHash is provided)
+    final result = {
+      'success': true,
+      'plant': plant,
+      'identificationId': data['identificationId'],
+    };
+
+    if (imageHash != null) {
+      await _cacheService.cachePlantIdentification(imageHash, result);
+    }
+
+    final duration = DateTime.now().difference(startTime).inMilliseconds;
+    print('✅ Plant identified in ${duration}ms');
+
+    return result;
   }
 
   // 🚀 NEW: Identify plant with PARALLEL distribution fetch

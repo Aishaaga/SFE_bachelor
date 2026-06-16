@@ -7,6 +7,7 @@ import 'package:sfe_mobile/widgets/loading_widget.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/image_compression_service.dart';
+import '../services/cloudinary_service.dart';
 import '../widgets/app_theme.dart';
 import '../l10n/app_localizations.dart';
 import 'result_screen.dart';
@@ -22,6 +23,7 @@ class _CameraScreenState extends State<CameraScreen>
     with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   final AuthService _authService = AuthService();
+  final CloudinaryService _cloudinaryService = CloudinaryService();
 
   File? _selectedImage;
   bool _isLoading = false;
@@ -74,7 +76,18 @@ class _CameraScreenState extends State<CameraScreen>
 
       LoadingDialog.update(
           context, AppLocalizations.of(context)!.sendingToPlantNet);
-      final result = await _apiService.identifyPlant(compressed);
+
+      // Upload to Cloudinary
+      LoadingDialog.update(context, 'Uploading to Cloudinary...');
+      final cloudinaryUrl = await _cloudinaryService.uploadImage(compressed);
+
+      if (cloudinaryUrl == null) {
+        LoadingDialog.hide(context);
+        _showSnack('Failed to upload image to Cloudinary', isError: true);
+        return;
+      }
+
+      final result = await _apiService.identifyPlant(cloudinaryUrl);
 
       LoadingDialog.update(
           context, AppLocalizations.of(context)!.fetchingDistribution);

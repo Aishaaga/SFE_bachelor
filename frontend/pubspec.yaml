@@ -57,6 +57,8 @@ dependencies:
   # For caching map tiles (optional but recommended)
   flutter_map_cancellable_tile_provider: ^2.0.0
 
+  
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -4,6 +4,7 @@ import '../models/plant.dart';
 import '../services/location_service.dart';
 import '../services/feed_service.dart';
 import '../services/profile_service.dart';
+import '../services/cloudinary_service.dart';
 import '../data/plant_translations.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/app_theme.dart';
@@ -26,6 +27,7 @@ class ShareScreen extends StatefulWidget {
 
 class _ShareScreenState extends State<ShareScreen> {
   final ProfileService _profileService = ProfileService();
+  final CloudinaryService _cloudinaryService = CloudinaryService();
   String _postAs = 'Ahmed';
   String _location = '';
   String? _username;
@@ -572,6 +574,55 @@ class _ShareScreenState extends State<ShareScreen> {
     );
 
     try {
+      // Upload image to Cloudinary
+      final cloudinaryUrl = await _cloudinaryService.uploadImage(widget.photo);
+      if (cloudinaryUrl == null) {
+        Navigator.pop(context); // Close loading dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            ),
+            title: Row(
+              children: [
+                Icon(Icons.error, color: AppTheme.refusedText),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.error,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.refusedText,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'Failed to upload image to Cloudinary',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.5,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  l10n.ok,
+                  style: TextStyle(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       // Prepare location data
       Map<String, dynamic> locationData;
       if (_location == l10n.moroccoOnly) {
@@ -642,7 +693,7 @@ class _ShareScreenState extends State<ShareScreen> {
         print('DEBUG: Scientific name is empty, skipping translation fetch');
       }
 
-      // Share to feed
+      // Share to feed with Cloudinary URL
       final result = await feedService.shareToFeed(
         plantId: plantId,
         plantName:
@@ -650,6 +701,7 @@ class _ShareScreenState extends State<ShareScreen> {
         scientificName: widget.plant.scientificName.isNotEmpty
             ? widget.plant.scientificName
             : 'Unknown',
+        imageUrl: cloudinaryUrl,
         identificationId: widget.identificationId,
         suggestedDarija: approvedDarija,
         suggestedTamazight: approvedTamazight,
