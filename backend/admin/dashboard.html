@@ -663,6 +663,92 @@
         .no-emoji {
             /* juste un marqueur */
         }
+        .btn-ban {
+            background: rgba(200, 70, 60, 0.4);
+            border: none;
+            color: #faf7f0;
+            padding: 0.3rem 0.8rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 0.3rem;
+        }
+
+        .btn-ban:hover {
+            background: rgba(200, 70, 60, 0.7);
+        }
+
+        .btn-disable {
+            background: rgba(200, 150, 60, 0.4);
+            border: none;
+            color: #faf7f0;
+            padding: 0.3rem 0.8rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 0.3rem;
+        }
+
+        .btn-disable:hover {
+            background: rgba(200, 150, 60, 0.7);
+        }
+
+        .btn-unban {
+            background: rgba(60, 200, 120, 0.4);
+            border: none;
+            color: #faf7f0;
+            padding: 0.3rem 0.8rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 0.3rem;
+        }
+
+        .btn-unban:hover {
+            background: rgba(60, 200, 120, 0.7);
+        }
+
+        .btn-enable {
+            background: rgba(60, 150, 200, 0.4);
+            border: none;
+            color: #faf7f0;
+            padding: 0.3rem 0.8rem;
+            border-radius: 60px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 0.3rem;
+        }
+
+        .btn-enable:hover {
+            background: rgba(60, 150, 200, 0.7);
+        }
+
+        .user-status {
+            padding: 0.2rem 0.6rem;
+            border-radius: 60px;
+            font-size: 0.7rem;
+            font-weight: 450;
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 245, 230, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .user-status.banned {
+            background: rgba(200, 70, 60, 0.15);
+            color: #e09080;
+            border-color: rgba(200, 70, 60, 0.1);
+        }
+
+        .user-status.disabled {
+            background: rgba(200, 150, 60, 0.15);
+            color: #e0b080;
+            border-color: rgba(200, 150, 60, 0.1);
+        }
+
     </style>
 </head>
 <body>
@@ -929,17 +1015,22 @@
             if (data.success && data.users && data.users.length) {
                 container.innerHTML = `
                     <table class="users-table">
-                        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Localisation</th><th>Contrib.</th><th>Inscrit le</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Localisation</th><th>Contrib.</th><th>Inscrit le</th><th>Actions</th></tr></thead>
                         <tbody>
                             ${data.users.map(u => `
                                 <tr>
                                     <td>${escapeHtml(u.name||'N/A')}</td>
-                                    <td>${escapeHtml(u.email)}</td>
-                                    <td><span class="user-role ${u.role}">${u.role}</span></td>
-                                    <td>${escapeHtml(u.location||'N/A')}</td>
-                                    <td>${u.contributionsCount||0}</td>
-                                    <td>${new Date(u.createdAt).toLocaleDateString()}</td>
-                                    <td><button class="btn-delete" onclick="deleteUser('${u._id}')">Supprimer</button></td>
+<td>${escapeHtml(u.email)}</td>
+<td><span class="user-role ${u.role}">${u.role}</span></td>
+<td><span class="user-status ${u.isBanned ? 'banned' : ''} ${u.isDisabled ? 'disabled' : ''}">${u.isBanned ? 'Banni' : (u.isDisabled ? 'Désactivé' : 'Actif')}</span></td>
+<td>${escapeHtml(u.location||'N/A')}</td>
+<td>${u.contributionsCount||0}</td>
+<td>${new Date(u.createdAt).toLocaleDateString()}</td>
+<td>
+${u.isBanned ? `<button class="btn-unban" onclick="unbanUser('${u._id}')">Débannir</button>` : `<button class="btn-ban" onclick="banUser('${u._id}')">Bannir</button>`}
+${u.isDisabled ? `<button class="btn-enable" onclick="enableUser('${u._id}')">Réactiver</button>` : `<button class="btn-disable" onclick="disableUser('${u._id}')">Désactiver</button>`}
+<button class="btn-delete" onclick="deleteUser('${u._id}')">Supprimer</button>
+</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -969,6 +1060,48 @@
             if (data.success) { loadUsers(currentPage); alert('Utilisateur supprimé.'); } else alert('Erreur : '+data.message);
         }).catch(e => alert('Erreur réseau'));
     }
+    function banUser(userId) {
+        const reason = prompt('Raison du bannissement (facultatif) :');
+        fetch(`http://localhost:3000/api/admin/users/${userId}/ban`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        }).then(r => r.json()).then(data => {
+            if (data.success) { loadUsers(currentPage); alert('Utilisateur banni.'); } else alert('Erreur : '+data.message);
+        }).catch(e => alert('Erreur réseau'));
+    }
+
+    function unbanUser(userId) {
+        if (!confirm('Débannir cet utilisateur ?')) return;
+        fetch(`http://localhost:3000/api/admin/users/${userId}/unban`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => r.json()).then(data => {
+            if (data.success) { loadUsers(currentPage); alert('Utilisateur débanni.'); } else alert('Erreur : '+data.message);
+        }).catch(e => alert('Erreur réseau'));
+    }
+
+    function disableUser(userId) {
+        const reason = prompt('Raison de la désactivation (facultatif) :');
+        fetch(`http://localhost:3000/api/admin/users/${userId}/disable`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        }).then(r => r.json()).then(data => {
+            if (data.success) { loadUsers(currentPage); alert('Utilisateur désactivé.'); } else alert('Erreur : '+data.message);
+        }).catch(e => alert('Erreur réseau'));
+    }
+
+    function enableUser(userId) {
+        if (!confirm('Réactiver cet utilisateur ?')) return;
+        fetch(`http://localhost:3000/api/admin/users/${userId}/enable`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => r.json()).then(data => {
+            if (data.success) { loadUsers(currentPage); alert('Utilisateur réactivé.'); } else alert('Erreur : '+data.message);
+        }).catch(e => alert('Erreur réseau'));
+    }
+
 
     // ========== MODÉRATION ==========
     function loadModerationContent() {

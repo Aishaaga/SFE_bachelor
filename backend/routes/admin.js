@@ -407,17 +407,17 @@ router.put('/users/:id', auth, adminAuth, async (req, res) => {
 router.delete('/users/:id', auth, adminAuth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
+
     if (user._id.toString() === req.userId) {
       return res.status(400).json({ success: false, message: 'Cannot delete yourself' });
     }
-    
+
     await User.findByIdAndDelete(req.params.id);
-    
+
     res.json({
       success: true,
       message: 'User deleted successfully'
@@ -425,6 +425,112 @@ router.delete('/users/:id', auth, adminAuth, async (req, res) => {
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ success: false, message: 'Error deleting user' });
+  }
+});
+
+// POST /api/admin/users/:id/ban - Ban a user
+router.post('/users/:id/ban', auth, adminAuth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user._id.toString() === req.userId) {
+      return res.status(400).json({ success: false, message: 'Cannot ban yourself' });
+    }
+
+    user.isBanned = true;
+    user.bannedAt = new Date();
+    user.banReason = reason || '';
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User banned successfully'
+    });
+  } catch (error) {
+    console.error('Error banning user:', error);
+    res.status(500).json({ success: false, message: 'Error banning user' });
+  }
+});
+
+// POST /api/admin/users/:id/unban - Unban a user
+router.post('/users/:id/unban', auth, adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.isBanned = false;
+    user.bannedAt = null;
+    user.banReason = '';
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User unbanned successfully'
+    });
+  } catch (error) {
+    console.error('Error unbanning user:', error);
+    res.status(500).json({ success: false, message: 'Error unbanning user' });
+  }
+});
+
+// POST /api/admin/users/:id/disable - Disable a user
+router.post('/users/:id/disable', auth, adminAuth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (user._id.toString() === req.userId) {
+      return res.status(400).json({ success: false, message: 'Cannot disable yourself' });
+    }
+
+    user.isDisabled = true;
+    user.disabledAt = new Date();
+    user.disableReason = reason || '';
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User disabled successfully'
+    });
+  } catch (error) {
+    console.error('Error disabling user:', error);
+    res.status(500).json({ success: false, message: 'Error disabling user' });
+  }
+});
+
+// POST /api/admin/users/:id/enable - Enable a user
+router.post('/users/:id/enable', auth, adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    user.isDisabled = false;
+    user.disabledAt = null;
+    user.disableReason = '';
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'User enabled successfully'
+    });
+  } catch (error) {
+    console.error('Error enabling user:', error);
+    res.status(500).json({ success: false, message: 'Error enabling user' });
   }
 });
 
