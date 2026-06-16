@@ -211,7 +211,9 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
 
     if (confirmed == true && reason != null && reason!.trim().isNotEmpty) {
       try {
+        print('Submitting report for post: $postId, reason: $reason');
         final result = await _feedService.reportPost(postId, reason!.trim());
+        print('Report result: $result');
 
         if (result['success']) {
           if (mounted) {
@@ -232,6 +234,7 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
           }
         }
       } catch (e) {
+        print('Error reporting post: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
