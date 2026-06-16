@@ -171,70 +171,74 @@ class _SocialFeedScreenState extends State<SocialFeedScreen>
   }
 
   Future<void> _flagPost(String postId) async {
-    String? reason;
-
+    final controller =
+        TextEditingController(); // Move controller outside StatefulBuilder
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          final controller = TextEditingController(text: reason);
-          return AlertDialog(
-            title: Text(AppLocalizations.of(context)!.flagPost),
-            content: TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.reportReason,
-                hintText: AppLocalizations.of(context)!.reportReasonHint,
+      builder: (context) {
+        String? reason;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.flagPost),
+              content: TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.reportReason,
+                  hintText: AppLocalizations.of(context)!.reportReasonHint,
+                ),
+                maxLines: 3,
+                textAlign: TextAlign.left,
+                textDirection: TextDirection.ltr,
+                onChanged: (value) {
+                  reason = value;
+                  setState(() {}); // This updates the button state
+                },
               ),
-              maxLines: 3,
-              onChanged: (value) {
-                reason = value;
-                setState(() {});
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(AppLocalizations.of(context)!.cancel),
-              ),
-              TextButton(
-                onPressed: (reason?.trim().isEmpty ?? true)
-                    ? null
-                    : () => Navigator.pop(context, true),
-                child: Text(AppLocalizations.of(context)!.flag),
-              ),
-            ],
-          );
-        },
-      ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                TextButton(
+                  onPressed: (reason?.trim().isEmpty ?? true)
+                      ? null
+                      : () => Navigator.pop(context, true),
+                  child: Text(AppLocalizations.of(context)!.flag),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
 
-    if (confirmed == true && reason != null && reason!.trim().isNotEmpty) {
-      try {
-        final result = await _feedService.reportPost(postId, reason!.trim());
-
-        if (result['success']) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(result['message'])),
-            );
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
+    if (confirmed == true) {
+      // Get the reason from the controller, not the variable
+      final reasonText = controller.text.trim();
+      if (reasonText.isNotEmpty) {
+        try {
+          final result = await _feedService.reportPost(postId, reasonText);
+          if (result['success']) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(result['message'])),
+              );
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(result['message'] ??
-                      AppLocalizations.of(context)!.failedToFlagPost)),
-            );
+                      AppLocalizations.of(context)!.failedToFlagPost)));
+            }
           }
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content:
-                    Text('${AppLocalizations.of(context)!.networkError}: $e')),
-          );
+                    Text('${AppLocalizations.of(context)!.networkError}: $e')));
+          }
         }
       }
     }
