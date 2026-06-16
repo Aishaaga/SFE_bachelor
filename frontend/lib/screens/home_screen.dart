@@ -569,18 +569,21 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final screens = _getScreens();
 
-    return Scaffold(
-      backgroundColor: AppTheme.surface,
-      // extendBody lets the list scroll behind the floating nav bar
-      extendBody: true,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
-      // ▼▼▼  FLOATING NAV BAR — replaces the old BottomNavigationBar  ▼▼▼
-      bottomNavigationBar: FloatingNavBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppTheme.surface,
+        // extendBody lets the list scroll behind the floating nav bar
+        extendBody: true,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: screens,
+        ),
+        // ▼▼▼  FLOATING NAV BAR — replaces the old BottomNavigationBar  ▼▼▼
+        bottomNavigationBar: FloatingNavBar(
+          currentIndex: _currentIndex,
+          onTap: (i) => setState(() => _currentIndex = i),
+        ),
       ),
     );
   }
