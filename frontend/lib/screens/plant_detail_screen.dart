@@ -72,14 +72,18 @@ class _PlantDetailScreenState extends State<PlantDetailScreen> {
       final List<String> photoUrls =
           List<String>.from(widget.identification['photoUrls'] ?? []);
       for (String photoUrl in photoUrls) {
-        final fullUrl =
-            '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}$photoUrl';
+        // Check if URL is already a full Cloudinary URL
+        final fullUrl = photoUrl.startsWith('http')
+            ? photoUrl
+            : '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}$photoUrl';
         images.add(fullUrl);
       }
     } else if (widget.identification['photoUrl'] != null) {
       // Old single identification format
-      final mainPhoto =
-          '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${widget.identification['photoUrl']}';
+      // Check if URL is already a full Cloudinary URL
+      final mainPhoto = widget.identification['photoUrl'].startsWith('http')
+          ? widget.identification['photoUrl']
+          : '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${widget.identification['photoUrl']}';
       images.add(mainPhoto);
     }
 

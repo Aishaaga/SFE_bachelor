@@ -117,8 +117,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           child: Builder(
             builder: (context) {
-              final imageUrl =
-                  '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${displayUrls[0]}';
+              // Check if URL is already a full Cloudinary URL
+              final imageUrl = displayUrls[0].startsWith('http')
+                  ? displayUrls[0]
+                  : '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${displayUrls[0]}';
               return Image.network(
                 imageUrl,
                 width: 56,
@@ -165,8 +167,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 child: Builder(
                   builder: (context) {
-                    final imageUrl =
-                        '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${displayUrls[0]}';
+                    // Check if URL is already a full Cloudinary URL
+                    final imageUrl = displayUrls[0].startsWith('http')
+                        ? displayUrls[0]
+                        : '${Constants.apiUrl.substring(0, Constants.apiUrl.indexOf('/api'))}${displayUrls[0]}';
                     return Image.network(
                       imageUrl,
                       width: 56,
