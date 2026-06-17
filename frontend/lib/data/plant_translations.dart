@@ -165,22 +165,6 @@ class PlantTranslations {
       },
       'metadata': {'region': 'Morocco', 'notes': ''}
     },
-    'Argania spinosa': {
-      'translations': {
-        'darija': {
-          'value': 'أركان',
-          'source': 'common_usage',
-          'confidence': 'high'
-        },
-        'tamazight': {
-          'value': 'ⴰⵔⴳⴰⵏ',
-          'source': 'IRCAM_verified',
-          'confidence': 'high',
-          'dialect': 'Tachelhit'
-        }
-      },
-      'metadata': {'region': 'Morocco', 'notes': 'iconic Moroccan species'}
-    },
     'Olea europaea': {
       'translations': {
         'darija': {
