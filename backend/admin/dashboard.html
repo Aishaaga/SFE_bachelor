@@ -565,12 +565,18 @@
         }
 
         .content-preview img {
-            max-width: 40px;
-            max-height: 40px;
+            max-width: 80px;
+            max-height: 80px;
             border-radius: 12px;
             object-fit: cover;
-            margin-right: 6px;
+            margin-right: 8px;
             vertical-align: middle;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .content-preview img:hover {
+            transform: scale(1.1);
         }
 
         .status-badge {
@@ -749,7 +755,51 @@
             border-color: rgba(200, 150, 60, 0.1);
         }
 
-    </style>
+    
+        /* Image modal for full-size view */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 1rem;
+            object-fit: contain;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #faf7f0;
+            padding: 0.8rem 1.5rem;
+            border-radius: 60px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .image-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+</style>
 </head>
 <body>
 
@@ -960,7 +1010,7 @@
                             <span class="vote-item">‚Üì <span class="vote-number">${s.downvotes||0}</span> Contre</span>
                             <span class="vote-item">‚¨° <span class="vote-number">${s.totalVotes||0}</span> Total</span>
                         </div>
-                        <div class="suggestion-user">Propos√© par ${escapeHtml(s.user?.name||'Inconnu')} (${escapeHtml(s.user?.email||'')})</div>
+                        <div class="suggestion-user">Propos√© par ${escapeHtml(s.user?.name||'Inconnu')} (${escapeHtml(s.user?.email||'')})${s.isAnonymous ? ' <span style="color:rgba(255,245,230,0.5);font-size:0.75rem;margin-left:8px;">(post anonyme)</span>' : ''}</div>
                         <div>
                             <button class="btn-approve" onclick="approveSuggestion('${s._id}')">Approuver</button>
                             <button class="btn-reject" onclick="rejectSuggestion('${s._id}')">Rejeter</button>
@@ -1125,8 +1175,8 @@ ${u.isDisabled ? `<button class="btn-enable" onclick="enableUser('${u._id}')">R√
             if (data.success && data.posts && data.posts.length) {
                 container.innerHTML = data.posts.map(p => `
                     <tr>
-                        <td><div>${escapeHtml(p.userId?.name||'Anonyme')}</div><div style="font-size:0.75rem;color:rgba(255,245,230,0.3)">${escapeHtml(p.userId?.email||'')}</div></td>
-                        <td><div class="content-preview">${p.imageUrl?`<img src="${escapeHtml(p.imageUrl)}" alt="">`:''} ${escapeHtml(p.plantName)} (${escapeHtml(p.scientificName)})</div></td>
+                        <td><div>${escapeHtml(p.userId?.name||'Anonyme')}</div><div style="font-size:0.75rem;color:rgba(255,245,230,0.3)">${escapeHtml(p.userId?.email||'')}</div>${p.isAnonymous ? '<div style="color:rgba(255,245,230,0.5);font-size:0.7rem;">(post anonyme)</div>' : ''}</td>
+                        <td><div class="content-preview">${p.imageUrl?`<img src="${escapeHtml(p.imageUrl)}" alt="" onclick="openImageModal('${escapeHtml(p.imageUrl)}')">`:''} ${escapeHtml(p.plantName)} (${escapeHtml(p.scientificName)})</div></td>
                         <td>${new Date(p.createdAt).toLocaleDateString()}</td>
                         <td><span class="status-badge ${p.status}">${p.status}</span></td>
                         <td><span class="report-count">‚ö† ${p.reportCount}</span></td>
@@ -1171,7 +1221,7 @@ ${u.isDisabled ? `<button class="btn-enable" onclick="enableUser('${u._id}')">R√
             if (data.success && data.posts && data.posts.length) {
                 container.innerHTML = data.posts.map(p => `
                     <tr>
-                        <td><div>${escapeHtml(p.userId?.name||'Anonyme')}</div><div style="font-size:0.75rem;color:rgba(255,245,230,0.3)">${escapeHtml(p.userId?.email||'')}</div></td>
+                        <td><div>${escapeHtml(p.userId?.name||'Anonyme')}</div><div style="font-size:0.75rem;color:rgba(255,245,230,0.3)">${escapeHtml(p.userId?.email||'')}</div>${p.isAnonymous ? '<div style="color:rgba(255,245,230,0.5);font-size:0.7rem;">(post anonyme)</div>' : ''}</td>
                         <td><div class="content-preview"><strong>${escapeHtml(p.plantName)}</strong> (${escapeHtml(p.scientificName)})<br>${escapeHtml(p.suggestedDarija? 'Darija: '+p.suggestedDarija : '')}${p.suggestedTamazight? ' Tamazight: '+p.suggestedTamazight : ''}</div></td>
                         <td>${new Date(p.createdAt).toLocaleDateString()}</td>
                         <td><span class="status-badge ${p.status}">${p.status}</span></td>
@@ -1248,9 +1298,14 @@ ${u.isDisabled ? `<button class="btn-enable" onclick="enableUser('${u._id}')">R√
             });
             const data = await res.json();
             if (data.success && data.reports && data.reports.length) {
-                let msg = 'Signalements :\n\n';
+                let msg = 'Signalements :              ';
                 data.reports.forEach(r => {
-                    msg += `- ${new Date(r.createdAt).toLocaleString()}\n  Par : ${r.reportedBy?.name||'Inconnu'} (${r.reportedBy?.email||''})\n  Motif : ${r.reason}\n  Statut : ${r.status}\n\n`;
+                    msg += `- ${new Date(r.createdAt).toLocaleString()}
+  Par : ${r.reportedBy?.name||'Inconnu'} (${r.reportedBy?.email||''})
+  Motif : ${r.reason}
+  Statut : ${r.status}
+
+`;
                 });
                 alert(msg);
             } else {
@@ -1262,6 +1317,28 @@ ${u.isDisabled ? `<button class="btn-enable" onclick="enableUser('${u._id}')">R√
     // Initialisation
     loadStats();
     loadSuggestions();
+
+    // Image modal functions
+    function openImageModal(imageUrl) {
+        document.getElementById('modalImage').src = imageUrl;
+        document.getElementById('imageModal').classList.add('active');
+    }
+
+    function closeImageModal() {
+        document.getElementById('imageModal').classList.remove('active');
+    }
+
+    // Close modal when clicking outside the image
+    document.getElementById('imageModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeImageModal();
+        }
+    });
 </script>
+    <!-- Image Modal -->
+    <div class="image-modal" id="imageModal">
+        <button class="image-modal-close" onclick="closeImageModal()">Fermer</button>
+        <img id="modalImage" src="" alt="">
+    </div>
 </body>
 </html>

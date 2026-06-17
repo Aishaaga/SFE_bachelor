@@ -89,7 +89,7 @@ router.post('/share', auth, async (req, res) => {
     // Create the feed post
     const feedPost = new FeedPost({
       type,
-      userId: isAnonymous ? null : req.userId,
+      userId: req.userId, // Always store userId for admin visibility
       isAnonymous,
       plantId: finalPlantId,
       plantName,

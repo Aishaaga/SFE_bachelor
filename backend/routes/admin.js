@@ -28,6 +28,7 @@ router.get('/pending', auth, adminAuth, async (req, res) => {
       status: 'active'
     })
       .populate('userId', 'name email')
+      .populate('identificationId')
       .sort({ createdAt: -1 });
     
     // Get vote counts for all suggestions
@@ -35,28 +36,50 @@ router.get('/pending', auth, adminAuth, async (req, res) => {
     const voteMap = await TranslationVote.getBatchVoteCounts(suggestionIds);
     
     // Transform data for dashboard compatibility
-    const transformedSuggestions = suggestions.map(s => ({
-      _id: s._id,
-      plantScientificName: s.scientificName,
-      suggestedDarija: s.suggestedDarija,
-      suggestedTamazight: s.suggestedTamazight,
-      user: s.userId ? {
-        name: s.userId.name,
-        email: s.userId.email
-      } : {
-        name: 'Anonymous',
-        email: ''
-      },
-      status: 'pending', // Map 'flagged' to 'pending' for dashboard
-      submittedAt: s.createdAt,
-      contributorName: s.userId ? s.userId.name : 'Anonymous',
-      contributorEmail: s.userId ? s.userId.email : '',
-      contributorRegion: s.location?.city || '',
-      notes: s.notes || '',
-      // Include vote counts
-      upvotes: voteMap[s._id.toString()]?.upvotes || 0,
-      downvotes: voteMap[s._id.toString()]?.downvotes || 0,
-      totalVotes: voteMap[s._id.toString()]?.total || 0
+    const transformedSuggestions = await Promise.all(suggestions.map(async s => {
+      let userName = 'Inconnu';
+      let userEmail = '';
+
+      // Try to get user from userId first
+      if (s.userId) {
+        userName = s.userId.name;
+        userEmail = s.userId.email;
+      }
+      // If userId is null but we have identificationId, fetch from identification
+      else if (s.identificationId) {
+        try {
+          const identificationId = s.identificationId._id || s.identificationId;
+          const identification = await Identification.findById(identificationId).populate('user', 'name email username');
+          if (identification && identification.user) {
+            userName = identification.user.name;
+            userEmail = identification.user.email;
+          }
+        } catch (err) {
+          console.log('Could not fetch user from identification:', err.message);
+        }
+      }
+
+      return {
+        _id: s._id,
+        plantScientificName: s.scientificName,
+        suggestedDarija: s.suggestedDarija,
+        suggestedTamazight: s.suggestedTamazight,
+        user: {
+          name: userName,
+          email: userEmail
+        },
+        isAnonymous: s.isAnonymous, // Include isAnonymous flag for reference
+        status: 'pending', // Map 'flagged' to 'pending' for dashboard
+        submittedAt: s.createdAt,
+        contributorName: userName,
+        contributorEmail: userEmail,
+        contributorRegion: s.location?.city || '',
+        notes: s.notes || '',
+        // Include vote counts
+        upvotes: voteMap[s._id.toString()]?.upvotes || 0,
+        downvotes: voteMap[s._id.toString()]?.downvotes || 0,
+        totalVotes: voteMap[s._id.toString()]?.total || 0
+      };
     }));
     
     res.json({
@@ -604,6 +627,7 @@ router.get('/moderation/identifications', auth, adminAuth, async (req, res) => {
 
     const posts = await FeedPost.find(query)
       .populate('userId', 'name email username')
+      .populate('identificationId')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -624,10 +648,27 @@ router.get('/moderation/identifications', auth, adminAuth, async (req, res) => {
     reports.forEach(r => { reportCounts[r._id.toString()] = r.count; });
 
     // Add status and report count to each post
-    const postsWithStatus = posts.map(post => ({
-      ...post.toObject(),
-      status: hiddenContentIds.has(post._id.toString()) ? 'hidden' : 'visible',
-      reportCount: reportCounts[post._id.toString()] || 0
+    const postsWithStatus = await Promise.all(posts.map(async post => {
+      const postObj = {
+        ...post.toObject(),
+        status: hiddenContentIds.has(post._id.toString()) ? 'hidden' : 'visible',
+        reportCount: reportCounts[post._id.toString()] || 0
+      };
+
+      // If userId is null but we have an identificationId, fetch user from identification
+      if (!postObj.userId && postObj.identificationId) {
+        try {
+          const identificationId = postObj.identificationId._id || postObj.identificationId;
+          const identification = await Identification.findById(identificationId).populate('user', 'name email username');
+          if (identification && identification.user) {
+            postObj.userId = identification.user;
+          }
+        } catch (err) {
+          console.log('Could not fetch user from identification:', err.message);
+        }
+      }
+
+      return postObj;
     }));
 
     const total = await FeedPost.countDocuments(query);
@@ -687,6 +728,7 @@ router.get('/moderation/translations', auth, adminAuth, async (req, res) => {
 
     const posts = await FeedPost.find(query)
       .populate('userId', 'name email username')
+      .populate('identificationId')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -707,10 +749,27 @@ router.get('/moderation/translations', auth, adminAuth, async (req, res) => {
     reports.forEach(r => { reportCounts[r._id.toString()] = r.count; });
 
     // Add status and report count to each post
-    const postsWithStatus = posts.map(post => ({
-      ...post.toObject(),
-      status: hiddenContentIds.has(post._id.toString()) ? 'hidden' : 'visible',
-      reportCount: reportCounts[post._id.toString()] || 0
+    const postsWithStatus = await Promise.all(posts.map(async post => {
+      const postObj = {
+        ...post.toObject(),
+        status: hiddenContentIds.has(post._id.toString()) ? 'hidden' : 'visible',
+        reportCount: reportCounts[post._id.toString()] || 0
+      };
+
+      // If userId is null but we have an identificationId, fetch user from identification
+      if (!postObj.userId && postObj.identificationId) {
+        try {
+          const identificationId = postObj.identificationId._id || postObj.identificationId;
+          const identification = await Identification.findById(identificationId).populate('user', 'name email username');
+          if (identification && identification.user) {
+            postObj.userId = identification.user;
+          }
+        } catch (err) {
+          console.log('Could not fetch user from identification:', err.message);
+        }
+      }
+
+      return postObj;
     }));
 
     const total = await FeedPost.countDocuments(query);
