@@ -77,17 +77,29 @@ class _CameraScreenState extends State<CameraScreen>
       LoadingDialog.update(
           context, AppLocalizations.of(context)!.sendingToPlantNet);
 
-      // Upload to Cloudinary
-      LoadingDialog.update(context, 'Uploading to Cloudinary...');
-      final cloudinaryUrl = await _cloudinaryService.uploadImage(compressed);
+      // Upload to Cloudinary in background (fire and forget)
+      String? cloudinaryUrl;
+      _cloudinaryService.uploadImage(compressed).then((url) {
+        cloudinaryUrl = url;
+        print('Cloudinary upload completed: $url');
+      }).catchError((error) {
+        print('Cloudinary upload failed: $error');
+      });
 
-      if (cloudinaryUrl == null) {
-        LoadingDialog.hide(context);
-        _showSnack('Failed to upload image to Cloudinary', isError: true);
-        return;
+      // Simultaneously upload to backend for identification
+      final result = await _apiService.identifyPlant(compressed);
+
+      // Wait a bit for Cloudinary upload to complete
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Update backend with Cloudinary URL if upload succeeded
+      if (cloudinaryUrl != null && result['identificationId'] != null) {
+        print('Updating identification with Cloudinary URL...');
+        await _apiService.updateIdentificationPhotoUrl(
+          result['identificationId'].toString(),
+          cloudinaryUrl!,
+        );
       }
-
-      final result = await _apiService.identifyPlant(cloudinaryUrl);
 
       LoadingDialog.update(
           context, AppLocalizations.of(context)!.fetchingDistribution);

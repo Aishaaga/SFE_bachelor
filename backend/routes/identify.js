@@ -5,7 +5,6 @@ const { identifyPlant} = require('../services/plantnet');
 const authMiddleware = require('../middleware/auth');
 const Identification = require('../models/Identification');
 const Plant = require('../models/Plant');
-const axios = require('axios');
 
 const router = express.Router();
 
@@ -51,34 +50,21 @@ const PLANTNET_TIMEOUT = 90000; // 90 seconds max
 // POST /api/identify (protected by authentication)
 router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
   try {
-    let imageBuffer;
-    let photoUrl;
-    let filename;
-
-    // Check if image is provided as file or Cloudinary URL
-    if (req.file) {
-      // File upload
-      console.log('Photo received (file): ' + req.file.originalname + ' (' + req.file.size + ' bytes)');
-      const fs = require('fs');
-      imageBuffer = fs.readFileSync(req.file.path);
-      photoUrl = '/uploads/' + req.file.filename;
-      filename = req.file.originalname;
-    } else if (req.body.imageUrl) {
-      // Cloudinary URL
-      console.log('Photo received (Cloudinary URL): ' + req.body.imageUrl);
-      const response = await axios.get(req.body.imageUrl, { responseType: 'arraybuffer' });
-      imageBuffer = Buffer.from(response.data, 'binary');
-      photoUrl = req.body.imageUrl;
-      filename = 'cloudinary-image.jpg';
-    } else {
+    if (!req.file) {
       return res.status(400).json({ 
         success: false, 
         message: 'Aucune photo fournie' 
       });
     }
     
+    console.log('Photo received (file): ' + req.file.originalname + ' (' + req.file.size + ' bytes)');
+    
+    // Read file back into buffer for PlantNet API
+    const fs = require('fs');
+    const imageBuffer = fs.readFileSync(req.file.path);
+    
     // Call PlantNet API
-    const result = await identifyPlant(imageBuffer, filename);
+    const result = await identifyPlant(imageBuffer, req.file.originalname);
     
     if (!result.success) {
       return res.status(400).json(result);
@@ -104,7 +90,8 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
       plant.identificationCount += 1;
       await plant.save();
       
-      // Create identification
+      // Create identification with temporary local URL
+      const photoUrl = '/uploads/' + req.file.filename;
       console.log('DEBUG: Saving photoUrl:', photoUrl);
       
       const identification = new Identification({
@@ -132,6 +119,54 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Erreur lors de l\'identification' 
+    });
+  }
+});
+
+// PUT /api/identify/:id/photoUrl - Update identification with Cloudinary URL
+router.put('/:id/photoUrl', authMiddleware, async (req, res) => {
+  try {
+    const { photoUrl } = req.body;
+    
+    if (!photoUrl) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'photoUrl is required' 
+      });
+    }
+    
+    const identification = await Identification.findById(req.params.id);
+    
+    if (!identification) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Identification not found' 
+      });
+    }
+    
+    // Verify user owns this identification
+    if (identification.user.toString() !== req.userId) {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Unauthorized' 
+      });
+    }
+    
+    identification.photoUrl = photoUrl;
+    await identification.save();
+    
+    console.log('DEBUG: Updated photoUrl for identification', req.params.id, 'to', photoUrl);
+    
+    res.json({ 
+      success: true, 
+      message: 'Photo URL updated successfully' 
+    });
+    
+  } catch (error) {
+    console.error('Error updating photoUrl:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error updating photo URL' 
     });
   }
 });

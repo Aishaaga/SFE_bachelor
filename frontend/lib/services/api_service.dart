@@ -143,6 +143,53 @@ class ApiService {
     }
   }
 
+  // Update identification with Cloudinary URL
+  Future<Map<String, dynamic>> updateIdentificationPhotoUrl(
+    String identificationId,
+    String photoUrl,
+  ) async {
+    try {
+      final token = await _authService.getToken();
+      if (token == null) {
+        return {'success': false, 'message': 'Non authentifié'};
+      }
+
+      final response = await http
+          .put(
+            Uri.parse(
+                '${Constants.apiUrl}/identify/$identificationId/photoUrl'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({'photoUrl': photoUrl}),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 401) {
+        await AuthService.handle401Error();
+        return {'success': false, 'message': 'Session expirée'};
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return {'success': true};
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'Erreur lors de la mise à jour',
+        };
+      }
+    } catch (e) {
+      print('Error updating photo URL: $e');
+      return {
+        'success': false,
+        'message': 'Erreur: $e',
+      };
+    }
+  }
+
   // Helper method to process identification response
   Future<Map<String, dynamic>> _processIdentificationResponse(
     Map<String, dynamic> data,
@@ -402,3 +449,4 @@ class ApiService {
     return translations.isNotEmpty ? translations.first : null;
   }
 }
+
