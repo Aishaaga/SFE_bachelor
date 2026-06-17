@@ -321,8 +321,9 @@ router.get('/stats', auth, adminAuth, async (req, res) => {
         approved: approvedCount,
         rejected: rejectedCount,
         totalSuggestions: pendingCount + approvedCount + rejectedCount,
-        totalUsers: totalUsers,
-        totalIdentifications: totalIdentifications,
+        users: totalUsers,
+        identifications: totalIdentifications,
+        suggestions: pendingCount + approvedCount + rejectedCount,
         recentSuggestions: recentSuggestions
       }
     });

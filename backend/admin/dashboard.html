@@ -162,6 +162,17 @@
             letter-spacing: 0.8px;
         }
 
+        /* Couleurs spécifiques pour chaque type de statistique */
+        .stat-card.users .stat-number {
+            color: #4fc3f7;
+        }
+        .stat-card.identifications .stat-number {
+            color: #81c784;
+        }
+        .stat-card.suggestions .stat-number {
+            color: #ffb74d;
+        }
+
         /* cartes de suggestions – transparentes */
         .suggestions-section h2 {
             font-size: 1.2rem;
@@ -835,6 +846,18 @@
                 <div class="stat-number" id="totalCount">-</div>
                 <div class="stat-label">Total</div>
             </div>
+            <div class="stat-card users">
+                <div class="stat-number" id="usersCount">-</div>
+                <div class="stat-label">Utilisateurs</div>
+            </div>
+            <div class="stat-card identifications">
+                <div class="stat-number" id="identificationsCount">-</div>
+                <div class="stat-label">Identifications</div>
+            </div>
+            <div class="stat-card suggestions">
+                <div class="stat-number" id="suggestionsCount">-</div>
+                <div class="stat-label">Suggestions</div>
+            </div>
         </div>
 
         <div class="suggestions-section">
@@ -979,6 +1002,9 @@
                 document.getElementById('approvedCount').textContent = data.stats.approved || 0;
                 document.getElementById('rejectedCount').textContent = data.stats.rejected || 0;
                 document.getElementById('totalCount').textContent = data.stats.totalSuggestions || 0;
+                document.getElementById('usersCount').textContent = data.stats.users || 0;
+                document.getElementById('identificationsCount').textContent = data.stats.identifications || 0;
+                document.getElementById('suggestionsCount').textContent = data.stats.suggestions || 0;
             }
         } catch (e) { console.error('Erreur de statistiques:', e); }
     }
