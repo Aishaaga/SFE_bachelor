@@ -416,7 +416,7 @@ class _FeedPostCardState extends State<FeedPostCard> {
           const SizedBox(height: 3),
           Text(widget.post.scientificName, style: AppTheme.scientificName),
           if (widget.post.type == 'translation_suggestion' ||
-              hasTranslations) ...[
+              (widget.post.type == 'identification' && hasTranslations)) ...[
             const SizedBox(height: 12),
             _buildTranslationBox(),
           ],

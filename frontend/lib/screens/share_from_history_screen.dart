@@ -628,11 +628,20 @@ class _ShareFromHistoryScreenState extends State<ShareFromHistoryScreen> {
           approvedTamazight =
               await PlantTranslations.getTamazightName(scientificName);
 
-          // Only use translations if they're different from the scientific name
-          if (approvedDarija == scientificName) {
+          // Only use translations if they're different from the scientific name AND plant name
+          // Also check if translation is just a word from the scientific name (fallback behavior)
+          final scientificWords = scientificName.toLowerCase().split(' ');
+          final darijaLower = approvedDarija?.toLowerCase();
+          final tamazightLower = approvedTamazight?.toLowerCase();
+          if (approvedDarija == scientificName ||
+              approvedDarija == plantName ||
+              (darijaLower != null && scientificWords.contains(darijaLower))) {
             approvedDarija = null;
           }
-          if (approvedTamazight == scientificName) {
+          if (approvedTamazight == scientificName ||
+              approvedTamazight == plantName ||
+              (tamazightLower != null &&
+                  scientificWords.contains(tamazightLower))) {
             approvedTamazight = null;
           }
 

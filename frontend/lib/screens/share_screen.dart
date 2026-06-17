@@ -673,14 +673,26 @@ class _ShareScreenState extends State<ShareScreen> {
           print('DEBUG: Raw Darija result: "$approvedDarija"');
           print('DEBUG: Raw Tamazight result: "$approvedTamazight"');
 
-          // Only use translations if they're different from the scientific name
-          if (approvedDarija == widget.plant.scientificName) {
+          // Only use translations if they're different from the scientific name AND plant name
+          // Also check if translation is just a word from the scientific name (fallback behavior)
+          final scientificWords =
+              widget.plant.scientificName.toLowerCase().split(' ');
+          final darijaLower = approvedDarija?.toLowerCase();
+          final tamazightLower = approvedTamazight?.toLowerCase();
+          if (approvedDarija == widget.plant.scientificName ||
+              approvedDarija == widget.plant.name ||
+              (darijaLower != null && scientificWords.contains(darijaLower))) {
             approvedDarija = null;
-            print('DEBUG: Darija same as scientific name, setting to null');
+            print(
+                'DEBUG: Darija same as scientific name, plant name, or is a word from scientific name, setting to null');
           }
-          if (approvedTamazight == widget.plant.scientificName) {
+          if (approvedTamazight == widget.plant.scientificName ||
+              approvedTamazight == widget.plant.name ||
+              (tamazightLower != null &&
+                  scientificWords.contains(tamazightLower))) {
             approvedTamazight = null;
-            print('DEBUG: Tamazight same as scientific name, setting to null');
+            print(
+                'DEBUG: Tamazight same as scientific name, plant name, or is a word from scientific name, setting to null');
           }
 
           print('DEBUG: Final Approved Darija: $approvedDarija');
