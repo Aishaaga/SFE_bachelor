@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../services/auth_service.dart';
 import '../l10n/app_localizations.dart';
+import '../widgets/app_theme.dart';
 import 'register_screen.dart';
-import 'home_screen.dart';
+import 'home_screen.dart' hide AppTheme;
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,9 +22,23 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true;
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (kDebugMode) {
+      print('[LoginScreen] Starting login process');
+    }
+
+    if (!_formKey.currentState!.validate()) {
+      if (kDebugMode) {
+        print('[LoginScreen] Form validation failed');
+      }
+      return;
+    }
 
     setState(() => _isLoading = true);
+
+    if (kDebugMode) {
+      print(
+          '[LoginScreen] Calling auth service for: ${_emailController.text.trim()}');
+    }
 
     final result = await _authService.login(
       _emailController.text.trim(),
@@ -31,14 +47,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = false);
 
+    if (kDebugMode) {
+      print('[LoginScreen] Login result: ${result['success']}');
+    }
+
     if (result['success']) {
+      if (kDebugMode) {
+        print('[LoginScreen] Login successful, navigating to HomeScreen');
+      }
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
     } else {
+      if (kDebugMode) {
+        print('[LoginScreen] Login failed: ${result['message']}');
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message']), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(result['message']),
+          backgroundColor: AppTheme.refusedText,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          ),
+        ),
       );
     }
   }
@@ -46,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF1B5E20),
       body: SafeArea(
         child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -62,24 +96,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
-                      width: 80,
-                      height: 80,
+                      width: 90,
+                      height: 90,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        color: AppTheme.primarySurface,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                        boxShadow: AppTheme.cardShadow,
                       ),
                       child: Center(
                         child: Image.asset(
                           'assets/images/logo_sfe.png',
-                          width: 50,
-                          height: 50,
+                          width: 55,
+                          height: 55,
                         ),
                       ),
                     ),
@@ -89,7 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF2E7D32),
+                        color: Colors.white,
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -99,9 +127,29 @@ class _LoginScreenState extends State<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.email,
-                        prefixIcon: const Icon(Icons.email),
-                        border: const OutlineInputBorder(),
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon:
+                            const Icon(Icons.email, color: AppTheme.primary),
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(
+                              color: AppTheme.primary, width: 1.5),
+                        ),
                       ),
+                      style: const TextStyle(color: Colors.white),
                       validator: (v) => v!.contains('@')
                           ? null
                           : AppLocalizations.of(context)!.invalidEmail,
@@ -112,16 +160,39 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: AppLocalizations.of(context)!.password,
-                        prefixIcon: const Icon(Icons.lock),
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon:
+                            const Icon(Icons.lock, color: AppTheme.primary),
                         suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off),
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: Colors.white70,
+                          ),
                           onPressed: () => setState(
                               () => _obscurePassword = !_obscurePassword),
                         ),
-                        border: const OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.transparent,
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(color: Colors.white30),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(
+                              color: AppTheme.primary, width: 1.5),
+                        ),
                       ),
+                      style: const TextStyle(color: Colors.white),
                       validator: (v) => v!.length >= 6
                           ? null
                           : AppLocalizations.of(context)!.passwordTooShort,
@@ -129,25 +200,58 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
+                      height: 54,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusSm),
+                          ),
+                        ),
                         child: _isLoading
-                            ? const CircularProgressIndicator()
-                            : Text(AppLocalizations.of(context)!.signIn,
-                                style: const TextStyle(fontSize: 16)),
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : Text(
+                                AppLocalizations.of(context)!.signIn,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: () {
+                        if (kDebugMode) {
+                          print('[LoginScreen] Navigating to RegisterScreen');
+                        }
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                               builder: (_) => const RegisterScreen()),
                         );
                       },
-                      child: Text(AppLocalizations.of(context)!.noAccount),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.noAccount,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
