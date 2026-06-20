@@ -102,13 +102,13 @@ class AppLocalizationsFr extends AppLocalizations {
   String get photoSelected => 'Photo sélectionnée';
 
   @override
-  String get compressingImage => '📸 Compression de l\'image...';
+  String get compressingImage => 'Compression de l\'image...';
 
   @override
-  String get sendingToPlantNet => '🌿 Envoi à PlantNet...';
+  String get sendingToPlantNet => 'Identification...';
 
   @override
-  String get fetchingDistribution => '🗺️ Récupération de la distribution...';
+  String get fetchingDistribution => 'Récupération de la distribution...';
 
   @override
   String get error => 'Erreur';
