@@ -55,9 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (kDebugMode) {
         print('[LoginScreen] Login successful, navigating to HomeScreen');
       }
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
+        (route) => false,
       );
     } else {
       if (kDebugMode) {
