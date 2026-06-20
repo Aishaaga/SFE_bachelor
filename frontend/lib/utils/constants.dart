@@ -1,6 +1,6 @@
 class Constants {
   // ⚠️ Remplace par l'IP de ton ordinateur sur le réseau
-  static const String apiUrl = 'http://172.20.10.4:3000/api';
+  static const String apiUrl = 'http://192.168.0.182:3000/api';
 
   // Pour l'émulateur Android (si tu utilises un émulateur)
   // static const String apiUrl = 'http://localhost:3000/api';
