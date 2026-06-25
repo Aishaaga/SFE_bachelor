@@ -20,7 +20,7 @@ class LoadingDialog {
               ),
               const SizedBox(height: 8),
               Text(
-                '⏱️ Environ 3-5 secondes',
+                'Environ 3-5 secondes',
                 style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
               ),
             ],

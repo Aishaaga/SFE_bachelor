@@ -8,7 +8,7 @@ class NotificationService {
       userId: userId,
       type: 'translation_approved',
       title: '✅ Translation Approved!',
-      message: `Your translation for "${suggestion.plantScientificName}" (${suggestion.suggestedDarija}) has been approved and added to the app.`,
+      message: `Your translation (${suggestion.suggestedDarija}) has been approved and added to the app.`,
       relatedId: suggestion._id,
       relatedModel: 'TranslationSuggestion',
       metadata: {
@@ -26,13 +26,13 @@ class NotificationService {
   // Send notification when translation is rejected
   static async translationRejected(userId, suggestion, reason) {
     const message = reason 
-      ? `Your translation for "${suggestion.plantScientificName}" was rejected. Reason: ${reason}`
-      : `Your translation for "${suggestion.plantScientificName}" was rejected. Please try again with a more accurate translation.`;
+      ? `Your translation was rejected. Reason: ${reason}`
+      : `Your translation was rejected. Please try again with a more accurate translation.`;
     
     const notification = new Notification({
       userId: userId,
       type: 'translation_rejected',
-      title: '❌ Translation Not Approved',
+      title: ' Translation Not Approved',
       message: message,
       relatedId: suggestion._id,
       relatedModel: 'TranslationSuggestion',
@@ -53,8 +53,8 @@ class NotificationService {
     const notification = new Notification({
       userId: userId,
       type: 'translation_featured',
-      title: '🌟 Your Translation is Featured!',
-      message: `Your translation for "${suggestion.plantScientificName}" has been featured as a top community choice!`,
+      title: ' Your Translation is Featured!',
+      message: `Your translation has been featured as a top community choice!`,
       relatedId: suggestion._id,
       relatedModel: 'TranslationSuggestion'
     });
